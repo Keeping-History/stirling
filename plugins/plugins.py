@@ -1,25 +1,26 @@
-import args
-import helpers
+import subprocess
 
-## PLUGIN FUNCTIONS
-
-## Generate audio peak/waveform data from file
-def generate_peaks(job):
-    helpers.log(
-        job, "Peak Extract Command: {}".format(job["commands"]["peaks"]["command"])
-    )
-    return args.default_unparser.unparse(**job["commands"]["peaks"]["options"])
+from plugins import hls, peaks, transcript
 
 
-## Generate a Speech-to-text transcription from audio extracted from file
-def generate_transcript(job):
-    helpers.log(
-        job,
-        "Transcript Generation Command: {}".format(
-            job["commands"]["transcript"]["command"]
-        ),
-    )
-    return args.default_unparser.unparse(
-        str(job["output"]["directory"]) + "/source.wav",
-        **job["commands"]["transcript"]["options"]
-    )
+def run(job):
+
+    # PLUGIN FUNCTIONS
+    # Generate Audio Peaks
+    job = peaks.generate_peaks(job)
+
+    # Generate Transcripts
+    job = transcript.generate_transcript(job)
+
+    # Generate an HLS VOD package
+    job = hls.create_hls(job)
+
+    return job
+
+
+def do(command, simulate=False):
+    cmd_output = [""]
+    if not simulate:
+        cmd_output = subprocess.getstatusoutput(command)
+
+    return cmd_output[1]

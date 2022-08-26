@@ -2,7 +2,9 @@ import json
 import subprocess
 import sys
 
-import helpers
+from core import helpers as helpers
+
+required_binaries = ["ffprobe"]
 
 
 def probe_media_file(input):
@@ -23,9 +25,9 @@ def get_input_streams(job):
 
     streams, video_stream, audio_stream, disable_hls = (
         job["source"]["info"]["streams"],
-        job["info"]["arguments"]["input_video_stream"],
-        job["info"]["arguments"]["input_audio_stream"],
-        job["info"]["arguments"]["disable_hls"],
+        job["arguments"]["input_video_stream"],
+        job["arguments"]["input_audio_stream"],
+        job["arguments"]["disable_hls"],
     )
 
     if disable_hls:
@@ -76,8 +78,6 @@ def get_best_video(probe_streams):
         for stream in probe_streams:
             v[stream[0]] = [stream[1].get("width") * stream[1].get("height")]
 
-    print("best video stream")
-    print(v, max(v, key=v.get))
     return max(v, key=v.get)
 
 
@@ -87,12 +87,15 @@ def get_best_audio(probe_streams):
         for stream in probe_streams:
             a[stream[0]] = [stream[1].get("bit_rate")]
 
-    print("best audio stream")
-    print(a, max(a, key=a.get))
     return max(a, key=a.get)
 
 
 def probe(job):
+    # Check to make sure the appropriate binary files we need are installed.
+    assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
+        helpers.check_dependencies_binaries(required_binaries)
+    )
+
     # Check if we can probe the input file.
     job["source"]["info"] = probe_media_file(job["source"]["input"]["filename"])
     if job["source"]["info"] is None:

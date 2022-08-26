@@ -1,17 +1,22 @@
 import collections
 import json
-import os
-import pathlib
-import shutil
-import sys
 import uuid
 from datetime import datetime
+from pathlib import Path
 
-import requests
-import validators
+from mergedeep import merge
 
-import args
-import helpers
+from core import args, definitions, helpers
+
+
+class DTEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # 👇️ if passed in object is datetime object
+        # convert it to a string
+        if isinstance(obj, datetime):
+            return str(obj)
+        # 👇️ otherwise use the default behavior
+        return json.JSONEncoder.default(self, obj)
 
 
 def create_job_from_template():
@@ -23,44 +28,67 @@ def create_job_from_template():
     # with any calculated values.
 
     job = {
-        "info": {
-            # The ID of the job. We create a random UUID whenever a job is
-            # created, however a custom one can be supplied so long as it
-            # is globally unique.
-            "id": str(uuid.uuid4()),
-            # The start time of the job, as a datetime.datetime object in UTC.
-            "time_start": datetime.now(),
-            # The end time of the job, as a datetime.datetime object in UTC.
-            "time_end": None,
-            # The duration of the job, in seconds.
-            "duration": None,
-            # The location of the job log file.
-            "log_file": None,
-            # The location of the JSON job file.
+        # The ID of the job. We create a random UUID whenever a job is
+        # created, however a custom one can be supplied so long as it
+        # is globally unique.
+        "id": str(uuid.uuid4()),
+        # The start time of the job, as a datetime.datetime object in UTC.
+        "time_start": datetime.now(),
+        # The end time of the job, as a datetime.datetime object in UTC.
+        "time_end": None,
+        # The duration of the job, in seconds.
+        "duration": None,
+        # The location of the job log file.
+        "log_file": None,
+        # The location of the JSON job file.
+        "job_file": None,
+        # Command line arguments.
+        "arguments": {
+            "source": None,
+            # The directory to output the package. Defaults to a folder named with the job's ID (a random UUID) in the current working folder.
+            "output": None,
+            # The folder prefix where incoming files are located. Defaults to the current working directory.
+            "input_directory": None,
+            # Add a prefix to the output directory automatically. Defaults to "output".
+            "output_directory_prefix": "output",
+            # Delete the temporary incoming source file when finished. By default, the temporary incoming source file is deleted.
+            "disable_delete_source": True,
+            # When a job is completed, a copy of the video file as it was uploaded is created in the output directory as "source". This can be disabled.
+            "disable_source_copy": True,
+            # Disables all audio-related tasks. This includes transcripts and peak data generation.
+            "disable_audio": False,
+            # Disable the transcript extraction.
+            "disable_transcript": False,
+            # Disable the generation of audio peak data.
+            "disable_peaks": False,
+            # Disable creating an HLS VOD package.
+            "disable_hls": False,
+            # Disable creating individual image frames from the input video.
+            "disable_frames": False,
+            # The encoding profile to use. Defaults to "sd".
+            "hls_profile": "sd",
+            # In input videos with multiple streams or renditions, specify which one to use. Defaults to the first video stream in the file.
+            "input_video_stream": -1,
+            # In input videos with multiple streams or renditions, specify which one to use. Defaults to the first video stream in the file.
+            "input_audio_stream": -1,
+            # The length of each segmented file.
+            "hls_segment_duration": 4,
+            # The bitrate ratio to use when determining the maximum bitrate for the video.
+            "hls_bitrate_ratio": 1.07,
+            # The ratio to use when determining the optimum buffer size.
+            "hls_buffer_ratio": 1.5,
+            # The Constant Rate Factor to use when encoding HLS video. Lower numbers are better quality, but larger files. Defaults to 20. Recommended values are 18-27.
+            "hls_crf": 20,
+            # The keyframe multiplier. The current framerate is multiplied by this number to determine the number the maximum length before the encoder creates a new one. Defaults to 1.
+            "hls_keyframe_multiplier": 1,
+            # The number of frames to capture per second. Can be a fraction. Defaults to 1.
+            "frames_interval": 1,
+            # A debugging option that attempts to setup a full job without actually doing any of the external transcoding/extraction. This should be removed.
+            "simulate": False,
+            # Enable additional debugging output.
+            "debug": True,
+            # The Job File, a JSON document that describes the whole job. If it is available, then we will apply it over these defaults.
             "job_file": None,
-            # Command line arguments.
-            "arguments": {
-                "source": None,
-                "output": None,
-                "input_directory": None,
-                "output_directory_prefix": "output",
-                "disable_delete_source": True,
-                "disable_source_copy": False,
-                "disable_audio": False,
-                "disable_transcript": False,
-                "disable_peaks": False,
-                "disable_hls": False,
-                "hls_profile": "1080p-high",
-                "input_video_stream": -1,
-                "input_audio_stream": -1,
-                "hls_segment_duration": 4,
-                "hls_bitrate_ratio": 1.07,
-                "hls_buffer_ratio": 1.5,
-                "hls_crf": 20,
-                "hls_keyframe_multiplier": 1,
-                "simulate": False,
-                "debug": True,
-            },
         },
         "output": {
             # The output directory for the package and its contents
@@ -74,7 +102,7 @@ def create_job_from_template():
                 "command": None,
                 # The output from the command above
                 "output": None,
-                "hls_args": collections.OrderedDict(
+                "args": collections.OrderedDict(
                     {
                         # The encoder profile to use. The default is "sd" which
                         # is a standard def package
@@ -137,7 +165,8 @@ def create_job_from_template():
                         # Enable faster file streaming start for HLS files by moving some of the metadata to the beginning of the file after transcode.
                         "movflags": "+faststart",
                         # Audio codec to encode with. We prefer AAC over mp3.
-                        "vf": "",  # Scale the video to the appropriate resolution.
+                        # Scale the video to the appropriate resolution.
+                        "vf": "",
                         "b:v": "",
                         # Set the maximum video bitrate.
                         "maxrate": "",
@@ -163,6 +192,7 @@ def create_job_from_template():
                         "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
                     }
                 ),
+                "encoder_profiles": definitions.encoder_profiles,
             },
             "transcript": {
                 "command": None,
@@ -223,9 +253,17 @@ def create_job_from_template():
                     }
                 ),
             },
-            "thumbnails": {
+            "frames": {
                 "command": None,
                 "output": None,
+                "args": collections.OrderedDict(
+                    {
+                        # Capture a frame every 1 second of video. Can be a fraction of a second, specified as a float. Default is 1 frame per second.
+                        "fps": 1,
+                        # Output filename pattern. See ... for more information.
+                        "output_filename": "%d.jpg",
+                    }
+                ),
                 "cli_options": collections.OrderedDict(
                     {
                         # Hide ffmpeg"s console banner output.
@@ -241,10 +279,12 @@ def create_job_from_template():
                     {
                         # The input filename
                         "i": "",
-                        # Extract only one audio track.
+                        # Extract an image every .
                         "f": "image2",
                         # Capture a frame ever 1/10 of fps.
-                        "vf": "fps=fps=1/10",
+                        "vf": "fps={}",
+                        # Remove duplicate frames, if necessary
+                        "vsync": 0,
                     }
                 ),
             },
@@ -263,20 +303,33 @@ def create_job_from_template():
         },
     }
 
-    # Parse arguments and setup "unparsers" to setup cli jobs(())
-    job = args.parse_args(sys.argv[1:], job)
-
     return job
 
 
-def open_job(job):
-    job = get_output_directory(job)
+def open_job(job, arguments):
+    # Parse arguments cli arguments
+    job = args.parse_args(arguments, job)
+
+    # Check to see if aJob JSON file was passed
+    if job["arguments"]["job_file"] is not None or job["arguments"]["job_file"] == "":
+        job_file = Path(job["arguments"]["job_file"])
+        # Check to make sure the Job JSON file exists
+        if job_file.is_file():
+            with open(job_file) as json_file:
+                # Load the file into our Job Object
+                new_job = json.load(json_file)
+                job = merge({}, job, new_job)
+
+    # Make sure we can access our output directory
+    job = helpers.get_output_directory(job)
+
+    # Logging
     helpers.log(job, "Starting job")
-    helpers.log(job, "Arguments: " + json.dumps(job["info"]["arguments"]))
+    helpers.log(job, "Arguments: " + json.dumps(job["arguments"]))
     helpers.log(job, "Output Directory will be: " + str(job["output"]["directory"]))
 
     # The incoming source file
-    job["source"]["input"]["filename"] = job["info"]["arguments"]["source"]
+    job["source"]["input"]["filename"] = job["arguments"]["source"]
     helpers.log(
         job, "File to process will be: " + str(job["source"]["input"]["filename"])
     )
@@ -289,126 +342,15 @@ def open_job(job):
 
 def close_job(job):
     # Close out the job and update its metadata
-    job["info"]["time_end"] = datetime.now()
-    job["info"]["duration"] = (
-        job["info"]["time_end"] - job["info"]["time_start"]
-    ).total_seconds()
-    return job
+    job["time_end"] = datetime.now()
+    job["duration"] = (job["time_end"] - job["time_start"]).total_seconds()
 
-
-def write_object(obj, filename):
-    # Write the object to a file
-    output_file = open(filename, "w")
-    output_file.write(json.dumps(obj, indent=4, default=str))
-    output_file.close()
-
-
-def check_dependencies_binaries(required_binaries):
-    required_binaries_missing = []
-    for program in required_binaries:
-        if shutil.which(program) is None:
-            required_binaries_missing.append(program)
-    if not len(required_binaries_missing) == 0:
-        return "missing binary dependencies: {}".format(
-            " ".join(required_binaries_missing)
-        )
-    return True
-
-
-def get_input(job):
-    source = job["source"]["input"]["filename"]
-    output = job["output"]["directory"]
-    disable_delete_source = job["info"]["arguments"]["disable_delete_source"]
-    disable_source_copy = job["info"]["arguments"]["disable_source_copy"]
-
-    # Get a full path to name our source file when we move it. We'll use this
-    # value later on as an input filename for specific commands.
-    incoming_filename = str(output) + "/source" + pathlib.Path(source).suffix
-
-    # If the incoming source is a URL, then let's download it.
-    if validators.url(source):
-        response = requests.get(source)
-        open(incoming_filename, "wb").write(response.content)
-    else:
-        if not disable_source_copy:
-            # Unless this is a simulation or we explicitly disabled it, copy the source
-            # file to the output directory as 'source'
-            shutil.copyfile(pathlib.Path(source).absolute(), incoming_filename)
-            if not disable_delete_source:
-                os.remove(source)
-        else:
-            incoming_filename = source
-
-    job["source"]["input"]["filename"] = pathlib.Path(incoming_filename)
-    return job
-
-
-def get_output_directory(job):
-    output = job["info"]["arguments"]["output"]
-    prefix = job["info"]["arguments"]["output_directory_prefix"]
-
-    # Check arguments and set any appropriate calculated defaults.
-    # The output directory. If not specified, then create one using the job_id.
-    if job["info"]["arguments"]["output_directory_prefix"] is not None:
-        prefix = "/" + str(prefix)
-    if job["info"]["arguments"]["output"] is None:
-        output_directory = pathlib.Path(os.getcwd() + prefix + "/" + job["info"]["id"])
-    else:
-        output_directory = pathlib.Path(prefix + output)
-
-    # Make the output directory, if it doesn't exist.
-    if not output_directory.is_dir():
-        output_directory.mkdir(parents=True, exist_ok=True)
-        output_directory = pathlib.Path(output_directory)
-        annotations_output_directory = output_directory / "annotations"
-        hls_output_directory = output_directory / "hls"
-        annotations_output_directory.mkdir(parents=True, exist_ok=True)
-        hls_output_directory.mkdir(parents=True, exist_ok=True)
-
-    job["output"]["directory"] = output_directory
-    job["info"]["log_file"] = job["output"]["directory"] / "job.log"
-    job["info"]["job_file"] = job["output"]["directory"] / "job.json"
-
-    # Make sure we have a directory for the output files
-    assert job["output"]["directory"].is_dir(), helpers.log(
+    # DONE
+    helpers.log(
         job,
-        "could not find the path {} for output files".format(
-            str(job["output"]["directory"])
+        "Ending job {} at {}, total duration: {}".format(
+            job["id"], job["time_end"], job["duration"]
         ),
     )
 
-    # Make sure we can write to the directory for the output files
-    assert os.access(str(job["output"]["directory"]), os.W_OK), helpers.log(
-        "could not write to path {} for output files".format(
-            str(job["output"]["directory"])
-        )
-    )
-
-    return job
-
-
-def log(job, message, debug=True):
-    stamp = datetime.now()
-    duration = str((stamp - job["info"]["time_start"]).total_seconds() * 1000)
-    line_header = "[{}] [+{}] [{}]".format(
-        stamp.strftime("%Y-%m-%d %H:%M:%S"), duration + "ms", job["info"]["id"]
-    )
-
-    if debug:
-        print("{}: {}\n".format(line_header, message))
-
-    file1 = open(job["info"]["log_file"], "a")  # append mode
-    file1.write("{}: {}\n".format(line_header, message))
-    file1.close()
-
-
-def log_object(object, line_identifier="+", header="", indent=4):
-    print(type(object))
-    return log_string(
-        header + json.dumps(vars(object), indent=indent), line_identifier, indent
-    )
-
-
-def log_string(string, line_identifier="+", indent=4):
-    new_line_string = "\n" + line_identifier + " " * indent
-    return new_line_string + new_line_string.join(string.splitlines())
+    helpers.write_object(job, job["job_file"])
