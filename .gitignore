@@ -147,5 +147,4 @@ include/
 *.mp3
 *.wav
 *.h5
-*.code-workspace
 .DS_Store
