@@ -11,7 +11,7 @@ def generate_transcript(job):
     # Plugins receive the job object.
 
     # Check to see if we can run this plugin.
-    if not job["arguments"]["disable_transcript"]:
+    if not job["arguments"]["transcript_disable"]:
 
         # Check to make sure the appropriate binary files we need are installed.
         assert helpers.check_dependencies_binaries(required_binaries), helpers.log(

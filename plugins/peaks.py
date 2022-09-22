@@ -7,7 +7,7 @@ required_binaries = ["audiowaveform"]
 ## PLUGIN FUNCTIONS
 ## Extract Audio Peaks from file
 def generate_peaks(job):
-    if not job["arguments"]["disable_peaks"]:
+    if not job["arguments"]["peaks_disable"]:
         # Check to make sure the appropriate binary files we need are installed.
         assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
             helpers.check_dependencies_binaries(required_binaries)

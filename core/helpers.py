@@ -76,8 +76,8 @@ def get_output_directory(job):
         annotations_output_directory.mkdir(parents=True, exist_ok=True)
 
     job["output"]["directory"] = output_directory
-    job["log_file"] = job["output"]["directory"] / "job.log"
-    job["job_file"] = job["output"]["directory"] / "job.json"
+    job["log_file"] = job["output"]["directory"] / job["arguments"]["log_file"]
+    job["job_file"] = job["output"]["directory"] / job["arguments"]["job_file"]
 
     # Make sure we have a directory for the output files
     assert job["output"]["directory"].is_dir(), log(

@@ -1,4 +1,5 @@
 import subprocess
+import simpleeval
 
 from core import args, helpers
 
@@ -32,6 +33,7 @@ def extract_frames(job):
         fps = job["commands"]["frames"]["options"]["vf"].format(
             job["commands"]["frames"]["args"]["fps"],
         )
+        frames_interval = job["commands"]["frames"]["frames_interval"]
 
         # Frame extraction options
         # Where to save the image files.
@@ -41,7 +43,7 @@ def extract_frames(job):
         job["commands"]["frames"]["options"]["i"] = input_filename
 
         # The number of frames to capture for each second of video.
-        job["commands"]["frames"]["options"]["vf"] = fps
+        job["commands"]["frames"]["options"]["r"] = get_frames_interval(frames_interval, fps)
 
         jobArgs = args.default_unparser.unparse(
             *{output_filename},
@@ -90,3 +92,18 @@ def extract_frames(job):
             )
 
     return job
+
+def get_frames_interval(interval, fps):
+    # The Frame Interval is the number of frames to capture for every second
+    # of video. To capture one frame for every second of video, provide 1 as
+    # the value. 
+    if type(interval) == str:
+        try:
+            interval = simpleeval.simple_eval(interval)
+        except:
+            interval = None
+
+    if not isinstance(interval, int, float, complex):
+        return fps
+
+    return interval

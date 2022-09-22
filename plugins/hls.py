@@ -74,7 +74,7 @@ def create_rendition(job):
 
 
 def create_hls(job):
-    if not job["arguments"]["disable_hls"]:
+    if not job["arguments"]["hls_disable"]:
         # Check to make sure the appropriate binary files we need are installed.
         assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
             helpers.check_dependencies_binaries(required_binaries)

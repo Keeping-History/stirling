@@ -8,19 +8,8 @@ from mergedeep import merge
 
 from core import args, definitions, helpers
 
-
-class DTEncoder(json.JSONEncoder):
-    def default(self, obj):
-        # 👇️ if passed in object is datetime object
-        # convert it to a string
-        if isinstance(obj, datetime):
-            return str(obj)
-        # 👇️ otherwise use the default behavior
-        return json.JSONEncoder.default(self, obj)
-
-
 def create_job_from_template():
-    # Start a new job and initize the job's metadata
+    # Start a new job and initialize the job's metadata
 
     # TODO: Load these from a json template file and provide some simple
     # default command line arguments for common profiles and
@@ -58,11 +47,11 @@ def create_job_from_template():
             # Disables all audio-related tasks. This includes transcripts and peak data generation.
             "disable_audio": False,
             # Disable the transcript extraction.
-            "disable_transcript": False,
+            "transcript_disable": False,
             # Disable the generation of audio peak data.
-            "disable_peaks": False,
+            "peaks_disable": False,
             # Disable creating an HLS VOD package.
-            "disable_hls": False,
+            "hls_disable": False,
             # Disable creating individual image frames from the input video.
             "disable_frames": False,
             # The encoding profile to use. Defaults to "sd".
@@ -192,7 +181,7 @@ def create_job_from_template():
                         "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
                     }
                 ),
-                "encoder_profiles": definitions.encoder_profiles,
+                "encoder_profiles": definitions.EncoderProfiles,
             },
             "transcript": {
                 "command": None,
@@ -279,10 +268,8 @@ def create_job_from_template():
                     {
                         # The input filename
                         "i": "",
-                        # Extract an image every .
-                        "f": "image2",
                         # Capture a frame ever 1/10 of fps.
-                        "vf": "fps={}",
+                        "r": "{}",
                         # Remove duplicate frames, if necessary
                         "vsync": 0,
                     }
@@ -326,12 +313,14 @@ def open_job(job, arguments):
     # Logging
     helpers.log(job, "Starting job")
     helpers.log(job, "Arguments: " + json.dumps(job["arguments"]))
-    helpers.log(job, "Output Directory will be: " + str(job["output"]["directory"]))
+    helpers.log(job, "Output Directory will be: " +
+                str(job["output"]["directory"]))
 
     # The incoming source file
     job["source"]["input"]["filename"] = job["arguments"]["source"]
     helpers.log(
-        job, "File to process will be: " + str(job["source"]["input"]["filename"])
+        job, "File to process will be: " +
+        str(job["source"]["input"]["filename"])
     )
 
     # Get the incoming file to process

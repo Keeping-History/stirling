@@ -23,14 +23,14 @@ def probe_media_file(input):
 
 def get_input_streams(job):
 
-    streams, video_stream, audio_stream, disable_hls = (
+    streams, video_stream, audio_stream, hls_disable = (
         job["source"]["info"]["streams"],
         job["arguments"]["input_video_stream"],
         job["arguments"]["input_audio_stream"],
-        job["arguments"]["disable_hls"],
+        job["arguments"]["hls_disable"],
     )
 
-    if disable_hls:
+    if hls_disable:
         if audio_stream == -1:
             audio_stream = get_best_audio(
                 get_input_streams_from_probe(streams, "audio")
