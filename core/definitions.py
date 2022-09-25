@@ -1,4 +1,4 @@
-from calendar import c
+from pickletools import float8
 import uuid
 import datetime
 from pathlib import Path
@@ -7,6 +7,8 @@ from typing import List, OrderedDict, get_type_hints
 import collections
 import pathlib
 from dateutil import parser as date_parser
+
+from core import helpers
 
 # definitions holds all the standard class definitions and variables we need
 # to run jobs.
@@ -165,40 +167,34 @@ class Job:
     def __setattr__(self, name, value):
         # Get the type hints from our Job
         proper_type = get_type_hints(Job)[name]
-        print(
-            "Name       :", name,
-            "\nProper Type: ", type(proper_type),
-            "\nIn Value   : ",value,
-            "\nIn Type    :", type(value),
-            "\n"
-        )
 
         # If the type of our incoming value and the type we hinted in the
         # object, then let's try to translate it to the proper type.
         if not isinstance(value, proper_type):
-            match proper_type:
-                case pathlib.Path:
+            match proper_type.__name__:
+                case "PosixPath" | "Path":
                     if value is None:
                         value = ""
                     value = pathlib.Path(value)
-                case uuid.UUID:
+                case "UUID":
                     try:
                         value = uuid.UUID(value)
                     except ValueError:
+                        # We must have a Job ID. If we can't set one, then we'll just create a random one.
                         value = uuid.uuid4()
-                case datetime.datetime:
-                    if type(value) is str:
+                case "datetime":
+                    if type(value) is str and value != "":
                         value = date_parser.parse(value)
-                case float() as proper_type:
-                    if type(value) is str or type(value) is int:
-                        value = float(str(value))
+                case "float":
+                    value = float(str(value))
+                case "int":
+                    value = int(str(value))
                 case _:
                     if value is None:
                         pass
                     raise ValueError
 
         self.__dict__[name] = value
-
 
 # Arguments Types
 # These Arguments types include all of the arguments available to pass in to the

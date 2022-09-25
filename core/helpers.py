@@ -2,7 +2,9 @@ import json
 import os
 import pathlib
 import shutil
+import uuid
 from datetime import datetime
+
 
 import requests
 import validators
@@ -122,3 +124,10 @@ def log_object(object, line_identifier="+", header="", indent=4):
 def log_string(string, line_identifier="+", indent=4):
     new_line_string = "\n" + line_identifier + " " * indent
     return new_line_string + new_line_string.join(string.splitlines())
+
+def is_valid_uuid(uuid_to_test, version=4):
+    try:
+        uuid_obj = uuid.UUID(uuid_to_test, version=version)
+    except ValueError:
+        return False
+    return str(uuid_obj) == uuid_to_test
