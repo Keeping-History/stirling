@@ -1,15 +1,13 @@
-import pathlib
+import json
+import os
 
-from core import args, helpers, pytorch
+import cv2
+from mtcnn import MTCNN
+
+from core import args, helpers
+#from core import pytorch
 from plugins import plugins
 
-import torch
-from mtcnn import MTCNN
-import json
-import cv2
-import os
-import numpy as np
-from pathlib import Path
 
 ## PLUGIN FUNCTIONS
 ## Generate an HLS Package from file
@@ -18,7 +16,7 @@ def generate_face_detection(job):
         # Create the directory for the faces.
         frames_input_directory = job["output"]["directory"] / "img" / "frames"
 
-        device = pytorch.pytorch_get_device()
+        # device = pytorch.pytorch_get_device()
 
         detector = MTCNN()
         output_filename = str(job["output"]["directory"]) + "/annotations/faces.json"
@@ -29,26 +27,23 @@ def generate_face_detection(job):
         # iterate over files in
         # that directory
         for filename in os.listdir(frames_input_directory):
-            if filename.endswith(('.jpg', '.png')):
+            if filename.endswith((".jpg", ".png")):
                 f = os.path.join(directory, filename)
-                holder: dict = {
-                    "filename": filename,
-                    "faces": []
-                }
+                holder: dict = {"filename": filename, "faces": []}
                 if os.path.isfile(f):
                     img = cv2.cvtColor(cv2.imread(f), cv2.COLOR_BGRA2BGR)
                     faces = detector.detect_faces(img)
-                    holder['faces'] = faces
-                    for i, face in enumerate(holder['faces']):
-                        cropped_face = img[face['box'][1]:face['box'][1]+face['box'][3], face['box'][0]:face['box'][0]+face['box'][2]]
+                    holder["faces"] = faces
+                    for i, face in enumerate(holder["faces"]):
+                        cropped_face = img[
+                            face["box"][1] : face["box"][1] + face["box"][3],
+                            face["box"][0] : face["box"][0] + face["box"][2],
+                        ]
                         cv2.imwrite(f + "_" + str(i) + "_face.jpg", cropped_face)
                     scan.append(holder)
 
         output_file.writelines(json.dumps(scan) + "\n")
         output_file.close()
-
-
-
 
         # Create the directory for the hls package.
         hls_output_directory = job["output"]["directory"] / "video" / "hls"

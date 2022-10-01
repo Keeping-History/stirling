@@ -1,9 +1,21 @@
 import subprocess
+from dataclasses import dataclass
 
-from core import args, helpers
+from core import args, definitions, helpers
 
 # Specify the required binaries in a list.
 required_binaries = ["autosub"]
+
+
+@dataclass
+class StirlingArgsPluginTranscript(definitions.StirlingClass):
+    """StirlingArgsPluginTranscript are for creating speech-to-text transcripts.
+    These transcripts can be used as-is, or can be used later for
+    confidence training, language analysis or for adding other contexts."""
+
+    # Disable the transcript extraction.
+    transcript_disable: bool = False
+
 
 ## PLUGIN FUNCTIONS
 ## Extract Audio Peaks from file

@@ -1,8 +1,19 @@
 import subprocess
+from dataclasses import dataclass
 
-from core import args, helpers
+from core import args, definitions, helpers
 
 required_binaries = ["audiowaveform"]
+
+
+@dataclass
+class StirlingArgsPluginPeaks(definitions.StirlingClass):
+    """StirlingArgsPluginPeaks are are for creating waveform peaks from the input
+    source's audio track."""
+
+    # Disable the generation of audio peak data.
+    peaks_disable: bool = False
+
 
 ## PLUGIN FUNCTIONS
 ## Extract Audio Peaks from file

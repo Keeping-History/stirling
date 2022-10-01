@@ -6,7 +6,8 @@ from pathlib import Path
 
 from mergedeep import merge
 
-from core import args, definitions, helpers
+from core import args, definitions, helpers, video
+
 
 def create_job_from_template():
     # Start a new job and initialize the job's metadata
@@ -181,7 +182,7 @@ def create_job_from_template():
                         "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
                     }
                 ),
-                "encoder_profiles": definitions.EncoderProfiles,
+                "encoder_profiles": video.EncoderProfiles,
             },
             "transcript": {
                 "command": None,
@@ -292,6 +293,9 @@ def create_job_from_template():
 
     return job
 
+def create_job():
+    job = definitions.StirlingJob()
+    return job
 
 def open_job(job, arguments):
     # Parse arguments cli arguments
@@ -313,14 +317,12 @@ def open_job(job, arguments):
     # Logging
     helpers.log(job, "Starting job")
     helpers.log(job, "Arguments: " + json.dumps(job["arguments"]))
-    helpers.log(job, "Output Directory will be: " +
-                str(job["output"]["directory"]))
+    helpers.log(job, "Output Directory will be: " + str(job["output"]["directory"]))
 
     # The incoming source file
     job["source"]["input"]["filename"] = job["arguments"]["source"]
     helpers.log(
-        job, "File to process will be: " +
-        str(job["source"]["input"]["filename"])
+        job, "File to process will be: " + str(job["source"]["input"]["filename"])
     )
 
     # Get the incoming file to process

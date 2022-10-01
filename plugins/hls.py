@@ -1,9 +1,152 @@
+from ast import Or
+import collections
 import pathlib
+from dataclasses import dataclass
+from typing import OrderedDict
 
-from core import args, helpers
+from core import args, definitions, helpers, video
 from plugins import plugins
 
 required_binaries = ["ffmpeg"]
+
+@dataclass
+class StirlingArgsPluginHLS(definitions.StirlingClass):
+    """StirlingArgsPluginHLS are for creating an HLS VOD streaming package from
+    the input source video."""
+
+    # Disable creating an HLS VOD package.
+    hls_disable: bool = False
+    # The encoding profile to use. Defaults to "sd".
+    hls_profile: str = "sd"
+    # The length of each segmented file.
+    hls_segment_duration: int = 4
+    # The bitrate ratio to use when determining the maximum bitrate for the
+    # video.
+    hls_bitrate_ratio: int = 1.07
+    # The ratio to use when determining the optimum buffer size.
+    hls_buffer_ratio: int = 1.5
+    # The Constant Rate Factor to use when encoding HLS video. Lower numbers are
+    # better quality, but larger files. Defaults to 20. Recommended values are
+    # 18-27.
+    hls_crf: int = 20
+    # The keyframe multiplier. The current framerate is multiplied by this
+    # number to determine the number the maximum length before the encoder
+    # creates a new one. Defaults to 1.
+    hls_keyframe_multiplier: int = 1
+    # Audio codec to encode with. We prefer AAC over mp3.
+    hls_audio_codec: str = "aac"
+    # Audio sample rate to encode with. Default is the same as the source.
+    hls_audio_sample_rate: int = None
+    # Video codec to encode with. H264 is the most common and our preferred
+    # codec for compatibility purposes.
+    hls_video_codec: str = "h264"
+    # Video encoding profile, set to a legacy setting for compatibility.
+    hls_video_profile: str = "main"
+    # Adjusts the sensitivity of the encoder's scene cut detection. When a new
+    # scene is detected (e.g. a video frame is very different than the one
+    # before it), a new keyframe is created. Rarely needs to be adjusted. 0
+    # disables scene detection altogether, and uses the GOP size to determine
+    # when to create a new keyframe. The recommended default is 40.
+    hls_sc_threshold: int = 40
+    # Set the Group Picture Size (GOP). Default is 12.
+    hls_gop_size: int = 12
+    # Set the minimum distance between keyframes.
+    hls_keyint_min: int = 25
+    # The target length of each segmented file, in seconds. Default is 2.
+    hls_target_segment_duration: int = 2
+    # The type of HLS playlist to create.
+    hls_playlist_type: str = "vod"
+    # Enable faster file streaming start for HLS files by moving some of the
+    # metadata to the beginning of the file after transcode.
+    hls_movflags: str = "+faststart"
+    # The encoder profiles to use. Load defaults from the core definitions
+    # package.
+    hls_encoder_profiles: OrderedDict = video.EncoderProfiles
+
+    def __post_init__(self):
+        # Check to make sure our necessary binaries are installed and available.
+        assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
+            helpers.check_dependencies_binaries(required_binaries)
+        )
+
+@dataclass
+class StirlingCmdHLS(definitions.StirlingCmd):
+    """StirlingCmdHLS contains a mapping of our input arguments to the necessary
+    CLI arguments that our video transcoder will need. Currently, we use ffmpeg,
+    but others could be used by mapping the proper input parameters to the
+    command parameters our transcoder requires."""
+
+    # The default, common CLI settings to use
+    cli_options: OrderedDict = video.DefaultsFFMPEG().cli_options
+
+    # A set of input options for the encoder.
+    input_options: OrderedDict = video.DefaultsFFMPEG().input
+
+    # The encoder profiles to use. Load defaults from the core definitions.
+    encoder_profiles: OrderedDict = (video.EncoderProfiles)
+
+    options = (
+        collections.OrderedDict(
+            {
+                # Audio codec to encode with. We prefer AAC over mp3.
+                "acodec": "aac",
+                # Audio sample rate to encode with. Default is the same as the
+                # source.
+                "ar": "44100",
+                # Video codec to encode with. H264 is the most common and our
+                # preferred codec for compatibility purposes.
+                "vcodec": "h264",
+                # Video encoding profile, set to a legacy setting for
+                # compatibility.
+                "profile:v": "main",
+                # The CRF value to use when encoding HLS video, lower is better
+                # quality. A "sane" value is 17-28. Default is 20. Currently, we
+                # are using args for this, but it is here to represent the
+                # template for future use.
+                "crf": "20",
+                # Adjusts the sensitivity of x264's scenecut detection. Rarely
+                # needs to be adjusted. 0 disables scene detection. Recommended
+                # default: 40
+                "sc_threshold": "40",
+                # Set the Group Picture Size (GOP). Default is 12.
+                "g": "12",
+                # Set the minimum distance between keyframes.
+                "keyint_min": "25",
+                # The target length of each segmented file. Default is 2.
+                "hls_time": "2",
+                # The type of HLS playlist to create.
+                "hls_playlist_type": "vod",
+                # Enable faster file streaming start for HLS files by moving
+                # some of the metadata to the beginning of the file after
+                # transcode.
+                "movflags": "+faststart",
+            }
+        ),
+    )
+    rendition_options = (
+        collections.OrderedDict(
+            {
+                # Scale the video to the appropriate resolution. A default
+                # string template is provided to input the width and height.
+                "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease",
+                # Control the bitrate. A default string template is provided.
+                "b:v": "{}k",
+                # Set the maximum video bitrate. A default string template is
+                # provided.
+                "maxrate": "{0}k",
+                # Set the size of the buffer before ffmpeg recalculates the
+                # bitrate. A default string template is provided.
+                "bufsize": "{0}k",
+                # Set the audio output bitrate. A default string template is
+                # provided.
+                "b:a": "{0}k",
+                # Set the output filename for the HLS segment. A default string
+                # template is provided.
+                "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
+            }
+        ),
+    )
+
 
 ## PLUGIN FUNCTIONS
 ## Generate an HLS Package from file
@@ -84,12 +227,11 @@ def create_hls(job):
         hls_output_directory = job["output"]["directory"] / "video" / "hls"
         hls_output_directory.mkdir(parents=True, exist_ok=True)
 
-        # Video encoding options
-        # Set the output folder for the HLS segments and playlists. Currently
-        # this is the same as the full package output folder, but we're making it a
-        # variable here in case we want to change it later.
-        # Update our templates with calculated values
-        # Calculate the appropriate interval for inserting keyframes.
+        # Video encoding options Set the output folder for the HLS segments and
+        # playlists. Currently this is the same as the full package output
+        # folder, but we're making it a variable here in case we want to change
+        # it later. Update our templates with calculated values Calculate the
+        # appropriate interval for inserting keyframes.
         try:
             kf_interval = (
                 eval(
@@ -110,12 +252,14 @@ def create_hls(job):
         # Set the minimum distance between keyframes.
         job["commands"]["hls"]["options"]["keyint_min"] = str(kf_interval)
 
-        # Set the maximum distance between keyframes. Currently, we"re setting this the same as kf_interval.
+        # Set the maximum distance between keyframes. Currently, we"re setting
+        # this the same as kf_interval.
         job["commands"]["hls"]["options"]["g"] = str(
             kf_interval * job["arguments"]["hls_keyframe_multiplier"]
         )
 
-        # Set the Constant Rate Factor to normalize the bitrate throughout for easier streaming.
+        # Set the Constant Rate Factor to normalize the bitrate throughout for
+        # easier streaming.
         job["commands"]["hls"]["options"]["crf"] = str(job["arguments"]["hls_crf"])
 
         # Set the length of each h.264 TS segment file.
@@ -144,7 +288,8 @@ def create_hls(job):
             job["arguments"]["hls_buffer_ratio"]
         )
 
-        # Create template entries for each of the encoder renditions specified in the profile.
+        # Create template entries for each of the encoder renditions specified
+        # in the profile.
         job, renditions_options, encoder_renditions, output_playlist = create_rendition(
             job
         )
@@ -154,7 +299,8 @@ def create_hls(job):
                 **(job["commands"]["hls"]["options"] | rendition_option)
             )
 
-        # Fix unargparsers insistence on "deciding" which types of quotes to use.
+        # Fix unargparsers insistence on "deciding" which types of quotes to
+        # use.
         encoder_renditions = encoder_renditions.replace("'", '"')
 
         job["commands"]["hls"]["command"] = "ffmpeg " + (

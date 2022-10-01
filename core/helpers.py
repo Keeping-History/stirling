@@ -5,9 +5,9 @@ import shutil
 import uuid
 from datetime import datetime
 
-
 import requests
 import validators
+from dateutil import parser as date_parser
 
 
 def write_object(obj, filename):
@@ -67,7 +67,7 @@ def get_output_directory(job):
         prefix = "/" + str(prefix)
     if job["arguments"]["output"] is None:
         output_directory = pathlib.Path(os.getcwd() + prefix + "/" + job["id"])
-    else:   
+    else:
         output_directory = pathlib.Path(prefix + output)
 
     # Make the output directory, if it doesn't exist.
@@ -125,9 +125,62 @@ def log_string(string, line_identifier="+", indent=4):
     new_line_string = "\n" + line_identifier + " " * indent
     return new_line_string + new_line_string.join(string.splitlines())
 
+
 def is_valid_uuid(uuid_to_test, version=4):
     try:
         uuid_obj = uuid.UUID(uuid_to_test, version=version)
     except ValueError:
         return False
     return str(uuid_obj) == uuid_to_test
+
+
+def type_check(value, proper_type):
+    # If the type of our incoming value and the type we hinted in the
+    # object, then let's try to translate it to the proper type.
+    a = True
+    try:
+        a = isinstance(value, proper_type)
+    except TypeError:
+        # We can't determine the type, so set it as passed.
+        value = value
+    if not a:
+        match proper_type.__name__:
+            case "PurePath" | "PurePosixPath" | "PureWindowsPath" | "Path" | "PosixPath" | "WindowsPath":
+                if value is None:
+                    value = ""
+                value = pathlib.Path(value)
+            case "UUID":
+                try:
+                    value = uuid.UUID(value)
+                except ValueError:
+                    # We must have a Job ID. If we can't set one, then we'll just create a random one.
+                    value = uuid.uuid4()
+            case "datetime":
+                if type(value) is str and value != "":
+                    value = date_parser.parse(value)
+            case "float":
+                value = float(str(value))
+            case "int":
+                value = int(float(str(value)))
+            case "bool":
+                if type(value) is int and (value == 0 or value == 1):
+                    value = bool(value)
+                elif type(value) is str:
+                    match value.lower():
+                        case "y" | "yes" | "t" | "true":
+                            value = True
+                        case "n" | "no" | "f" | "false":
+                            value = False
+                        case _:
+                            # We may want to modify this default case later
+                            # to set it to the default or get the value it
+                            # already was and leave it as is.
+                            value = False
+                else:
+                    value = False
+            case _:
+                if value is None:
+                    # Allow a None (nil) value
+                    pass
+
+    return value
