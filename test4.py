@@ -1,8 +1,11 @@
 import json
 
-from core import definitions, strings, video, jobs
+from core import definitions, strings, video, jobs, probe
 from plugins import hls, peaks, transcript
 
+f = probe.probe_media_file("source.mp4")
+print(f)
+exit()
 # e = definitions.Job()
 # e.duration = 100
 # e.log_file = "job.log"

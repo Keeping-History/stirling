@@ -2,7 +2,7 @@ import datetime
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, get_type_hints
+from typing import get_type_hints
 
 from core import helpers
 
@@ -21,17 +21,6 @@ class StirlingClass(object):
         # If necessary, attempt to convert the value to the proper type we
         # expect.
         self.__dict__[name] = helpers.type_check(value, proper_type)
-
-
-@dataclass
-class StirlingOutputs(StirlingClass):
-    """StirlingOutputs is a collection for all the files output for a job."""
-
-    # The output directory for the package and its contents
-    directory: Path = None
-    # Specific output files/directories generated are put here
-    outputs: List[dict] = field(default_factory=list)
-
 
 @dataclass
 class StirlingJob(StirlingClass):
@@ -54,8 +43,8 @@ class StirlingJob(StirlingClass):
     job_file: Path = Path("./job.json")
     # arguments is a holder for job arguments we'll use later.
     arguments: dict = field(default_factory=dict)
-    output: StirlingOutputs = None
-
+    # Specific output files/directories generated are put here
+    outputs: list = field(default_factory=list)
 
 # StirlingArgs Types
 # These StirlingArgs types include all of the arguments available to pass in to the
@@ -68,11 +57,9 @@ class StirlingJob(StirlingClass):
 # which argument, in the end, is used. First, any custom StirlingArgsPluginX types
 # will be merged together; it's important to note there is no guarantee a
 # particular plugin will be able to set a shared argument name, so it's
-# important to use name prefixes. Next, the StirlingArgsPluginDefault values are
-# merged. Next, the StirlingArgsCore object is merged. Finally, the StirlingArgsJob
+# important to use name prefixes. Next, the StirlingArgsJob
 # will be merged. In case of an argument conflict, the latest merged object,
 # from the order above, will win and be set.
-
 
 @dataclass
 class StirlingArgsJob(StirlingClass):
@@ -105,6 +92,11 @@ class StirlingArgsJob(StirlingClass):
     # When a job is completed, a copy of the video file as it was uploaded is
     # created in the output directory as "source". This can be disabled.
     disable_source_copy: bool = True
+    # Disables all audio-related tasks. This includes transcripts and peak data
+    # generation.
+    disable_audio: bool = False
+    # Disable creating individual image frames from the input video.
+    disable_frames: bool = False
     # A debugging option that attempts to setup a full job without actually
     # doing any of the external transcoding/extraction. This should be removed.
     simulate: bool = False
@@ -116,24 +108,6 @@ class StirlingArgsJob(StirlingClass):
         if name == "source" and name is None:
             raise ValueError
         return super().__setattr__(name, value)
-
-
-@dataclass
-class StirlingArgsCore(StirlingClass):
-    """StirlingArgsCore are parameters passed to the Core Plugins. Core Plugins are
-    essentially a set of utilities that are necessary for the Stirling Engine to
-    function. Core Plugins also provide the bare input for all of the Stirling
-    Engine default provided plugins, as well as any custom plugins. Some examples
-    of of these Core Plugin functions include extracting audio from video,
-    extracting image frames from a video file, as well as creating a normalized
-    video from the input file, all of which can be provided to plugins later on in
-    the job."""
-
-    # Disables all audio-related tasks. This includes transcripts and peak data
-    # generation.
-    disable_audio: bool = False
-    # Disable creating individual image frames from the input video.
-    disable_frames: bool = False
 
 # Use this class definition as an example for creating your own StirlingArgsPlugin:
 # @dataclass

@@ -5,6 +5,7 @@ import shutil
 import uuid
 from datetime import datetime
 
+import definitions
 import requests
 import validators
 from dateutil import parser as date_parser
@@ -57,18 +58,17 @@ def get_input(job):
     return job
 
 
-def get_output_directory(job):
-    output = job["arguments"]["output"]
-    prefix = job["arguments"]["output_directory_prefix"]
+def get_output_directory(args: definitions.StirlingArgsJob, job: definitions.StirlingJob):
+    prefix = args.output_directory_prefix
 
     # Check arguments and set any appropriate calculated defaults.
     # The output directory. If not specified, then create one using the job_id.
-    if job["arguments"]["output_directory_prefix"] is not None:
+    if args.output_directory_prefix is not None:
         prefix = "/" + str(prefix)
     if job["arguments"]["output"] is None:
         output_directory = pathlib.Path(os.getcwd() + prefix + "/" + job["id"])
     else:
-        output_directory = pathlib.Path(prefix + output)
+        output_directory = pathlib.Path(prefix + args.output)
 
     # Make the output directory, if it doesn't exist.
     if not output_directory.is_dir():

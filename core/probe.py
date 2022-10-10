@@ -1,3 +1,6 @@
+from array import array
+from dataclasses import dataclass
+from datetime import datetime
 import json
 import subprocess
 import sys
@@ -6,6 +9,45 @@ from core import helpers as helpers
 
 required_binaries = ["ffprobe"]
 
+@dataclass
+class SourceInfo:
+    streams_count: int
+    size: int # bits
+    container_format: str #  tags: major_brand
+    created: datetime
+    bitrate: float # in bits per second
+
+
+@dataclass
+class Stream:
+    codec: str
+    duration: float # in seconds
+    content_type: str # audio or video
+    streams_count: int
+    codec: str
+    profile: str
+
+@dataclass
+class StreamVideo(Stream):
+    width: int
+    height: int
+    frame_rate: float # avg_frame_rate
+    scan_type: str # progressive or one of the interlace formats (tt, tb, bt, bb)
+    color_space: str
+    color_bits: int # bits_per_raw_sample
+    color_model: str # pix_fmt
+
+    content_type: str = "video"
+    aspect: array = array[1, 1] # display_aspect_ratio
+
+@dataclass
+class StreamAudio(Stream):
+    sample_rate: int
+    channels: int
+    channel_layout: str
+
+    language: str = "eng"
+    content_type: str = "audio"
 
 def probe_media_file(input):
 

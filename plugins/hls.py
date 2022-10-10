@@ -1,4 +1,3 @@
-from ast import Or
 import collections
 import pathlib
 from dataclasses import dataclass
@@ -61,7 +60,7 @@ class StirlingArgsPluginHLS(definitions.StirlingClass):
     hls_movflags: str = "+faststart"
     # The encoder profiles to use. Load defaults from the core definitions
     # package.
-    hls_encoder_profiles: OrderedDict = video.EncoderProfiles
+    hls_encoder_profiles = video.EncoderProfiles
 
     def __post_init__(self):
         # Check to make sure our necessary binaries are installed and available.
@@ -85,68 +84,51 @@ class StirlingCmdHLS(definitions.StirlingCmd):
     # The encoder profiles to use. Load defaults from the core definitions.
     encoder_profiles: OrderedDict = (video.EncoderProfiles)
 
-    options = (
-        collections.OrderedDict(
-            {
-                # Audio codec to encode with. We prefer AAC over mp3.
-                "acodec": "aac",
-                # Audio sample rate to encode with. Default is the same as the
-                # source.
-                "ar": "44100",
-                # Video codec to encode with. H264 is the most common and our
-                # preferred codec for compatibility purposes.
-                "vcodec": "h264",
-                # Video encoding profile, set to a legacy setting for
-                # compatibility.
-                "profile:v": "main",
-                # The CRF value to use when encoding HLS video, lower is better
-                # quality. A "sane" value is 17-28. Default is 20. Currently, we
-                # are using args for this, but it is here to represent the
-                # template for future use.
-                "crf": "20",
-                # Adjusts the sensitivity of x264's scenecut detection. Rarely
-                # needs to be adjusted. 0 disables scene detection. Recommended
-                # default: 40
-                "sc_threshold": "40",
-                # Set the Group Picture Size (GOP). Default is 12.
-                "g": "12",
+    options: collections.OrderedDict = collections.OrderedDict({})
+
+    def options(self, args: StirlingArgsPluginHLS):
+        """options returns a list of options to pass to the transcoder."""
+        self.options = collections.OrderedDict({
+                # Audio codec to encode with.
+                "acodec": args.hls_audio_codec,
+                # Audio sample rate to encode with.
+                "ar": args.hls_audio_sample_rate,
+                # Video codec to encode with.
+                "vcodec": args.hls_video_codec,
+                # Video encoding profile.
+                "profile:v": args.hls_video_profile,
+                "crf": args.hls_crf,
+                # Scenecut detection threshold.
+                "sc_threshold": args.hls_sc_threshold,
+                # Set the Group Picture Size (GOP).
+                "g": args.hls_gop_size,
                 # Set the minimum distance between keyframes.
-                "keyint_min": "25",
-                # The target length of each segmented file. Default is 2.
-                "hls_time": "2",
+                "keyint_min": args.hls_keyint_min,
+                # The target length of each segmented file.
+                "hls_time": args.hls_target_segment_duration,
                 # The type of HLS playlist to create.
-                "hls_playlist_type": "vod",
+                "hls_playlist_type": args.hls_playlist_type,
                 # Enable faster file streaming start for HLS files by moving
                 # some of the metadata to the beginning of the file after
                 # transcode.
-                "movflags": "+faststart",
-            }
-        ),
-    )
-    rendition_options = (
-        collections.OrderedDict(
-            {
-                # Scale the video to the appropriate resolution. A default
-                # string template is provided to input the width and height.
+                "movflags": args.hls_movflags,
+        })
+        self.rendition_options = collections.OrderedDict({
+                # Scale the video to the appropriate resolution (width and height)
                 "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease",
-                # Control the bitrate. A default string template is provided.
+                # Control the bitrate.
                 "b:v": "{}k",
-                # Set the maximum video bitrate. A default string template is
-                # provided.
+                # Set the maximum video bitrate.
                 "maxrate": "{0}k",
                 # Set the size of the buffer before ffmpeg recalculates the
-                # bitrate. A default string template is provided.
+                # bitrate.
                 "bufsize": "{0}k",
-                # Set the audio output bitrate. A default string template is
-                # provided.
+                # Set the audio output bitrate.
                 "b:a": "{0}k",
-                # Set the output filename for the HLS segment. A default string
-                # template is provided.
+                # Set the output filename for the HLS segment.
                 "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
             }
         ),
-    )
-
 
 ## PLUGIN FUNCTIONS
 ## Generate an HLS Package from file

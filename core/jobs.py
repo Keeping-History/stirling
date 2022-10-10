@@ -302,14 +302,15 @@ def open_job(job, arguments):
     job = args.parse_args(arguments, job)
 
     # Check to see if aJob JSON file was passed
-    if job["arguments"]["job_file"] is not None or job["arguments"]["job_file"] == "":
-        job_file = Path(job["arguments"]["job_file"])
-        # Check to make sure the Job JSON file exists
-        if job_file.is_file():
-            with open(job_file) as json_file:
-                # Load the file into our Job Object
-                new_job = json.load(json_file)
-                job = merge({}, job, new_job)
+    # TODO: Update this to use the new job file format
+    # if job["arguments"]["job_file"] is not None or job["arguments"]["job_file"] == "":
+    #     job_file = Path(job["arguments"]["job_file"])
+    #     # Check to make sure the Job JSON file exists
+    #     if job_file.is_file():
+    #         with open(job_file) as json_file:
+    #             # Load the file into our Job Object
+    #             new_job = json.load(json_file)
+    #             job = merge({}, job, new_job)
 
     # Make sure we can access our output directory
     job = helpers.get_output_directory(job)
