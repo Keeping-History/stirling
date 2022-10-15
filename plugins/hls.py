@@ -1,7 +1,6 @@
 import collections
 import pathlib
-from dataclasses import dataclass
-from typing import OrderedDict
+from dataclasses import dataclass, field
 
 from core import args, definitions, helpers, video
 from plugins import plugins
@@ -76,15 +75,15 @@ class StirlingCmdHLS(definitions.StirlingCmd):
     command parameters our transcoder requires."""
 
     # The default, common CLI settings to use
-    cli_options: OrderedDict = video.DefaultsFFMPEG().cli_options
+    cli_options: dict = field(default_factory=video.DefaultsFFMPEG().cli_options)
 
     # A set of input options for the encoder.
-    input_options: OrderedDict = video.DefaultsFFMPEG().input
+    input_options: dict = field(default_factory=video.DefaultsFFMPEG().input)
 
     # The encoder profiles to use. Load defaults from the core definitions.
-    encoder_profiles: OrderedDict = (video.EncoderProfiles)
+    encoder_profiles: dict = field(default_factory=video.EncoderProfiles)
 
-    options: collections.OrderedDict = collections.OrderedDict({})
+    options: dict = field(default_factory=dict)
 
     def options(self, args: StirlingArgsPluginHLS):
         """options returns a list of options to pass to the transcoder."""

@@ -1,348 +1,243 @@
-import collections
 import json
+import os
+import shutil
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse, urlsplit
 
+import requests
+import validators
 from mergedeep import merge
 
-from core import args, definitions, helpers, video
+from core import definitions, strings
 
 
-def create_job_from_template():
-    # Start a new job and initialize the job's metadata
+@dataclass
+class StirlingJob(definitions.StirlingClass):
+    """A Stirling Engine Job definition are the base arguments and information
+    necessary to start up the Stirling job runner. These includes things like
+    input and output file and directories, and other options related to the
+    running of the job."""
 
-    # TODO: Load these from a json template file and provide some simple
-    # default command line arguments for common profiles and
-    # default settings. The JSON file should be loaded and interpolated
-    # with any calculated values.
+    ### Required Variables
+    # The input source filename
+    source: str
+    ### Job-specific variables
+    # id is the ID of the job. We create a random UUID whenever a job is
+    # created, however a custom one can be supplied so long as it is assured to
+    # be globally unique (or at least try your best).
+    id: uuid.UUID = uuid.uuid4()
+    # time_start is the start time of the job, as a datetime.datetime object in
+    # UTC.
+    time_start: datetime = datetime.now()
+    # time_end is the end time of the job, as a datetime.datetime object in UTC.
+    time_end: datetime = None
+    # duration is the length of the job run time, in seconds.
+    duration: float = 0.0
+    # log_file is the filename of the job log file.
+    log_file: Path = Path("./job.log")
+    # job_file is the filename of the JSON job file to save.
+    job_file: Path = Path("./job.json")
 
-    job = {
-        # The ID of the job. We create a random UUID whenever a job is
-        # created, however a custom one can be supplied so long as it
-        # is globally unique.
-        "id": str(uuid.uuid4()),
-        # The start time of the job, as a datetime.datetime object in UTC.
-        "time_start": datetime.now(),
-        # The end time of the job, as a datetime.datetime object in UTC.
-        "time_end": None,
-        # The duration of the job, in seconds.
-        "duration": None,
-        # The location of the job log file.
-        "log_file": None,
-        # The location of the JSON job file.
-        "job_file": None,
-        # Command line arguments.
-        "arguments": {
-            "source": None,
-            # The directory to output the package. Defaults to a folder named with the job's ID (a random UUID) in the current working folder.
-            "output": None,
-            # The folder prefix where incoming files are located. Defaults to the current working directory.
-            "input_directory": None,
-            # Add a prefix to the output directory automatically. Defaults to "output".
-            "output_directory_prefix": "output",
-            # Delete the temporary incoming source file when finished. By default, the temporary incoming source file is deleted.
-            "disable_delete_source": True,
-            # When a job is completed, a copy of the video file as it was uploaded is created in the output directory as "source". This can be disabled.
-            "disable_source_copy": True,
-            # Disables all audio-related tasks. This includes transcripts and peak data generation.
-            "disable_audio": False,
-            # Disable the transcript extraction.
-            "transcript_disable": False,
-            # Disable the generation of audio peak data.
-            "peaks_disable": False,
-            # Disable creating an HLS VOD package.
-            "hls_disable": False,
-            # Disable creating individual image frames from the input video.
-            "disable_frames": False,
-            # The encoding profile to use. Defaults to "sd".
-            "hls_profile": "sd",
-            # In input videos with multiple streams or renditions, specify which one to use. Defaults to the first video stream in the file.
-            "input_video_stream": -1,
-            # In input videos with multiple streams or renditions, specify which one to use. Defaults to the first video stream in the file.
-            "input_audio_stream": -1,
-            # The length of each segmented file.
-            "hls_segment_duration": 4,
-            # The bitrate ratio to use when determining the maximum bitrate for the video.
-            "hls_bitrate_ratio": 1.07,
-            # The ratio to use when determining the optimum buffer size.
-            "hls_buffer_ratio": 1.5,
-            # The Constant Rate Factor to use when encoding HLS video. Lower numbers are better quality, but larger files. Defaults to 20. Recommended values are 18-27.
-            "hls_crf": 20,
-            # The keyframe multiplier. The current framerate is multiplied by this number to determine the number the maximum length before the encoder creates a new one. Defaults to 1.
-            "hls_keyframe_multiplier": 1,
-            # The number of frames to capture per second. Can be a fraction. Defaults to 1.
-            "frames_interval": 1,
-            # A debugging option that attempts to setup a full job without actually doing any of the external transcoding/extraction. This should be removed.
-            "simulate": False,
-            # Enable additional debugging output.
-            "debug": True,
-            # The Job File, a JSON document that describes the whole job. If it is available, then we will apply it over these defaults.
-            "job_file": None,
-        },
-        "output": {
-            # The output directory for the package and its contents
-            "directory": None,
-            # Specific output files/directories generated are put here
-            "outputs": [],
-        },
-        "commands": {
-            "hls": {
-                # The final, completed command that is run.
-                "command": None,
-                # The output from the command above
-                "output": None,
-                "args": collections.OrderedDict(
-                    {
-                        # The encoder profile to use. The default is "sd" which
-                        # is a standard def package
-                        "hls_profile": "sd",
-                        "hls_bitrate_ratio": 1,
-                        "hls_buffer_ratio": 1,
-                    }
-                ),
-                # A set of input options for the encoder.
-                "input_options": collections.OrderedDict(
-                    {
-                        # The source (input) file
-                        "i": None,
-                        # The stream to use for the input. For more information
-                        # se https://trac.ffmpeg.org/wiki/Map
-                        "map": None,
-                    }
-                ),
-                "output_options": collections.OrderedDict(
-                    {
-                        # The output directory for the HLS package.
-                        "directory": None,
-                    }
-                ),
-                "cli_options": collections.OrderedDict(
-                    {
-                        # Hide ffmpeg"s console banner output.
-                        "hide_banner": True,
-                        # Tell ffmpeg to just agree to whatever
-                        "y": True,
-                        # Output log level. See here for more on loglevels:
-                        # https://ffmpeg.org/ffmpeg.html#Generic-options
-                        "loglevel": "debug",
-                    }
-                ),
-                "options": collections.OrderedDict(
-                    {
-                        # Audio codec to encode with. We prefer AAC over mp3.
-                        "acodec": "aac",
-                        # Audio sample rate to encode with. Default is the same as the source.
-                        "ar": "44100",
-                        # Video codec to encode with. H264 is the most common and our preferred codec for compatibility purposes.
-                        "vcodec": "h264",
-                        # Video encoding profile, set to a legacy setting for compatibility.
-                        "profile:v": "main",
-                        # The CRF value to use when encoding HLS video, lower is better
-                        # quality. A "sane" value is 17-28. Default is 20. Currently, we are using
-                        # args for this, but it is here to represent the template for future use.
-                        "crf": "20",
-                        # Adjusts the sensitivity of x264's scenecut detection. Rarely needs to be adjusted. 0 disables scene detection. Recommended default: 40
-                        "sc_threshold": "40",
-                        # Set the Group Picture Size (GOP). Default is 12.
-                        "g": "12",
-                        # Set the minimum distance between keyframes.
-                        "keyint_min": "25",
-                        # The target length of each segmented file. Default is 2.
-                        "hls_time": "2",
-                        # The type of HLS playlist to create.
-                        "hls_playlist_type": "vod",
-                        # Enable faster file streaming start for HLS files by moving some of the metadata to the beginning of the file after transcode.
-                        "movflags": "+faststart",
-                        # Audio codec to encode with. We prefer AAC over mp3.
-                        # Scale the video to the appropriate resolution.
-                        "vf": "",
-                        "b:v": "",
-                        # Set the maximum video bitrate.
-                        "maxrate": "",
-                        # Set the size of the buffer before ffmpeg recalculates the bitrate.
-                        "bufsize": "",
-                        # Set the audio output bitrate.
-                        "b:a": "",
-                    }
-                ),
-                "rendition_options": collections.OrderedDict(
-                    {
-                        # Scale the video to the appropriate resolution. A default string template is provided to input the width and height.
-                        "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease",
-                        # Control the bitrate. A default string template is provided.
-                        "b:v": "{}k",
-                        # Set the maximum video bitrate. A default string template is provided.
-                        "maxrate": "{0}k",
-                        # Set the size of the buffer before ffmpeg recalculates the bitrate. A default string template is provided.
-                        "bufsize": "{0}k",
-                        # Set the audio output bitrate. A default string template is provided.
-                        "b:a": "{0}k",
-                        # Set the output filename for the HLS segment. A default string template is provided.
-                        "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
-                    }
-                ),
-                "encoder_profiles": video.EncoderProfiles,
-            },
-            "transcript": {
-                "command": None,
-                "output": None,
-                "options": collections.OrderedDict(
-                    {
-                        # The output filename for the transcript.
-                        "o": None,
-                        # Output transcript file language. Default to English.
-                        "D": "en",
-                        # Source file language to transcribe. Default to English.
-                        "S": "en",
-                        # Number of concurrent API calls.
-                        "C": "10",
-                        # Output transcript file format. Defaults to JSON.
-                        "F": "json",
-                        # A Google Translate API key. This is needed when the language of the source and destination do not match. The default is blank, which uses a Google Chrome/Android System access key.
-                        # ["api-key", "aaa"],
-                    }
-                ),
-            },
-            "peaks": {
-                "command": None,
-                "output": None,
-                "options": collections.OrderedDict(
-                    {
-                        # The WAV input filename
-                        "i": None,
-                        # The output JSON/TXT filename
-                        "o": None,
-                    }
-                ),
-            },
-            "audio": {
-                "command": None,
-                "output": None,
-                "cli_options": collections.OrderedDict(
-                    {
-                        # Hide ffmpeg"s console banner output.
-                        "hide_banner": True,
-                        # Tell ffmpeg to just agree to whatever
-                        "y": True,
-                        # Output log level. See here for more on loglevels:
-                        # https://ffmpeg.org/ffmpeg.html#Generic-options
-                        "loglevel": "debug",
-                    }
-                ),
-                "options": collections.OrderedDict(
-                    {
-                        # The input filename
-                        "i": "",
-                        # Extract only one audio track.
-                        "ac": "1",
-                        # Encode as a PCM waveform file.
-                        "acodec": "pcm_s16le",
-                        # Sample rate of the PCM waveform file.
-                        "ar": "44800",
-                    }
-                ),
-            },
-            "frames": {
-                "command": None,
-                "output": None,
-                "args": collections.OrderedDict(
-                    {
-                        # Capture a frame every 1 second of video. Can be a fraction of a second, specified as a float. Default is 1 frame per second.
-                        "fps": 1,
-                        # Output filename pattern. See ... for more information.
-                        "output_filename": "%d.jpg",
-                    }
-                ),
-                "cli_options": collections.OrderedDict(
-                    {
-                        # Hide ffmpeg"s console banner output.
-                        "hide_banner": True,
-                        # Tell ffmpeg to just agree to whatever
-                        "y": True,
-                        # Output log level. See here for more on loglevels:
-                        # https://ffmpeg.org/ffmpeg.html#Generic-options
-                        "loglevel": "debug",
-                    }
-                ),
-                "options": collections.OrderedDict(
-                    {
-                        # The input filename
-                        "i": "",
-                        # Capture a frame ever 1/10 of fps.
-                        "r": "{}",
-                        # Remove duplicate frames, if necessary
-                        "vsync": 0,
-                    }
-                ),
-            },
-        },
-        "source": {
-            # Here is stored info from ffprobe about the source file and it's contents
-            "info": {},
-            "input": {
-                # The input filename. Can be a full path.
-                "filename": None,
-                # The index of the video stream
-                "video_stream": None,
-                # The index of the audio stream
-                "audio_stream": None,
-            },
-        },
-    }
+    ### Source input variables
+    # The folder prefix where incoming files are located. Defaults to the
+    # current working directory.
+    input_directory: Path = Path(os.getcwd())
+    # Delete the temporary incoming source file when finished. By default, the
+    # temporary incoming source file is deleted.
+    disable_delete_source: bool = True
 
-    return job
+    ### Output variables
+    # The directory to output the package. Defaults to a folder named with the
+    # job's ID (a random UUID) in the current working folder.
+    output_directory: Path = Path(os.getcwd())
+    # The directory to store annotations in. Defaults to a folder named annotations.
+    output_annotations_directory: str = "annotations"
+    # When a job is completed, a copy of the video file as it was uploaded is
+    # created in the output directory as "source". This can be disabled.
+    disable_source_copy: bool = True
 
-def create_job():
-    job = definitions.StirlingJob()
-    return job
+    ### Others
+    # A debugging option that attempts to setup a full job without actually
+    # doing any of the external transcoding/extraction. This should be removed.
+    simulate: bool = False
+    # Enable additional debugging output.
+    debug: bool = True
 
-def open_job(job, arguments):
-    # Parse arguments cli arguments
-    job = args.parse_args(arguments, job)
+    ### Variable Holders
+    # media_info contains source information after being probed.
+    media_info: dict = field(default_factory=dict)
+    # arguments is a holder for job arguments we'll use later.
+    arguments: dict = field(default_factory=dict)
+    # Specific output files/directories generated are put here
+    outputs: list = field(default_factory=list)
 
-    # Check to see if aJob JSON file was passed
-    # TODO: Update this to use the new job file format
-    # if job["arguments"]["job_file"] is not None or job["arguments"]["job_file"] == "":
-    #     job_file = Path(job["arguments"]["job_file"])
-    #     # Check to make sure the Job JSON file exists
-    #     if job_file.is_file():
-    #         with open(job_file) as json_file:
-    #             # Load the file into our Job Object
-    #             new_job = json.load(json_file)
-    #             job = merge({}, job, new_job)
+    def open(self):
+        # Check to see if a Job JSON file was passed and parse it
+        # TODO: see self.load()
+        # if self.job_file.is_file():
+        #    self.load()
 
-    # Make sure we can access our output directory
-    job = helpers.get_output_directory(job)
+        # Setup our output directory
+        self.__get_output_directory()
+        # Validate our incoming source file
+        self.__get_source()
 
-    # Logging
-    helpers.log(job, "Starting job")
-    helpers.log(job, "Arguments: " + json.dumps(job["arguments"]))
-    helpers.log(job, "Output Directory will be: " + str(job["output"]["directory"]))
+        # Logging
+        self.log("Starting job")
+        self.log("Job Definition: ", self)
+        self.log("Output Directory will be: " + str(self.output_directory))
+        self.log("File to processed will be: " + str(self.source))
 
-    # The incoming source file
-    job["source"]["input"]["filename"] = job["arguments"]["source"]
-    helpers.log(
-        job, "File to process will be: " + str(job["source"]["input"]["filename"])
-    )
+    def load(self):
+        # TODO: Implement the actual merge, this whole function is just a
+        #  placeholder stub
+        with open(self.job_file) as json_file:
+            # Load the file into our Job Object
+            new_job = json.load(json_file)
+            job = merge({}, self, new_job)
+            self.log("Loaded job: ", job)
 
-    # Get the incoming file to process
-    job = helpers.get_input(job)
+    def close(self):
+        # Close out the job and update its metadata
+        self.time_end = datetime.now()
+        self.duration = (self.time_end - self.time_start).total_seconds()
+        self.log(
+            "Ending job {} at {}, total duration: {}".format(
+                self.id, self.time_end, self.duration
+            ),
+        )
+        self.write()
 
-    return job
+    def write(self):
+        # Write the object to a file
+        output_file = open(self.job_file, "w")
+        output_file.write(json.dumps(self, indent=4, cls=strings.JobEncoder))
+        output_file.close()
 
+    def log(self, message, *args):
+        stamp = datetime.now()
+        obj_log = ""
+        duration = str((stamp - self.time_start))
+        line_header = "[{}] [+{}] [{}]".format(
+            stamp.strftime("%Y-%m-%d %H:%M:%S"), duration, self.id
+        )
 
-def close_job(job):
-    # Close out the job and update its metadata
-    job["time_end"] = datetime.now()
-    job["duration"] = (job["time_end"] - job["time_start"]).total_seconds()
+        for object_to_log in args:
+            obj_log += self.__log_object(object_to_log)
 
-    # DONE
-    helpers.log(
-        job,
-        "Ending job {} at {}, total duration: {}".format(
-            job["id"], job["time_end"], job["duration"]
-        ),
-    )
+        if self.debug:
+            print("{}: {}{}".format(line_header, message, obj_log))
 
-    helpers.write_object(job, job["job_file"])
+        try:
+            file1 = open(self.log_file, "a")  # append mode
+            file1.write("{}: {}".format(line_header, message))
+
+            # If we have any objects to log, log them
+            for line in obj_log.split("\n"):
+                # We're looping here in case we want to prettify each line
+                # (like above) in the future.
+                file1.write(line + "\n")
+
+            file1.close()
+
+        except OSError:
+            raise Exception(
+                "can't access the log file: {}, stopping execution for job {}".format(
+                    self.log_file, str(self.id)
+                )
+            )
+
+    def __log_object(
+        self, obj, line_identifier: str = "+", header: str = "", indent: int = 4
+    ):
+        return self.__log_string(
+            header + json.dumps(vars(obj), indent=indent, cls=strings.JobEncoder),
+            line_identifier,
+            indent,
+        )
+
+    def __get_source(self):
+
+        # If the incoming source is a URL, then let's download it.
+        if validators.url(self.source, public=False):
+            response = requests.get(self.source)
+            incoming_filename = "".join(os.path.splitext(os.path.basename(urlsplit(self.source).path)))
+            self.source = incoming_filename
+            if response.ok:
+                open(incoming_filename, "wb").write(response.content)
+            else:
+                raise FileNotFoundError(
+                    "Unable to download source file from URL: {}".format(self.source)
+                )
+
+        # Get a full path to name our source file when we move it. We'll use this
+        # value later on as an input filename for specific commands.
+        incoming_filename = (
+            str(self.output_directory) + "/source" + Path(self.source).suffix
+        )
+
+        if not self.disable_source_copy:
+            # Unless this is a simulation or we explicitly disabled it, copy the source
+            # file to the output directory as 'source'
+            shutil.copyfile(Path(self.source).absolute(), incoming_filename)
+            if not self.disable_delete_source:
+                # Don't delete the incoming source file, in case we're testing.
+                os.remove(self.source)
+
+        self.source = Path(incoming_filename)
+
+    def __get_output_directory(self):
+        # Make the output directory, if it doesn't exist.
+        if not self.output_directory.is_dir():
+            self.output_directory.mkdir(parents=True, exist_ok=True)
+            annotations_output_directory = (
+                self.output_directory / self.output_annotations_directory
+            )
+            annotations_output_directory.mkdir(parents=True, exist_ok=True)
+
+        self.log_file = self.output_directory / self.log_file
+        self.job_file = self.output_directory / self.job_file
+
+        # Make sure we have a directory for the output files
+        assert self.output_directory.is_dir(), self.log(
+            "could not find the path {} for output files".format(
+                str(self.output_directory)
+            ),
+        )
+
+        # Make sure we can write to the directory for the output files
+        assert os.access(self.output_directory, os.W_OK), self.log(
+            "could not write to path {} for output files".format(
+                str(self.output_directory)
+            )
+        )
+
+    def __log_string(self, string, line_identifier="+", indent=4):
+        new_line_string = "\n" + line_identifier + " " * indent
+        return new_line_string + new_line_string.join(string.splitlines())
+
+    def __is_url(self):
+        try:
+            result = urlparse.urlparse(self.source)
+            print(result)
+            return all([result.scheme, result.netloc])
+        except ValueError:
+            return False
+
+# StirlingArgs Types
+# These StirlingArgs types include all of the arguments available to pass in to the
+# Stirling Engine (excluding any custom plugins). During startup, all StirlingArgs
+# Types will be merged into one. It is very important to note that only
+# arguments specified by the Stirling Engine and its Core Plugins can provide
+# any arguments that are not prefixed with the namespace of the plugin, followed
+# by an underscore ("_"). All Argument objects will be merged into one. In case
+# of an argument conflict, the order the arguments are merged in will determine
+# which argument, in the end, is used. First, any custom StirlingArgsPluginX types
+# will be merged together; it's important to note there is no guarantee a
+# particular plugin will be able to set a shared argument name, so it's
+# important to use name prefixes. Next, the StirlingArgsJob
+# will be merged. In case of an argument conflict, the latest merged object,
+# from the order above, will win and be set.

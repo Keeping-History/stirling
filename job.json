@@ -1,18 +1,18 @@
 {
-  "arguments": {
-    "source": "source.mp4",
+    "source": "/Users/robbiebyrd/Projects/stirling/source.ts",
+    "id": "5a1d9232-d723-4ea6-ba69-43dedcfd5b9d",
+    "time_start": "2022-10-14 18:55:58.358253",
+    "time_end": null,
+    "duration": 0.0,
+    "log_file": "/Users/robbiebyrd/Projects/stirling/job.log",
+    "job_file": "/Users/robbiebyrd/Projects/stirling/job.json",
+    "arguments": {},
+    "outputs": [],
+    "input_directory": "/Users/robbiebyrd/Projects/stirling",
     "disable_delete_source": true,
-    "disable_source_copy": false,
-    "hls_profile": "sd",
-    "input_video_stream": -1,
-    "input_audio_stream": -1,
-    "frames_interval": 2,
+    "output_directory": "/Users/robbiebyrd/Projects/stirling",
+    "output_annotations_directory": "annotations",
+    "disable_source_copy": true,
     "simulate": false,
-    "debug": false
-  },
-  "source": {
-    "input": {
-      "filename": "source.mp4"
-    }
-  }
+    "debug": true
 }

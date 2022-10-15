@@ -1,8 +1,23 @@
 import subprocess
+from dataclasses import dataclass
+
+from core import definitions
 
 from core import args, helpers
 
 required_binaries = ["ffmpeg"]
+
+@dataclass
+class StirlingPluginAudio(definitions.StirlingClass):
+    """StirlingPluginAudio are for using a source audio-only file or for
+    extracting audio from a video file."""
+
+    # In input videos with multiple streams or renditions, specify which one to
+    # use. Defaults to the first video stream in the file.
+    source_audio_stream: int = -1
+    # Disables all audio-related tasks. This includes transcripts and peak data
+    # generation.
+    disable_audio: bool = False
 
 ## PLUGIN FUNCTIONS
 

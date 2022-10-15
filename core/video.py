@@ -1,6 +1,5 @@
-import collections
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import simpleeval
 
@@ -26,7 +25,7 @@ required_binaries = ["ffmpeg"]
 # 4k    	    3840x2160	14000k	        18200	        192k
 # 4k High   	3840x2160	23000k	        29500k	        192k
 # TODO: Finish adding profiles here
-EncoderRenditions: collections.OrderedDict = {
+EncoderRenditions: dict = {
     "4k-high": {
         "width": "3840",
         "height": "2160",
@@ -124,7 +123,7 @@ EncoderRenditions: collections.OrderedDict = {
 # encoding job for each rendition. When each rendition is done, they will be
 # merged into one package. The video player only needs the url to our finished
 # package, and it will decide which video stream to use.
-EncoderProfiles: collections.OrderedDict = {
+EncoderProfiles: dict = {
     "sd": [
         EncoderRenditions["120sd"],
         EncoderRenditions["240sd"],
@@ -139,7 +138,7 @@ EncoderProfiles: collections.OrderedDict = {
 
 @dataclass
 class DefaultsFFMPEG():
-    cli_options = collections.OrderedDict({
+    cli_options: dict = field(default_factory=lambda:{
             # Hide ffmpeg"s console banner output.
             "hide_banner": True,
             # Tell ffmpeg to just agree to whatever
@@ -149,7 +148,7 @@ class DefaultsFFMPEG():
             "loglevel": "debug",
     })
 
-    input = collections.OrderedDict({
+    input: dict = field(default_factory=lambda:{
             # The source (input) file
             "i": None,
             # The streams to use from the input file. For more information on input streams, see
@@ -157,13 +156,27 @@ class DefaultsFFMPEG():
             "map": None,
     })
 
+@dataclass
+class StirlingPluginVideo(definitions.StirlingClass):
+    """StirlingPluginVideo are arguments for handling the source video
+    and our archival encoded copy."""
+
+    # Disable creating creating videos or processing any video-dependent
+    # plugins. This is not recommended, unless your source is truly audio only.
+    disable_video: bool = False
+    # In input videos with multiple streams or renditions, specify which one to
+    # use. Defaults to the first video stream in the file.
+    source_video_stream: int = -1
 
 
 @dataclass
-class StirlingArgsPluginFrames(definitions.StirlingClass):
-    """StirlingArgsPluginFrames are for extracting image frames from the source
-    video. This is helpful for later machine learning processing or for
+class StirlingPluginFrames(definitions.StirlingClass):
+    """StirlingPluginFrames are options for extracting image frames from the
+    source video. This is helpful for later machine learning processing or for
     scrub/thumbnail images."""
+
+    # Disable creating individual image frames from the input video.
+    disable_frames: bool = False
 
     # The number of frames to capture per second. Can be an integer, a float
     # (decimal), a string that can be parsed to an integer or float, OR it can
