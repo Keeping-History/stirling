@@ -23,12 +23,12 @@ class StreamVideo():
     width: int
     height: int
     frame_rate: float # avg_frame_rate
-    scan_type: str
-    color_bits: int
     color_model: str
+    aspect: List
 
-    aspect: list = field(default_factory=list)
+    color_bits: int = 8
 
+    scan_type: str = "unknown"
     content_type: str = "video"
 
 @dataclass
@@ -61,9 +61,9 @@ class StreamText():
 
 @dataclass
 class MediaInfo(definitions.StirlingClass):
-    video_streams: List[StreamVideo]
-    audio_streams: List[StreamAudio]
-    text_streams: List[StreamText]
+    video_streams: List[StreamVideo] = None
+    audio_streams: List[StreamAudio] = None
+    text_streams: List[StreamText] = None
 
 def probe_media_file(input: Path):
     options = {
@@ -84,6 +84,7 @@ def probe_media_file(input: Path):
     # Check if we can probe the input file.
     ffmpeg_proc = subprocess.getstatusoutput(cmd)
 
+    print(ffmpeg_proc)
     if ffmpeg_proc[0] != 0:
         return MediaInfo()
 
@@ -92,22 +93,25 @@ def probe_media_file(input: Path):
     probe_info = MediaInfo()
 
     for stream in streams:
+        print(stream["codec_type"])
         match stream["codec_type"]:
             case "video":
-                item = StreamVideo()
-                item.stream = stream["index"]
-                item.duration = float(stream["duration"])
-                item.codec = stream["codec_name"]
-                item.profile = stream["profile"]
-                item.bitrate = stream["bit_rate"]
+                
+                item = StreamVideo(
+                    stream = get_key_with_default(stream, "index"),
+                    duration = float(get_key_with_default(stream, "duration")),
+                    codec = get_key_with_default(stream, "codec_name"),
+                    profile = get_key_with_default(stream, "profile"),
+                    bitrate = get_key_with_default(stream, "bit_rate"),
 
-                item.width = int(stream["width"])
-                item.height = int(stream["height"])
-                item.frame_rate = float(simpleeval.simple_eval(stream["avg_frame_rate"]))
-                item.scan_type = stream["field_order"]
-                item.color_bits = stream["bits_per_raw_sample"]
-                item.color_model = stream["pix_fmt"]
-                item.aspect = stream["display_aspect_ratio"].split(":")
+                    width = get_key_with_default(stream, "width"),
+                    height = get_key_with_default(stream, "height"),
+                    frame_rate = float(simpleeval.simple_eval(get_key_with_default(stream, "avg_frame_rate"))),
+                    scan_type = get_key_with_default(stream, "field_order", "unknown"),
+                    color_bits = stream["bits_per_raw_sample"],
+                    color_model = stream["pix_fmt"],
+                    aspect = stream["display_aspect_ratio"].split(":"),
+                )
 
                 probe_info.video_streams.append(item)
 
@@ -122,12 +126,6 @@ def probe_media_file(input: Path):
                 item.sample_rate = int(stream["sample_rate"])
                 item.channels = int(stream["channels"])
                 item.channel_layout = stream["channel_layout"]
-
-                item.frame_rate = float(simpleeval.simple_eval(stream["avg_frame_rate"]))
-                item.scan_type = stream["field_order"]
-                item.color_bits = stream["bits_per_raw_sample"]
-                item.color_model = stream["pix_fmt"]
-                item.aspect = stream["display_aspect_ratio"].split(":")
 
             case "subtitle":
                 item = StreamText()
@@ -144,6 +142,12 @@ def probe_media_file(input: Path):
                 item.language = stream["tags"]["language"]
 
     return probe_info
+
+def get_key_with_default(obj, key, default=None):
+    if obj.has_key(key):
+        return obj[key]
+    else:
+        return default
 
 
 def get_input_streams(job: jobs.StirlingJob):
