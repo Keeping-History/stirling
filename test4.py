@@ -5,11 +5,7 @@ from plugins import hls, peaks, transcript
 from fractions import Fraction
 
 
-print(float.as_integer_ratio(640/273))
-print(Fraction(640/273).limit_denominator())
-exit()
-
-e = probe.probe_media_file("/Users/robbiebyrd/output.mp4")
+e = probe.probe_media_file("https://download.samplelib.com/mp4/sample-5s.mp4")
 print(json.dumps(e, indent=4, cls=strings.JobEncoder))
 exit()
 
