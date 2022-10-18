@@ -4,6 +4,7 @@ from core import args, definitions, helpers, jobs
 
 required_binaries = ["audiowaveform"]
 
+
 @dataclass
 class StirlingPluginPeaks(definitions.StirlingClass):
     """StirlingPluginPeaks are are for creating waveform peaks from the input
@@ -24,18 +25,26 @@ class StirlingPluginPeaks(definitions.StirlingClass):
     def __post_init__(self):
         if not self.peaks_disable:
             # Check to make sure the appropriate binary files we need are installed.
-            assert helpers.check_dependencies_binaries(required_binaries), AssertionError("Missing required binaries: {}".format(required_binaries))
+            assert helpers.check_dependencies_binaries(
+                required_binaries
+            ), AssertionError("Missing required binaries: {}".format(required_binaries))
 
     ## Extract Audio from file
     def cmd(self, job: jobs.StirlingJob):
-        output_file = job.output_directory / job.output_annotations_directory / (self._plugin_name + ".json")
+        output_file = (
+            job.output_directory
+            / job.output_annotations_directory
+            / (self._plugin_name + ".json")
+        )
 
         # Set the options to extract audio from the source file.
         options = {
-            'i': str(job.media_info.source),
-            'o': str(output_file),
-            'output-format': self.peaks_output_format,
+            "i": str(job.media_info.source),
+            "o": str(output_file),
+            "output-format": self.peaks_output_format,
         }
 
-        self.commands.append("audiowaveform " + args.default_unparser.unparse(**options))
+        self.commands.append(
+            "audiowaveform " + args.default_unparser.unparse(**options)
+        )
         self.outputs.append(output_file)

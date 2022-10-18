@@ -11,7 +11,7 @@ import requests
 import validators
 from mergedeep import merge
 
-from core import definitions, strings, probe
+from core import definitions, probe, strings
 
 
 @dataclass
@@ -84,7 +84,6 @@ class StirlingJob(definitions.StirlingClass):
         self.__get_output_directory()
         # Validate our incoming source file
         self.__get_source()
-
 
         # Logging
         self.log("Starting job")
@@ -170,7 +169,9 @@ class StirlingJob(definitions.StirlingClass):
         # If the incoming source is a URL, then let's download it.
         if validators.url(self.source, public=False):
             response = requests.get(self.source)
-            incoming_filename = "".join(os.path.splitext(os.path.basename(urlsplit(self.source).path)))
+            incoming_filename = "".join(
+                os.path.splitext(os.path.basename(urlsplit(self.source).path))
+            )
             self.source = incoming_filename
             if response.ok:
                 open(incoming_filename, "wb").write(response.content)
@@ -232,6 +233,7 @@ class StirlingJob(definitions.StirlingClass):
             return all([result.scheme, result.netloc])
         except ValueError:
             return False
+
 
 # StirlingArgs Types
 # These StirlingArgs types include all of the arguments available to pass in to the

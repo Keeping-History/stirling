@@ -2,15 +2,21 @@ import collections
 import pathlib
 from dataclasses import dataclass, field
 
-from core import args, definitions, helpers, video
+from core import args, definitions, helpers, jobs
 from plugins import plugins
 
 required_binaries = ["ffmpeg"]
 
+
 @dataclass
-class StirlingArgsPluginHLS(definitions.StirlingClass):
-    """StirlingArgsPluginHLS are for creating an HLS VOD streaming package from
+class StirlingPluginHLS(definitions.StirlingClass):
+    """StirlingPluginHLS is for creating an HLS VOD streaming package from
     the input source video."""
+
+    _plugin_name: str = "hls"
+
+    video_source_stream: int = -1
+    audio_source_stream: int = -1
 
     # Disable creating an HLS VOD package.
     hls_disable: bool = False
@@ -20,9 +26,9 @@ class StirlingArgsPluginHLS(definitions.StirlingClass):
     hls_segment_duration: int = 4
     # The bitrate ratio to use when determining the maximum bitrate for the
     # video.
-    hls_bitrate_ratio: int = 1.07
+    hls_bitrate_ratio: float = 1.07
     # The ratio to use when determining the optimum buffer size.
-    hls_buffer_ratio: int = 1.5
+    hls_buffer_ratio: float = 1.5
     # The Constant Rate Factor to use when encoding HLS video. Lower numbers are
     # better quality, but larger files. Defaults to 20. Recommended values are
     # 18-27.
@@ -34,7 +40,7 @@ class StirlingArgsPluginHLS(definitions.StirlingClass):
     # Audio codec to encode with. We prefer AAC over mp3.
     hls_audio_codec: str = "aac"
     # Audio sample rate to encode with. Default is the same as the source.
-    hls_audio_sample_rate: int = None
+    hls_audio_sample_rate: int = 0
     # Video codec to encode with. H264 is the most common and our preferred
     # codec for compatibility purposes.
     hls_video_codec: str = "h264"
@@ -59,13 +65,110 @@ class StirlingArgsPluginHLS(definitions.StirlingClass):
     hls_movflags: str = "+faststart"
     # The encoder profiles to use. Load defaults from the core definitions
     # package.
-    hls_encoder_profiles = video.EncoderProfiles
+    hls_encoder_profiles: dict = field(default_factory=dict)
+
+    # The commands we will run to complete this plugin.
+    commands: list = field(default_factory=list)
+    # Files to output.
+    outputs: list = field(default_factory=list)
 
     def __post_init__(self):
-        # Check to make sure our necessary binaries are installed and available.
-        assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
-            helpers.check_dependencies_binaries(required_binaries)
-        )
+        if self.hls_profile not in self.hls_encoder_profiles:
+            self.hls_encoder_profiles = definitions.EncoderProfiles[self.hls_profile]
+
+        if not self.hls_disable:
+            # Check to make sure the appropriate binary files we need are installed.
+            assert helpers.check_dependencies_binaries(
+                required_binaries
+            ), AssertionError("Missing required binaries: {}".format(required_binaries))
+            print("POSTINIT")
+
+    def cmd(self, job: jobs.StirlingJob):
+
+        if not self.hls_disable:
+            if (
+                self.video_source_stream == -1
+                and job.media_info.preferred["video"] is not None
+            ):
+                self.video_source_stream = job.media_info.preferred["video"]
+
+            if (
+                self.audio_source_stream == -1
+                and job.media_info.preferred["audio"] is not None
+            ):
+                self.audio_source_stream = job.media_info.preferred["audio"]
+
+            if self.hls_audio_sample_rate == 0:
+                self.hls_audio_sample_rate = job.media_info.audio_streams[
+                    self.audio_source_stream
+                ].sample_rate
+
+            output_directory = job.output_directory / self._plugin_name
+            output_directory.mkdir(parents=True, exist_ok=True)
+
+            # Set the options to encode an HLS package.
+            options = {
+                "hide_banner": True,
+                "loglevel": "quiet",
+                "y": True,
+                "i": job.media_info.source,
+                "map": "0:v:{} -map 0:a:{}".format(
+                    self.video_source_stream, self.audio_source_stream
+                ),
+                "acodec": self.hls_audio_codec,
+                "ar": self.hls_audio_sample_rate,
+                "vcodec": self.hls_video_codec,
+                "profile:v": self.hls_video_profile,
+                "crf": self.hls_crf,
+                "sc_threshold": self.hls_sc_threshold,
+                "g": self.hls_gop_size,
+                "keyint_min": self.hls_keyint_min,
+                "hls_time": self.hls_target_segment_duration,
+                "hls_playlist_type": self.hls_playlist_type,
+                "movflags": self.hls_movflags,
+            }
+
+            renditions = ""
+            for rendition in self.hls_encoder_profiles:
+                rendition_command = {
+                    # Scale the video to the appropriate resolution (width and height)
+                    "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease".format(
+                        rendition["width"], rendition["height"]
+                    ),
+                    # Control the bitrate.
+                    "b:v": "{}k".format(rendition["bitrate"]),
+                    # Set the maximum video bitrate.
+                    "maxrate": "{}k".format(
+                        int(rendition["bitrate"]) * self.hls_bitrate_ratio
+                    ),
+                    # Set the size of the buffer before ffmpeg recalculates the
+                    # bitrate.
+                    "bufsize": "{0}k".format(
+                        int(rendition["bitrate"]) * self.hls_buffer_ratio
+                    ),
+                    # Set the audio output bitrate.
+                    "b:a": "{0}k".format(rendition["audio-bitrate"]),
+                    # Set the output filename for the HLS segment.
+                    "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8".format(
+                        str(output_directory), rendition["name"]
+                    ),
+                }
+
+                renditions += args.default_unparser.unparse(**rendition_command)
+                self.outputs.append(
+                    "{0}/{1}.m3u8".format(str(output_directory), rendition["name"])
+                )
+
+            self.commands.append(
+                "ffmpeg {} {}".format(
+                    args.default_unparser.unparse(
+                        str(job.media_info.source), **options
+                    ),
+                    renditions,
+                )
+            )
+            self.outputs.append(output_directory)
+
 
 @dataclass
 class StirlingCmdHLS(definitions.StirlingCmd):
@@ -80,14 +183,12 @@ class StirlingCmdHLS(definitions.StirlingCmd):
     # A set of input options for the encoder.
     input_options: dict = field(default_factory=dict)
 
-    # The encoder profiles to use. Load defaults from the core definitions.
-    encoder_profiles: dict = field(default_factory=video.EncoderProfiles)
-
     options: dict = field(default_factory=dict)
 
-    def options(self, args: StirlingArgsPluginHLS):
+    def options(self, args: StirlingPluginHLS):
         """options returns a list of options to pass to the transcoder."""
-        self.options = collections.OrderedDict({
+        self.options = collections.OrderedDict(
+            {
                 # Audio codec to encode with.
                 "acodec": args.hls_audio_codec,
                 # Audio sample rate to encode with.
@@ -111,23 +212,28 @@ class StirlingCmdHLS(definitions.StirlingCmd):
                 # some of the metadata to the beginning of the file after
                 # transcode.
                 "movflags": args.hls_movflags,
-        })
-        self.rendition_options = collections.OrderedDict({
-                # Scale the video to the appropriate resolution (width and height)
-                "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease",
-                # Control the bitrate.
-                "b:v": "{}k",
-                # Set the maximum video bitrate.
-                "maxrate": "{0}k",
-                # Set the size of the buffer before ffmpeg recalculates the
-                # bitrate.
-                "bufsize": "{0}k",
-                # Set the audio output bitrate.
-                "b:a": "{0}k",
-                # Set the output filename for the HLS segment.
-                "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
             }
-        ),
+        )
+        self.rendition_options = (
+            collections.OrderedDict(
+                {
+                    # Scale the video to the appropriate resolution (width and height)
+                    "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease",
+                    # Control the bitrate.
+                    "b:v": "{}k",
+                    # Set the maximum video bitrate.
+                    "maxrate": "{0}k",
+                    # Set the size of the buffer before ffmpeg recalculates the
+                    # bitrate.
+                    "bufsize": "{0}k",
+                    # Set the audio output bitrate.
+                    "b:a": "{0}k",
+                    # Set the output filename for the HLS segment.
+                    "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
+                }
+            ),
+        )
+
 
 ## PLUGIN FUNCTIONS
 ## Generate an HLS Package from file
@@ -186,9 +292,7 @@ def create_rendition(job):
                 * job["commands"]["hls"]["args"]["hls_buffer_ratio"]
             )
         )
-        this_rendition["hls_segment_filename"] = this_rendition[
-            "hls_segment_filename"
-        ].format(
+        this_rendition["c"] = this_rendition["hls_segment_filename"].format(
             str(job["commands"]["hls"]["output_options"]["directory"]),
             rendition["name"],
         )

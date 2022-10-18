@@ -5,6 +5,7 @@ from core import args, definitions, helpers, jobs
 # Specify the required binaries in a list.
 required_binaries = ["autosub"]
 
+
 @dataclass
 class StirlingPluginTranscript(definitions.StirlingClass):
     """StirlingPluginTranscript are for creating speech-to-text transcripts.
@@ -26,26 +27,37 @@ class StirlingPluginTranscript(definitions.StirlingClass):
     # The number of concurrent API requests to make
     transcript_concurrency: int = 10
     # The format to output the transcript to.
-    transcript_format: str ="json"
+    transcript_format: str = "json"
 
     ## Extract Audio from file
     def __post_init__(self):
         if not self.transcript_disable:
             # Check to make sure the appropriate binary files we need are installed.
-            assert helpers.check_dependencies_binaries(required_binaries), AssertionError("Missing required binaries: {}".format(required_binaries))
+            assert helpers.check_dependencies_binaries(
+                required_binaries
+            ), AssertionError("Missing required binaries: {}".format(required_binaries))
 
     ## Extract Audio from file
     def cmd(self, job: jobs.StirlingJob):
-        output_file = job.output_directory / job.output_annotations_directory / (self._plugin_name + ".json")
+        output_file = (
+            job.output_directory
+            / job.output_annotations_directory
+            / (self._plugin_name + ".json")
+        )
 
         # Set the options to extract audio from the source file.
         options = {
-            'o': str(output_file),
-            'D': self.transcript_lang_output,
-            'S': self.transcript_lang_input,
-            'C': self.transcript_concurrency,
-            'F': self.transcript_format,
+            "o": str(output_file),
+            "D": self.transcript_lang_output,
+            "S": self.transcript_lang_input,
+            "C": self.transcript_concurrency,
+            "F": self.transcript_format,
         }
 
-        self.commands.append("autosub " + args.default_unparser.unparse(**options) + " " + str(job.media_info.source))
+        self.commands.append(
+            "autosub "
+            + args.default_unparser.unparse(**options)
+            + " "
+            + str(job.media_info.source)
+        )
         self.outputs.append(output_file)
