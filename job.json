@@ -1,18 +1,113 @@
 {
-    "source": "/Users/robbiebyrd/Projects/stirling/source.ts",
-    "id": "5a1d9232-d723-4ea6-ba69-43dedcfd5b9d",
-    "time_start": "2022-10-14 18:55:58.358253",
+    "source": "/Users/robbiebyrd/Projects/stirling/source.mp4",
+    "id": "5a478ff8-505e-4ccb-adc0-ded2d23d5298",
+    "time_start": "2022-10-17 21:50:10.428943",
     "time_end": null,
     "duration": 0.0,
     "log_file": "/Users/robbiebyrd/Projects/stirling/job.log",
     "job_file": "/Users/robbiebyrd/Projects/stirling/job.json",
-    "arguments": {},
-    "outputs": [],
     "input_directory": "/Users/robbiebyrd/Projects/stirling",
-    "disable_delete_source": true,
+    "source_delete_disable": true,
     "output_directory": "/Users/robbiebyrd/Projects/stirling",
     "output_annotations_directory": "annotations",
-    "disable_source_copy": true,
+    "source_copy_disable": true,
     "simulate": false,
-    "debug": true
+    "debug": false,
+    "media_info": {
+        "source": "/Users/robbiebyrd/Projects/stirling/source.mp4",
+        "video_streams": [
+            {
+                "stream": 1,
+                "duration": 1489.120967,
+                "codec": "h264",
+                "profile": "High",
+                "bitrate": "753340",
+                "width": 480,
+                "height": 360,
+                "frame_rate": 29.97002997002997,
+                "aspect": [
+                    "4",
+                    "3"
+                ],
+                "color_bits": "8",
+                "color_model": "yuv420p",
+                "scan_type": "progressive",
+                "content_type": "video"
+            }
+        ],
+        "audio_streams": [
+            {
+                "stream": 0,
+                "duration": 1489.120958,
+                "codec": "aac",
+                "profile": "LC",
+                "bitrate": "252135",
+                "sample_rate": "48000",
+                "channels": 2,
+                "channel_layout": "stereo",
+                "content_type": "audio"
+            }
+        ],
+        "text_streams": [],
+        "preferred": {
+            "video": 1,
+            "audio": 0
+        }
+    },
+    "plugins": [
+        {
+            "_plugin_name": "audio",
+            "audio_disable": false,
+            "audio_source_stream": 0,
+            "commands": [
+                "ffmpeg -hide_banner -loglevel quiet -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f flac -map 0:a:0 /Users/robbiebyrd/Projects/stirling/audio/source.flac"
+            ],
+            "outputs": [
+                "/Users/robbiebyrd/Projects/stirling/audio/source.flac"
+            ],
+            "audio_output_format": [
+                "flac",
+                "flac"
+            ]
+        },
+        {
+            "_plugin_name": "peaks",
+            "peaks_disable": false,
+            "commands": [
+                "audiowaveform -i /Users/robbiebyrd/Projects/stirling/source.mp4 -o /Users/robbiebyrd/Projects/stirling/annotations/peaks.json --output-format json"
+            ],
+            "outputs": [
+                "/Users/robbiebyrd/Projects/stirling/annotations/peaks.json"
+            ],
+            "peaks_output_format": "json"
+        },
+        {
+            "_plugin_name": "video",
+            "video_disable": false,
+            "video_source_stream": 1,
+            "video_frames_disable": false,
+            "frames_interval": 1,
+            "commands": [
+                "ffmpeg --hide_banner --loglevel quiet -y -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f image2 --map 0:v:1 --vf fps=1 --vsync 0 --frame_pts 1 /Users/robbiebyrd/Projects/stirling/source.mp4 /Users/robbiebyrd/Projects/stirling/video/frames%d.jpg"
+            ],
+            "outputs": [
+                "/Users/robbiebyrd/Projects/stirling/video/frames"
+            ]
+        },
+        {
+            "_plugin_name": "transcript",
+            "transcript_disable": false,
+            "commands": [
+                "autosub -o /Users/robbiebyrd/Projects/stirling/annotations/transcript.json -D en -S en -C 10 -F json /Users/robbiebyrd/Projects/stirling/source.mp4"
+            ],
+            "outputs": [
+                "/Users/robbiebyrd/Projects/stirling/annotations/transcript.json"
+            ],
+            "transcript_lang_input": "en",
+            "transcript_lang_output": "en",
+            "transcript_concurrency": 10,
+            "transcript_format": "json"
+        }
+    ],
+    "outputs": null
 }

@@ -11,7 +11,7 @@ import requests
 import validators
 from mergedeep import merge
 
-from core import definitions, strings
+from core import definitions, strings, probe
 
 
 @dataclass
@@ -47,7 +47,7 @@ class StirlingJob(definitions.StirlingClass):
     input_directory: Path = Path(os.getcwd())
     # Delete the temporary incoming source file when finished. By default, the
     # temporary incoming source file is deleted.
-    disable_delete_source: bool = True
+    source_delete_disable: bool = True
 
     ### Output variables
     # The directory to output the package. Defaults to a folder named with the
@@ -57,7 +57,7 @@ class StirlingJob(definitions.StirlingClass):
     output_annotations_directory: str = "annotations"
     # When a job is completed, a copy of the video file as it was uploaded is
     # created in the output directory as "source". This can be disabled.
-    disable_source_copy: bool = True
+    source_copy_disable: bool = True
 
     ### Others
     # A debugging option that attempts to setup a full job without actually
@@ -68,11 +68,11 @@ class StirlingJob(definitions.StirlingClass):
 
     ### Variable Holders
     # media_info contains source information after being probed.
-    media_info: dict = field(default_factory=dict)
-    # arguments is a holder for job arguments we'll use later.
-    arguments: dict = field(default_factory=dict)
+    media_info: probe.SterlingMediaInfo = None
+    # plugins is a holder for plugin arguments we'll use later.
+    plugins: list = field(default_factory=list)
     # Specific output files/directories generated are put here
-    outputs: list = field(default_factory=list)
+    outputs: list = None
 
     def open(self):
         # Check to see if a Job JSON file was passed and parse it
@@ -85,14 +85,20 @@ class StirlingJob(definitions.StirlingClass):
         # Validate our incoming source file
         self.__get_source()
 
+
         # Logging
         self.log("Starting job")
         self.log("Job Definition: ", self)
         self.log("Output Directory will be: " + str(self.output_directory))
         self.log("File to processed will be: " + str(self.source))
 
+        # Probe the source file
+        self.media_info = probe.SterlingMediaInfo(source=self.source)
+        self.log("Media file {} probed: ".format(self.source), self.media_info)
+
     def load(self):
-        # TODO: Implement the actual merge, this whole function is just a
+        # TODO: Implement the actual merge from a JSON job file
+        #  This whole function is just a
         #  placeholder stub
         with open(self.job_file) as json_file:
             # Load the file into our Job Object
@@ -179,11 +185,11 @@ class StirlingJob(definitions.StirlingClass):
             str(self.output_directory) + "/source" + Path(self.source).suffix
         )
 
-        if not self.disable_source_copy:
+        if not self.source_copy_disable:
             # Unless this is a simulation or we explicitly disabled it, copy the source
             # file to the output directory as 'source'
             shutil.copyfile(Path(self.source).absolute(), incoming_filename)
-            if not self.disable_delete_source:
+            if not self.source_delete_disable:
                 # Don't delete the incoming source file, in case we're testing.
                 os.remove(self.source)
 

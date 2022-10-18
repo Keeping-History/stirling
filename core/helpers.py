@@ -1,7 +1,7 @@
 import shutil
 import uuid
 
-def check_dependencies_binaries(required_binaries):
+def check_dependencies_binaries(required_binaries: list) -> bool:
     required_binaries_missing = []
     for program in required_binaries:
         if shutil.which(program) is None:
@@ -12,10 +12,7 @@ def check_dependencies_binaries(required_binaries):
         )
     return True
 
-
-
-
-def is_valid_uuid(uuid_to_test, version=4):
+def is_valid_uuid(uuid_to_test: str, version: int=4) -> bool:
     try:
         uuid_obj = uuid.UUID(uuid_to_test, version=version)
     except ValueError:

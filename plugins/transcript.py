@@ -1,85 +1,51 @@
-import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from core import args, definitions, helpers
+from core import args, definitions, helpers, jobs
 
 # Specify the required binaries in a list.
 required_binaries = ["autosub"]
 
-
 @dataclass
-class StirlingArgsPluginTranscript(definitions.StirlingClass):
-    """StirlingArgsPluginTranscript are for creating speech-to-text transcripts.
+class StirlingPluginTranscript(definitions.StirlingClass):
+    """StirlingPluginTranscript are for creating speech-to-text transcripts.
     These transcripts can be used as-is, or can be used later for
     confidence training, language analysis or for adding other contexts."""
 
-    # Disable the transcript extraction.
+    _plugin_name: str = "transcript"
+    # Disable the generation of audio peak data.
     transcript_disable: bool = False
+    # Command to run to execute this plugin.
+    commands: list = field(default_factory=list)
+    # Files to output.
+    outputs: list = field(default_factory=list)
 
+    # Additional configuration variables for this plugin.
+    transcript_lang_input: str = "en"
+    # Additional configuration variables for this plugin.
+    transcript_lang_output: str = "en"
+    # The number of concurrent API requests to make
+    transcript_concurrency: int = 10
+    # The format to output the transcript to.
+    transcript_format: str ="json"
 
-## PLUGIN FUNCTIONS
-## Extract Audio Peaks from file
-def generate_transcript(job):
-    # Plugins receive the job object.
+    ## Extract Audio from file
+    def __post_init__(self):
+        if not self.transcript_disable:
+            # Check to make sure the appropriate binary files we need are installed.
+            assert helpers.check_dependencies_binaries(required_binaries), AssertionError("Missing required binaries: {}".format(required_binaries))
 
-    # Check to see if we can run this plugin.
-    if not job["arguments"]["transcript_disable"]:
+    ## Extract Audio from file
+    def cmd(self, job: jobs.StirlingJob):
+        output_file = job.output_directory / job.output_annotations_directory / (self._plugin_name + ".json")
 
-        # Check to make sure the appropriate binary files we need are installed.
-        assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
-            helpers.check_dependencies_binaries(required_binaries)
-        )
+        # Set the options to extract audio from the source file.
+        options = {
+            'o': str(output_file),
+            'D': self.transcript_lang_output,
+            'S': self.transcript_lang_input,
+            'C': self.transcript_concurrency,
+            'F': self.transcript_format,
+        }
 
-        # Peak file Generation options
-
-        # Where to store our calculated audio peaks JSON file.
-        output_filename = (
-            str(job["output"]["directory"]) + "/annotations/subtitles.json"
-        )
-        job["commands"]["transcript"]["options"]["o"] = output_filename
-
-        # Unparse our command line arguments, from our job object, into a string.
-        jobArgs = args.default_unparser.unparse(
-            job["commands"]["audio"]["output"],
-            **job["commands"]["transcript"]["options"]
-        )
-
-        # Create the command to run.
-        job["commands"]["transcript"]["command"] = "autosub " + jobArgs
-        helpers.log(
-            job,
-            "Transcript Generation Command: "
-            + job["commands"]["transcript"]["command"],
-        )
-
-        # Add the output of the plugin to the job.
-        job["commands"]["transcript"]["output"] = output_filename
-        job["output"]["outputs"].append(output_filename)
-
-        # Run the command to generate transcript from the extracted audio.
-        helpers.log(
-            job,
-            "Generating transcript data from audio file '{}' to {}".format(
-                job["commands"]["peaks"]["options"]["i"],
-                job["commands"]["transcript"]["output"],
-            ),
-        )
-
-        if not job["arguments"]["simulate"]:
-            generate_transcript_output = subprocess.getstatusoutput(
-                job["commands"]["transcript"]["command"]
-            )
-
-            # Get the output of the command and add it to the job.
-            job["output"]["transcript_generation"] = generate_transcript_output[1]
-            helpers.log(
-                job,
-                "Completed generating transcript data from audio file '{}' to '{}'. Command output: {}".format(
-                    job["commands"]["peaks"]["options"]["i"],
-                    job["commands"]["transcript"]["output"],
-                    generate_transcript_output[1],
-                ),
-            )
-
-    # Plugins should always return the job.
-    return job
+        self.commands.append("autosub " + args.default_unparser.unparse(**options) + " " + str(job.media_info.source))
+        self.outputs.append(output_file)

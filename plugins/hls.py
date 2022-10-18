@@ -75,10 +75,10 @@ class StirlingCmdHLS(definitions.StirlingCmd):
     command parameters our transcoder requires."""
 
     # The default, common CLI settings to use
-    cli_options: dict = field(default_factory=video.DefaultsFFMPEG().cli_options)
+    cli_options: dict = field(default_factory=dict)
 
     # A set of input options for the encoder.
-    input_options: dict = field(default_factory=video.DefaultsFFMPEG().input)
+    input_options: dict = field(default_factory=dict)
 
     # The encoder profiles to use. Load defaults from the core definitions.
     encoder_profiles: dict = field(default_factory=video.EncoderProfiles)

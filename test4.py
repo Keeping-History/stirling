@@ -1,45 +1,42 @@
 import json
 
-from core import definitions, strings, video, jobs, probe
+from core import definitions, strings, video, jobs, audio
 from plugins import hls, peaks, transcript
-from fractions import Fraction
 
 
-e = probe.probe_media_file("https://download.samplelib.com/mp4/sample-5s.mp4")
-print(json.dumps(e, indent=4, cls=strings.JobEncoder))
+# e = probe.SterlingMediaInfo(source="https://download.samplelib.com/mp4/sample-5s.mp4")
+# print(json.dumps(e, indent=4, cls=strings.JobEncoder))
+# exit()
+
+def get_outputs(args):
+    outputs: list = []
+    for a in args:
+        outputs.append(*a.outputs)
+    return outputs
+
+def get_commands(args):
+    commands: list = []
+    for a in args:
+        commands.append(*a.commands)
+    return commands
+
+
+e = jobs.StirlingJob(source="source.mp4", debug=False)
+e.open()
+e.plugins += audio.StirlingPluginAudio(), peaks.StirlingPluginPeaks(), video.StirlingPluginVideo(), transcript.StirlingPluginTranscript()
+for i in e.plugins:
+    i.cmd(e)
+
+print(get_commands(e.plugins))
+print(get_outputs(e.plugins))
+e.write()
 exit()
 
-# e = definitions.Job()
-# e.duration = 100
-# e.log_file = "job.log"
-# e.job_file = "job.json"
-# print(json.dumps(e, cls=strings.JobEncoder))
 
-#f = definitions.StirlingJob(id="e491aca4-d0e1-4db0-826f-df949809f848")
-f = jobs.StirlingJob(source='https://cdn1.911realtime.org//download/WUSA_20010911_033500_Late_Show_With_David_Letterman/120p_000.ts', debug=True, disable_source_copy=True)
-
-f.open()
-f.write()
-
-exit()
-
-coreargs = definitions.StirlingArgsCore()
-jobargs = definitions.StirlingArgsJob()
-framesargs = video.StirlingArgsPluginFrames()
-transcriptargs = transcript.StirlingArgsPluginTranscript()
-peakargs = peaks.StirlingArgsPluginPeaks()
 hlsargs = hls.StirlingArgsPluginHLS()
 outputs = definitions.StirlingOutputs(
     directory=".", outputs=[{"plugin": "a", "files": "a"}]
 )
-f.output = outputs
-
-f.arguments = {
-    framesargs.__class__.__name__: framesargs.__dict__,
-    transcriptargs.__class__.__name__: transcriptargs.__dict__,
-    peakargs.__class__.__name__: peakargs.__dict__,
-    hlsargs.__class__.__name__:hlsargs.__dict__,
-    }
 
 print(json.dumps(f, cls=strings.JobEncoder, indent=4))
 #print(json.dumps(j, cls=strings.JobEncoder, indent=4))
@@ -69,13 +66,13 @@ exit()
 #     "output": null,
 #     "input_directory": null,
 #     "output_directory_prefix": "output",
-#     "disable_delete_source": true,
-#     "disable_source_copy": true,
-#     "disable_audio": false,
+#     "source_delete_disable": true,
+#     "source_copy_disable": true,
+#     "audio_disable": false,
 #     "transcript_disable": false,
 #     "peaks_disable": false,
 #     "hls_disable": false,
-#     "disable_frames": false,
+#     "video_frames_disable": false,
 #     "hls_profile": "sd",
 #     "input_video_stream": -1,
 #     "input_audio_stream": -1,

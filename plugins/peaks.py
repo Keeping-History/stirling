@@ -1,68 +1,41 @@
-import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from core import args, definitions, helpers
+from core import args, definitions, helpers, jobs
 
 required_binaries = ["audiowaveform"]
 
-
 @dataclass
-class StirlingArgsPluginPeaks(definitions.StirlingClass):
-    """StirlingArgsPluginPeaks are are for creating waveform peaks from the input
+class StirlingPluginPeaks(definitions.StirlingClass):
+    """StirlingPluginPeaks are are for creating waveform peaks from the input
     source's audio track."""
 
+    _plugin_name: str = "peaks"
     # Disable the generation of audio peak data.
     peaks_disable: bool = False
+    # Command to run to execute this plugin.
+    commands: list = field(default_factory=list)
+    # Files to output.
+    outputs: list = field(default_factory=list)
 
+    # Additional configuration variables for this plugin.
+    peaks_output_format: str = "json"
 
-## PLUGIN FUNCTIONS
-## Extract Audio Peaks from file
-def generate_peaks(job):
-    if not job["arguments"]["peaks_disable"]:
-        # Check to make sure the appropriate binary files we need are installed.
-        assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
-            helpers.check_dependencies_binaries(required_binaries)
-        )
+    ## Extract Audio from file
+    def __post_init__(self):
+        if not self.peaks_disable:
+            # Check to make sure the appropriate binary files we need are installed.
+            assert helpers.check_dependencies_binaries(required_binaries), AssertionError("Missing required binaries: {}".format(required_binaries))
 
-        # Peak file Generation options
-        # Where to find our extracted WAV file.
-        job["commands"]["peaks"]["options"]["i"] = job["commands"]["audio"]["output"]
+    ## Extract Audio from file
+    def cmd(self, job: jobs.StirlingJob):
+        output_file = job.output_directory / job.output_annotations_directory / (self._plugin_name + ".json")
 
-        # Where to store our calculated audio peaks JSON file.
-        output_filename = str(job["output"]["directory"]) + "/annotations/peaks.json"
-        job["commands"]["peaks"]["options"]["o"] = output_filename
+        # Set the options to extract audio from the source file.
+        options = {
+            'i': str(job.media_info.source),
+            'o': str(output_file),
+            'output-format': self.peaks_output_format,
+        }
 
-        jobArgs = args.default_unparser.unparse(**job["commands"]["peaks"]["options"])
-
-        job["commands"]["peaks"]["command"] = "audiowaveform " + jobArgs
-
-        helpers.log(
-            job, "Peak Generation Command: " + job["commands"]["peaks"]["command"]
-        )
-
-        job["commands"]["peaks"]["output"] = output_filename
-        job["output"]["outputs"].append(output_filename)
-
-        # Generate a peak JSON file from the extracted audio file.
-        helpers.log(
-            job,
-            "Generating peak data from audio file '{}' to '{}'".format(
-                job["commands"]["peaks"]["options"]["i"],
-                job["commands"]["peaks"]["options"]["o"],
-            ),
-        )
-        if not job["arguments"]["simulate"]:
-            audio_peak_generation_output = subprocess.getstatusoutput(
-                job["commands"]["peaks"]["command"]
-            )
-            job["output"]["audio_peak_generation"] = audio_peak_generation_output[1]
-            helpers.log(
-                job,
-                "Completed generating peak data from audio file '{}' : '{}'. Command output: {}".format(
-                    job["commands"]["peaks"]["options"]["i"],
-                    job["commands"]["peaks"]["options"]["o"],
-                    helpers.log_string(audio_peak_generation_output[1]),
-                ),
-            )
-
-    return job
+        self.commands.append("audiowaveform " + args.default_unparser.unparse(**options))
+        self.outputs.append(output_file)
