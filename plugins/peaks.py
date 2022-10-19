@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 from core import args, definitions, helpers, jobs
 
@@ -11,15 +12,19 @@ class StirlingPluginPeaks(definitions.StirlingClass):
     source's audio track."""
 
     _plugin_name: str = "peaks"
+    _depends_on: list = field(default_factory=lambda: ['audio'])
+    _weight: int = 10
+
     # Disable the generation of audio peak data.
     peaks_disable: bool = False
-    # Command to run to execute this plugin.
-    commands: list = field(default_factory=list)
-    # Files to output.
-    outputs: list = field(default_factory=list)
 
     # Additional configuration variables for this plugin.
     peaks_output_format: str = "json"
+
+    # Command to run to execute this plugin.
+    commands: List[definitions.StrilingCmd] = field(default_factory=list)
+    # Files to output.
+    outputs: list = field(default_factory=list)
 
     ## Extract Audio from file
     def __post_init__(self):
@@ -45,6 +50,13 @@ class StirlingPluginPeaks(definitions.StirlingClass):
         }
 
         self.commands.append(
-            "audiowaveform " + args.default_unparser.unparse(**options)
+            definitions.StrilingCmd(
+                plugin_name=self._plugin_name,
+                command="audiowaveform {}".format(
+                    args.default_unparser.unparse(**options)
+                ),
+                weight=self._weight,
+                output=output_file,
+                depends_on=self._depends_on,
+            )
         )
-        self.outputs.append(output_file)

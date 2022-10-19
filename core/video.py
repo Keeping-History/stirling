@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 import simpleeval
 
@@ -13,6 +14,7 @@ class StirlingPluginVideo(definitions.StirlingClass):
     and our archival encoded copy."""
 
     _plugin_name: str = "video"
+    _depends_on: list = field(default_factory=list)
 
     # Disable creating creating videos or processing any video-dependent
     # plugins. This is not recommended, unless your source is truly audio only.
@@ -36,7 +38,7 @@ class StirlingPluginVideo(definitions.StirlingClass):
     frames_interval: int = 1
 
     # The commands we will run to complete this plugin.
-    commands: list = field(default_factory=list)
+    commands: List[definitions.StrilingCmd] = field(default_factory=list)
     # Files to output.
     outputs: list = field(default_factory=list)
 
@@ -82,14 +84,19 @@ class StirlingPluginVideo(definitions.StirlingClass):
                 output_directory.mkdir(parents=True, exist_ok=True)
 
                 self.commands.append(
-                    "ffmpeg {} {}".format(
-                        args.default_unparser.unparse(
-                            str(job.media_info.source), **options
+                    definitions.StrilingCmd(
+                        plugin_name=self._plugin_name,
+                        depends_on=self._depends_on,
+                        command="ffmpeg {} {}".format(
+                            args.default_unparser.unparse(
+                                str(job.media_info.source), **options
+                            ),
+                            str(output_directory) + "%d.jpg",
                         ),
-                        str(output_directory) + "%d.jpg",
+                        weight=0,
+                        output=str(output_directory) + "*.jpg",
                     )
                 )
-                self.outputs.append(output_directory)
 
     def __get_frames_interval(self, interval, fps):
         # The Frame Interval is the number of frames to capture for every second

@@ -1,5 +1,5 @@
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import get_type_hints
 
@@ -17,7 +17,6 @@ class StirlingClass(object):
         proper_type = get_type_hints(self)[name]
         # If necessary, attempt to convert the value to the proper type we
         # expect.
-        print("NAME: ", name)
         self.__dict__[name] = type_check(value, proper_type)
 
 
@@ -47,7 +46,6 @@ class StirlingCmd(StirlingClass):
 
 # type_check attempts to set our variable to the proper type.
 def type_check(value, proper_type):
-    print("VALUE: ", value)
     # If the type of our incoming value and the type we hinted in the
     # object, then let's try to translate it to the proper type.
     a = True
@@ -227,3 +225,11 @@ EncoderProfiles: dict = {
         EncoderRenditions["1080p-high"],
     ],
 }
+
+@dataclass
+class StrilingCmd(StirlingClass):
+    plugin_name: str = ""
+    weight: int = 0
+    command: str = ""
+    depends_on: list = field(default_factory=list)
+    output: str = ""

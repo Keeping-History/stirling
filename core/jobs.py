@@ -5,6 +5,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import List
 from urllib.parse import urlparse, urlsplit
 
 import requests
@@ -70,9 +71,11 @@ class StirlingJob(definitions.StirlingClass):
     # media_info contains source information after being probed.
     media_info: probe.SterlingMediaInfo = None
     # plugins is a holder for plugin arguments we'll use later.
-    plugins: list = field(default_factory=list)
+    plugins: List = field(default_factory=list)
     # Specific output files/directories generated are put here
-    outputs: list = None
+    _outputs: List = field(default_factory=list)
+    # Commands to fire off
+    _commands: List = field(default_factory=list)
 
     def open(self):
         # Check to see if a Job JSON file was passed and parse it
@@ -149,18 +152,16 @@ class StirlingJob(definitions.StirlingClass):
             file1.close()
 
         except OSError:
-            raise Exception(
+            raise FileNotFoundError(
                 "can't access the log file: {}, stopping execution for job {}".format(
                     self.log_file, str(self.id)
                 )
             )
 
-    def __log_object(
-        self, obj, line_identifier: str = "+", header: str = "", indent: int = 4
-    ):
+    def __log_object(self, obj, prefix: str = "+", header: str = "", indent: int = 4):
         return self.__log_string(
             header + json.dumps(vars(obj), indent=indent, cls=strings.JobEncoder),
-            line_identifier,
+            prefix,
             indent,
         )
 
@@ -177,7 +178,9 @@ class StirlingJob(definitions.StirlingClass):
                 open(incoming_filename, "wb").write(response.content)
             else:
                 raise FileNotFoundError(
-                    "Unable to download source file from URL: {}".format(self.source)
+                    "unable to download source file from URL {}, stopping execution for job {}".format(
+                        self.source, str(self.id)
+                    )
                 )
 
         # Get a full path to name our source file when we move it. We'll use this
@@ -209,16 +212,16 @@ class StirlingJob(definitions.StirlingClass):
         self.job_file = self.output_directory / self.job_file
 
         # Make sure we have a directory for the output files
-        assert self.output_directory.is_dir(), self.log(
-            "could not find the path {} for output files".format(
-                str(self.output_directory)
+        assert self.output_directory.is_dir(), AssertionError(
+            "could not find the path {} for output files for job {}".format(
+                str(self.output_directory), str(self.id)
             ),
         )
 
         # Make sure we can write to the directory for the output files
-        assert os.access(self.output_directory, os.W_OK), self.log(
-            "could not write to path {} for output files".format(
-                str(self.output_directory)
+        assert os.access(self.output_directory, os.W_OK), AssertionError(
+            "could not write to path {} for output files for job {}".format(
+                str(self.output_directory), str(self.id)
             )
         )
 
@@ -229,11 +232,24 @@ class StirlingJob(definitions.StirlingClass):
     def __is_url(self):
         try:
             result = urlparse.urlparse(self.source)
-            print(result)
             return all([result.scheme, result.netloc])
         except ValueError:
             return False
 
+    def commands(self):
+        for plugin in self.plugins:
+            plugin.cmd(self)
+            for cmd in plugin.commands:
+                self._commands.append(str(cmd.command))
+        # TODO: Order the commands by their dependencies and their weight
+        return self._commands
+
+    def outputs(self):
+        for plugin in self.plugins:
+            plugin.cmd(self)
+            for out in plugin.output:
+                self._outputs.append(str(out.output))
+        return self._outputs
 
 # StirlingArgs Types
 # These StirlingArgs types include all of the arguments available to pass in to the

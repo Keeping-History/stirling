@@ -1,7 +1,7 @@
 {
     "source": "/Users/robbiebyrd/Projects/stirling/source.mp4",
-    "id": "5a478ff8-505e-4ccb-adc0-ded2d23d5298",
-    "time_start": "2022-10-17 21:50:10.428943",
+    "id": "8ebf6fec-a842-474d-8c35-385a47b49b1c",
+    "time_start": "2022-10-18 21:37:24.612442",
     "time_end": null,
     "duration": 0.0,
     "log_file": "/Users/robbiebyrd/Projects/stirling/job.log",
@@ -57,57 +57,159 @@
     "plugins": [
         {
             "_plugin_name": "audio",
+            "_depends_on": [],
+            "_weight": 0,
             "audio_disable": false,
             "audio_source_stream": 0,
-            "commands": [
-                "ffmpeg -hide_banner -loglevel quiet -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f flac -map 0:a:0 /Users/robbiebyrd/Projects/stirling/audio/source.flac"
-            ],
-            "outputs": [
-                "/Users/robbiebyrd/Projects/stirling/audio/source.flac"
-            ],
             "audio_output_format": [
                 "flac",
                 "flac"
-            ]
+            ],
+            "commands": [
+                {
+                    "plugin_name": "audio",
+                    "weight": 0,
+                    "command": "ffmpeg -hide_banner -loglevel quiet -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f flac -map 0:a:0 /Users/robbiebyrd/Projects/stirling/audio/source.flac",
+                    "depends_on": [],
+                    "output": "/Users/robbiebyrd/Projects/stirling/audio/source.flac"
+                }
+            ],
+            "outputs": []
         },
         {
             "_plugin_name": "peaks",
+            "_depends_on": [
+                "audio"
+            ],
+            "_weight": 10,
             "peaks_disable": false,
+            "peaks_output_format": "json",
             "commands": [
-                "audiowaveform -i /Users/robbiebyrd/Projects/stirling/source.mp4 -o /Users/robbiebyrd/Projects/stirling/annotations/peaks.json --output-format json"
+                {
+                    "plugin_name": "peaks",
+                    "weight": 10,
+                    "command": "audiowaveform -i /Users/robbiebyrd/Projects/stirling/source.mp4 -o /Users/robbiebyrd/Projects/stirling/annotations/peaks.json --output-format json",
+                    "depends_on": [
+                        "audio"
+                    ],
+                    "output": "/Users/robbiebyrd/Projects/stirling/annotations/peaks.json"
+                }
             ],
-            "outputs": [
-                "/Users/robbiebyrd/Projects/stirling/annotations/peaks.json"
-            ],
-            "peaks_output_format": "json"
+            "outputs": []
         },
         {
             "_plugin_name": "video",
+            "_depends_on": [],
             "video_disable": false,
             "video_source_stream": 1,
             "video_frames_disable": false,
             "frames_interval": 1,
             "commands": [
-                "ffmpeg --hide_banner --loglevel quiet -y -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f image2 --map 0:v:1 --vf fps=1 --vsync 0 --frame_pts 1 /Users/robbiebyrd/Projects/stirling/source.mp4 /Users/robbiebyrd/Projects/stirling/video/frames%d.jpg"
+                {
+                    "plugin_name": "video",
+                    "weight": 0,
+                    "command": "ffmpeg --hide_banner --loglevel quiet -y -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f image2 --map 0:v:1 --vf fps=1 --vsync 0 --frame_pts 1 /Users/robbiebyrd/Projects/stirling/source.mp4 /Users/robbiebyrd/Projects/stirling/video/frames%d.jpg",
+                    "depends_on": [],
+                    "output": "/Users/robbiebyrd/Projects/stirling/video/frames*.jpg"
+                }
             ],
-            "outputs": [
-                "/Users/robbiebyrd/Projects/stirling/video/frames"
-            ]
+            "outputs": []
         },
         {
             "_plugin_name": "transcript",
+            "_depends_on": [
+                "audio"
+            ],
+            "_weight": 10,
             "transcript_disable": false,
             "commands": [
-                "autosub -o /Users/robbiebyrd/Projects/stirling/annotations/transcript.json -D en -S en -C 10 -F json /Users/robbiebyrd/Projects/stirling/source.mp4"
+                {
+                    "plugin_name": "transcript",
+                    "weight": 10,
+                    "command": "autosub -o /Users/robbiebyrd/Projects/stirling/annotations/transcript.json -D en -S en -C 10 -F json /Users/robbiebyrd/Projects/stirling/source.mp4",
+                    "depends_on": [
+                        "audio"
+                    ],
+                    "output": "/Users/robbiebyrd/Projects/stirling/annotations/transcript.json"
+                }
             ],
-            "outputs": [
-                "/Users/robbiebyrd/Projects/stirling/annotations/transcript.json"
-            ],
+            "outputs": [],
             "transcript_lang_input": "en",
             "transcript_lang_output": "en",
             "transcript_concurrency": 10,
             "transcript_format": "json"
+        },
+        {
+            "_plugin_name": "hls",
+            "_depends_on": [
+                "video"
+            ],
+            "_weight": 50,
+            "video_source_stream": 1,
+            "audio_source_stream": 0,
+            "hls_disable": false,
+            "hls_profile": "sd",
+            "hls_segment_duration": 4,
+            "hls_bitrate_ratio": 1.07,
+            "hls_buffer_ratio": 1.5,
+            "hls_crf": 20,
+            "hls_keyframe_multiplier": 1,
+            "hls_audio_codec": "aac",
+            "hls_audio_sample_rate": 48000,
+            "hls_video_codec": "h264",
+            "hls_video_profile": "main",
+            "hls_sc_threshold": 40,
+            "hls_gop_size": 12,
+            "hls_keyint_min": 25,
+            "hls_target_segment_duration": 2,
+            "hls_playlist_type": "vod",
+            "hls_movflags": "+faststart",
+            "hls_encoder_profiles": [
+                {
+                    "name": "120p",
+                    "width": "160",
+                    "height": "120",
+                    "bitrate": "128",
+                    "audio-bitrate": "32",
+                    "ratio": "4:3"
+                },
+                {
+                    "name": "240p",
+                    "width": "320",
+                    "height": "240",
+                    "bitrate": "300",
+                    "audio-bitrate": "64",
+                    "ratio": "4:3"
+                },
+                {
+                    "name": "480p",
+                    "width": "640",
+                    "height": "480",
+                    "bitrate": "800",
+                    "audio-bitrate": "96",
+                    "ratio": "4:3"
+                }
+            ],
+            "commands": [
+                {
+                    "plugin_name": "hls",
+                    "weight": 50,
+                    "command": "ffmpeg --hide_banner --loglevel quiet -y -i /Users/robbiebyrd/Projects/stirling/source.mp4 --map '0:v:1 -map 0:a:0' --acodec aac --ar 48000 --vcodec h264 --profile:v main --crf 20 --sc_threshold 40 -g 12 --keyint_min 25 --hls_time 2 --hls_playlist_type vod --movflags +faststart /Users/robbiebyrd/Projects/stirling/source.mp4 --vf scale=w=160:h=120:force_original_aspect_ratio=decrease --b:v 128k --maxrate 136.96k --bufsize 192.0k --b:a 32k --hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/hls/120p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/hls/120p.m3u8\"--vf scale=w=320:h=240:force_original_aspect_ratio=decrease --b:v 300k --maxrate 321.0k --bufsize 450.0k --b:a 64k --hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/hls/240p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/hls/240p.m3u8\"--vf scale=w=640:h=480:force_original_aspect_ratio=decrease --b:v 800k --maxrate 856.0k --bufsize 1200.0k --b:a 96k --hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/hls/480p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/hls/480p.m3u8\"",
+                    "depends_on": [
+                        "video"
+                    ],
+                    "output": "/Users/robbiebyrd/Projects/stirling/hls"
+                }
+            ],
+            "outputs": []
         }
     ],
-    "outputs": null
+    "_outputs": [],
+    "_commands": [
+        "ffmpeg -hide_banner -loglevel quiet -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f flac -map 0:a:0 /Users/robbiebyrd/Projects/stirling/audio/source.flac",
+        "audiowaveform -i /Users/robbiebyrd/Projects/stirling/source.mp4 -o /Users/robbiebyrd/Projects/stirling/annotations/peaks.json --output-format json",
+        "ffmpeg --hide_banner --loglevel quiet -y -i /Users/robbiebyrd/Projects/stirling/source.mp4 -f image2 --map 0:v:1 --vf fps=1 --vsync 0 --frame_pts 1 /Users/robbiebyrd/Projects/stirling/source.mp4 /Users/robbiebyrd/Projects/stirling/video/frames%d.jpg",
+        "autosub -o /Users/robbiebyrd/Projects/stirling/annotations/transcript.json -D en -S en -C 10 -F json /Users/robbiebyrd/Projects/stirling/source.mp4",
+        "ffmpeg --hide_banner --loglevel quiet -y -i /Users/robbiebyrd/Projects/stirling/source.mp4 --map '0:v:1 -map 0:a:0' --acodec aac --ar 48000 --vcodec h264 --profile:v main --crf 20 --sc_threshold 40 -g 12 --keyint_min 25 --hls_time 2 --hls_playlist_type vod --movflags +faststart /Users/robbiebyrd/Projects/stirling/source.mp4 --vf scale=w=160:h=120:force_original_aspect_ratio=decrease --b:v 128k --maxrate 136.96k --bufsize 192.0k --b:a 32k --hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/hls/120p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/hls/120p.m3u8\"--vf scale=w=320:h=240:force_original_aspect_ratio=decrease --b:v 300k --maxrate 321.0k --bufsize 450.0k --b:a 64k --hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/hls/240p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/hls/240p.m3u8\"--vf scale=w=640:h=480:force_original_aspect_ratio=decrease --b:v 800k --maxrate 856.0k --bufsize 1200.0k --b:a 96k --hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/hls/480p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/hls/480p.m3u8\""
+    ]
 }

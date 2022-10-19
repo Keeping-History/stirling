@@ -11,7 +11,7 @@ from plugins import hls, peaks, transcript
 def get_outputs(args):
     outputs: list = []
     for a in args:
-        outputs.append(*a.outputs)
+        outputs.append([*a.outputs])
     return outputs
 
 def get_commands(args):
@@ -23,13 +23,11 @@ def get_commands(args):
 
 e = jobs.StirlingJob(source="source.mp4", debug=False)
 e.open()
-e.plugins += audio.StirlingPluginAudio(), peaks.StirlingPluginPeaks(), video.StirlingPluginVideo(), transcript.StirlingPluginTranscript()
-for i in e.plugins:
-    i.cmd(e)
-
-print(get_commands(e.plugins))
-print(get_outputs(e.plugins))
+e.plugins = [audio.StirlingPluginAudio(), peaks.StirlingPluginPeaks(), video.StirlingPluginVideo(), transcript.StirlingPluginTranscript(), hls.StirlingPluginHLS()]
+e.commands()
 e.write()
+print(json.dumps(e, indent=4, cls=strings.JobEncoder))
+
 exit()
 
 

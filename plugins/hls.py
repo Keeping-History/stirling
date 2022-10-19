@@ -14,6 +14,8 @@ class StirlingPluginHLS(definitions.StirlingClass):
     the input source video."""
 
     _plugin_name: str = "hls"
+    _depends_on: list = field(default_factory=lambda: ["video"])
+    _weight: int = 50
 
     video_source_stream: int = -1
     audio_source_stream: int = -1
@@ -81,7 +83,6 @@ class StirlingPluginHLS(definitions.StirlingClass):
             assert helpers.check_dependencies_binaries(
                 required_binaries
             ), AssertionError("Missing required binaries: {}".format(required_binaries))
-            print("POSTINIT")
 
     def cmd(self, job: jobs.StirlingJob):
 
@@ -155,85 +156,21 @@ class StirlingPluginHLS(definitions.StirlingClass):
                 }
 
                 renditions += args.default_unparser.unparse(**rendition_command)
-                self.outputs.append(
-                    "{0}/{1}.m3u8".format(str(output_directory), rendition["name"])
-                )
 
             self.commands.append(
-                "ffmpeg {} {}".format(
-                    args.default_unparser.unparse(
-                        str(job.media_info.source), **options
+                definitions.StrilingCmd(
+                    plugin_name=self._plugin_name,
+                    command="ffmpeg {} {}".format(
+                        args.default_unparser.unparse(
+                            str(job.media_info.source), **options
+                        ),
+                        renditions,
                     ),
-                    renditions,
+                    weight=self._weight,
+                    output=output_directory,
+                    depends_on=self._depends_on,
                 )
             )
-            self.outputs.append(output_directory)
-
-
-@dataclass
-class StirlingCmdHLS(definitions.StirlingCmd):
-    """StirlingCmdHLS contains a mapping of our input arguments to the necessary
-    CLI arguments that our video transcoder will need. Currently, we use ffmpeg,
-    but others could be used by mapping the proper input parameters to the
-    command parameters our transcoder requires."""
-
-    # The default, common CLI settings to use
-    cli_options: dict = field(default_factory=dict)
-
-    # A set of input options for the encoder.
-    input_options: dict = field(default_factory=dict)
-
-    options: dict = field(default_factory=dict)
-
-    def options(self, args: StirlingPluginHLS):
-        """options returns a list of options to pass to the transcoder."""
-        self.options = collections.OrderedDict(
-            {
-                # Audio codec to encode with.
-                "acodec": args.hls_audio_codec,
-                # Audio sample rate to encode with.
-                "ar": args.hls_audio_sample_rate,
-                # Video codec to encode with.
-                "vcodec": args.hls_video_codec,
-                # Video encoding profile.
-                "profile:v": args.hls_video_profile,
-                "crf": args.hls_crf,
-                # Scenecut detection threshold.
-                "sc_threshold": args.hls_sc_threshold,
-                # Set the Group Picture Size (GOP).
-                "g": args.hls_gop_size,
-                # Set the minimum distance between keyframes.
-                "keyint_min": args.hls_keyint_min,
-                # The target length of each segmented file.
-                "hls_time": args.hls_target_segment_duration,
-                # The type of HLS playlist to create.
-                "hls_playlist_type": args.hls_playlist_type,
-                # Enable faster file streaming start for HLS files by moving
-                # some of the metadata to the beginning of the file after
-                # transcode.
-                "movflags": args.hls_movflags,
-            }
-        )
-        self.rendition_options = (
-            collections.OrderedDict(
-                {
-                    # Scale the video to the appropriate resolution (width and height)
-                    "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease",
-                    # Control the bitrate.
-                    "b:v": "{}k",
-                    # Set the maximum video bitrate.
-                    "maxrate": "{0}k",
-                    # Set the size of the buffer before ffmpeg recalculates the
-                    # bitrate.
-                    "bufsize": "{0}k",
-                    # Set the audio output bitrate.
-                    "b:a": "{0}k",
-                    # Set the output filename for the HLS segment.
-                    "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8",
-                }
-            ),
-        )
-
 
 ## PLUGIN FUNCTIONS
 ## Generate an HLS Package from file

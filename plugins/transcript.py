@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 from core import args, definitions, helpers, jobs
 
@@ -13,10 +14,13 @@ class StirlingPluginTranscript(definitions.StirlingClass):
     confidence training, language analysis or for adding other contexts."""
 
     _plugin_name: str = "transcript"
+    _depends_on: list = field(default_factory=lambda: ['audio'])
+    _weight: int = 10
+
     # Disable the generation of audio peak data.
     transcript_disable: bool = False
     # Command to run to execute this plugin.
-    commands: list = field(default_factory=list)
+    commands: List[definitions.StrilingCmd] = field(default_factory=list)
     # Files to output.
     outputs: list = field(default_factory=list)
 
@@ -55,9 +59,13 @@ class StirlingPluginTranscript(definitions.StirlingClass):
         }
 
         self.commands.append(
-            "autosub "
-            + args.default_unparser.unparse(**options)
-            + " "
-            + str(job.media_info.source)
+            definitions.StrilingCmd(
+                plugin_name=self._plugin_name,
+                command="autosub {} {}".format(
+                    args.default_unparser.unparse(**options), str(job.media_info.source)
+                ),
+                weight=self._weight,
+                output=output_file,
+                depends_on=self._depends_on,
+            )
         )
-        self.outputs.append(output_file)
