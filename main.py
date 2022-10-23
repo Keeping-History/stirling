@@ -1,7 +1,5 @@
-import sys
-
-from core import audio, jobs, probe, video
-from plugins import plugins
+from core import audio, jobs, video
+from plugins import hls, peaks, transcript
 
 # TODO: Add support for multiple audio tracks.
 # TODO: Add support for multiple transcripts/languages
@@ -10,29 +8,21 @@ from plugins import plugins
 # at the source files resolution for previewing and fast editor preview.
 
 if __name__ == "__main__":
-    # BEGIN
 
-    # Create our job dictionary that will store all the information
-    # about the job and ceate a timestamp of when we started this job,
-    # and create a unique UUID to identify this job, the output file,
-    # and the output directory (when not specified explicitly).
-    job = jobs.create_job_from_template()
+    # Create a new job
+    my_job = jobs.StirlingJob(source="source.mp4", debug=False)
 
-    # Open the job and pass the command-line arguments to the job.
-    job = jobs.open_job(job, sys.argv[1:])
+    # Add plugins to the job
+    my_job.add_plugins(
+        audio.StirlingPluginAudio(),
+        peaks.StirlingPluginPeaks(),
+        video.StirlingPluginVideo(),
+        transcript.StirlingPluginTranscript(),
+        hls.StirlingPluginHLS(),
+    )
 
-    # CORE FUNCTIONS
-    # Media Probe
-    job = probe.probe(job)
+    # Run the job
+    my_job.run()
 
-    # Audio Extraction
-    job = audio.extract_audio(job)
-
-    # Image Frame Extraction
-    job = video.extract_frames(job)
-
-    # Run the plugins
-    job = plugins.run(job)
-
-    # END
-    jobs.close_job(job)
+    # Close out the job
+    my_job.close()

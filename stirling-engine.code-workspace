@@ -36,5 +36,8 @@
 			"commandCenter.border": "#15202b99"
 		},
 		"peacock.color": "gray",
+		"cSpell.words": [
+			"audiowaveform"
+		],
 	}
 }

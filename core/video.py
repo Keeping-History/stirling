@@ -1,92 +1,110 @@
-import subprocess
+from dataclasses import dataclass, field
 
-from core import args, helpers
+import simpleeval
+
+from core import args, definitions, helpers, jobs
 
 required_binaries = ["ffmpeg"]
 
-## PLUGIN FUNCTIONS
-# TODO: Extract iFrames to jpgs.
-# ##### -f image2 -vf "select=gt(scene\,0.5), -vsync vfr yosemiteThumb%03d.png  (scene change)
-# ##### -f image2 -vf "select=eq(pict_type\,PICT_TYPE_I)"  -vsync vfr yi%03d.png (for every iFrame)
-# ##### -f image2 -vf fps=fps=1/10 ythumb%3d.png (period thumbnails)
-# ##### -f image2 -ss 00:00:18.123 -frames:v 1 yosemite.png (specific time)
-# ##### ffmpeg -i source -vf fps=1,select='not(mod(t,5))' -vsync 0 -frame_pts 1 z%d.jpg
 
-## Extract Audio from file
-def extract_frames(job):
-    if not job["arguments"]["disable_frames"]:
-        # Check to make sure the appropriate binary files we need are installed.
-        assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
-            helpers.check_dependencies_binaries(required_binaries)
-        )
+@dataclass
+class StirlingPluginVideo(definitions.StirlingPlugin):
+    """StirlingPluginVideo are arguments for handling the source video
+    and our archival encoded copy."""
 
-        #### Some helper variables
-        # Input Filename
-        input_filename = job["source"]["input"]["filename"]
-        # Create the directory for the images.
-        frames_output_directory = job["output"]["directory"] / "img" / "frames"
-        output_filename = (
-            frames_output_directory
-            / job["commands"]["frames"]["args"]["output_filename"]
-        )
-        fps = job["commands"]["frames"]["options"]["vf"].format(
-            job["commands"]["frames"]["args"]["fps"],
-        )
+    plugin_name: str = "video"
+    depends_on: list = field(default_factory=list)
+    priority: int = 0
 
-        # Frame extraction options
-        # Where to save the image files.
-        job["commands"]["hls"]["output_options"]["directory"] = frames_output_directory
+    # Disable creating creating videos or processing any video-dependent
+    # plugins. This is not recommended, unless your source is truly audio only.
+    video_disable: bool = False
+    # In input videos with multiple streams or renditions, specify which one to
+    # use. Defaults to the first video stream in the file.
+    video_source_stream: int = -1
 
-        # The input video file
-        job["commands"]["frames"]["options"]["i"] = input_filename
+    # Disable creating individual image frames from the input video.
+    video_frames_disable: bool = False
+    # The number of frames to capture per second. Can be an integer, a float
+    # (decimal), a string that can be parsed to an integer or float, OR it can
+    # accept simple mathematical calculations, such as a fraction as a string
+    # ("1/10" or "2+"). For more information, see
+    # https://github.com/danthedeckie/simpleeval#operators for a list of
+    # standard operators. Only operations that return an integer or float
+    # (decimal) will return a value. When evaluating mathematical calculations
+    # on strings, variables and custom functions are not allowed; this is for
+    # security purposes. If no value is provided, or one cannot be calculated
+    # from the provided value, then the default is 1 frame per second.
+    frames_interval: int = 1
 
-        # The number of frames to capture for each second of video.
-        job["commands"]["frames"]["options"]["vf"] = fps
+    def __post_init__(self):
+        if not self.video_frames_disable:
+            # Check to make sure the appropriate binary files we need are installed.
+            assert helpers.check_dependencies_binaries(
+                required_binaries
+            ), AssertionError("Missing required binaries: {}".format(required_binaries))
 
-        jobArgs = args.default_unparser.unparse(
-            *{output_filename},
-            **(
-                job["commands"]["frames"]["cli_options"]
-                | job["commands"]["frames"]["options"]
-            )
-        )
+    def cmd(self, job: jobs.StirlingJob):
+        if (
+            self.video_source_stream == -1
+            and self.plugin_name in job.media_info.preferred
+            and job.media_info.preferred[self.plugin_name] is not None
+        ):
+            self.video_source_stream = job.media_info.preferred[self.plugin_name]
+        if not self.video_disable:
+            if not self.video_frames_disable:
+                stream = [
+                    item
+                    for item in job.media_info.video_streams
+                    if item.stream == self.video_source_stream
+                ]
+                fps = stream[0].frame_rate
 
-        job["commands"]["frames"]["command"] = "ffmpeg " + jobArgs
+                # Set the options to extract audio from the source file.
+                options = {
+                    "hide_banner": True,
+                    "loglevel": "quiet",
+                    "y": True,
+                    "i": job.media_info.source,
+                    "f": "image2",
+                    "map": "0:v:{}".format(self.video_source_stream),
+                    "vf": "fps={}".format(
+                        self.__get_frames_interval(self.frames_interval, fps)
+                    ),
+                    "vsync": 0,
+                    "frame_pts": 1,
+                }
 
-        helpers.log(
-            job,
-            "Frames Extract Command: {}".format(job["commands"]["frames"]["command"]),
-        )
+                output_directory = job.output_directory / self.plugin_name / "frames"
+                output_directory.mkdir(parents=True, exist_ok=True)
 
-        job["commands"]["frames"]["output"] = frames_output_directory
-        job["output"]["outputs"].append(frames_output_directory)
+                job.commands.append(
+                    definitions.StrilingCmd(
+                        plugin_name=self.plugin_name,
+                        depends_on=self.depends_on,
+                        command="ffmpeg {} {}".format(
+                            args.ffmpeg_unparser.unparse(
+                                str(job.media_info.source), **options
+                            ),
+                            str(output_directory) + "%d.jpg",
+                        ),
+                        priority=0,
+                        expected_output=str(output_directory),
+                    )
+                )
 
-        # Extract frames from video file
-        helpers.log(
-            job,
-            "Extracting image frames from video file '{}' to '{}'".format(
-                job["source"]["input"]["filename"],
-                job["commands"]["frames"]["output"],
-            ),
-        )
+    def __get_frames_interval(self, interval, fps):
+        # The Frame Interval is the number of frames to capture for every second
+        # of video. To capture one frame for every second of video, provide 1 as
+        # the value.
+        if type(interval) == str:
+            try:
+                interval = simpleeval.simple_eval(interval)
+            # trunk-ignore(flake8/E722)
+            except:
+                interval = None
 
-        if not job["arguments"]["simulate"]:
-            # Create the output directory
-            frames_output_directory.mkdir(parents=True, exist_ok=True)
+        if not isinstance(interval, (int, float, complex)):
+            return fps
 
-            # Run the command
-            command_output = subprocess.getstatusoutput(
-                job["commands"]["frames"]["command"]
-            )
-            job["output"]["frames_extract"] = command_output[1]
-
-            helpers.log(
-                job,
-                "Completed extracting images from video file '{}' to '{}'. Command output: {}".format(
-                    job["source"]["input"]["filename"],
-                    job["commands"]["frames"]["output"],
-                    helpers.log_string(command_output[1]),
-                ),
-            )
-
-    return job
+        return interval

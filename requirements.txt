@@ -3,3 +3,11 @@ validators
 autosub3
 argunparse
 mergedeep
+mtcnn
+torch
+opencv-python
+numpy
+simpleeval
+python-dateutil
+mergedeep
+networkx

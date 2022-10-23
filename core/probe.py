@@ -1,145 +1,183 @@
 import json
 import subprocess
-import sys
+from dataclasses import dataclass, field
+from typing import List
 
-from core import helpers as helpers
+import simpleeval
+
+from core import args, definitions, helpers
 
 required_binaries = ["ffprobe"]
 
 
-def probe_media_file(input):
+@dataclass
+class StreamVideo:
+    stream: int
 
-    ffprobe_options = "-hide_banner -loglevel quiet -show_error -show_format -show_streams -show_programs -show_chapters -show_private_data -print_format json"
-    # Check if we can probe the input file.
-    ffmpeg_proc = subprocess.getstatusoutput(
-        ["ffprobe {} '{}'".format(ffprobe_options, input)]
-    )
+    duration: float
+    codec: str
+    profile: str
+    bitrate: int
 
-    if ffmpeg_proc[0] != 0:
-        return None
+    width: int
+    height: int
+    frame_rate: float  # avg_frame_rate
+    aspect: List
 
-    return json.loads(ffmpeg_proc[1])
+    color_bits: int = 8
+    color_model: str = "unknown"
+    scan_type: str = "unknown"
 
-
-def get_input_streams(job):
-
-    streams, video_stream, audio_stream, disable_hls = (
-        job["source"]["info"]["streams"],
-        job["arguments"]["input_video_stream"],
-        job["arguments"]["input_audio_stream"],
-        job["arguments"]["disable_hls"],
-    )
-
-    if disable_hls:
-        if audio_stream == -1:
-            audio_stream = get_best_audio(
-                get_input_streams_from_probe(streams, "audio")
-            )
-    else:
-        if video_stream == -1:
-            video_stream = get_best_video(
-                get_input_streams_from_probe(streams, "video")
-            )
-            if audio_stream == -1:
-                audio_stream = get_best_audio(
-                    get_input_streams_from_probe(streams, "audio")
-                )
-        else:
-            audio_stream = audio_stream
-
-    (
-        job["source"]["input"]["video_stream"],
-        job["source"]["input"]["audio_stream"],
-    ) = (video_stream, audio_stream)
-    helpers.log(
-        job,
-        "Using video input stream {} ".format(job["source"]["input"]["video_stream"]),
-    )
-    helpers.log(
-        job,
-        "Using audio input stream {} ".format(job["source"]["input"]["audio_stream"]),
-    )
-
-    return job
+    content_type: str = "video"
 
 
-def get_input_streams_from_probe(probe_streams, stream_type):
-    # Get the input streams based on the codec type.
-    holder = []
-    for i in range(len(probe_streams)):
-        if probe_streams[i].get("codec_type") == stream_type:
-            holder.append((i, probe_streams[i]))
-    return holder
+@dataclass
+class StreamAudio:
+    stream: int
+
+    duration: float
+    codec: str
+    profile: str
+    bitrate: int
+
+    sample_rate: int
+    channels: int
+    channel_layout: str
+
+    content_type: str = "audio"
 
 
-def get_best_video(probe_streams):
-    if len(probe_streams) > 0:
-        v = {}
-        for stream in probe_streams:
-            v[stream[0]] = [stream[1].get("width") * stream[1].get("height")]
+@dataclass
+class StreamText:
+    stream: int
 
-    return max(v, key=v.get)
+    duration: float
+    codec: str
+    start_time: float
 
+    dispositions: list
+    language: str = "und"  # undetermined
 
-def get_best_audio(probe_streams):
-    if len(probe_streams) > 0:
-        a = {}
-        for stream in probe_streams:
-            a[stream[0]] = [stream[1].get("bit_rate")]
-
-    return max(a, key=a.get)
+    content_type: str = "subtitle"
 
 
-def probe(job):
-    # Check to make sure the appropriate binary files we need are installed.
-    assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
-        helpers.check_dependencies_binaries(required_binaries)
-    )
+@dataclass
+class StirlingMediaInfo(definitions.StirlingClass):
+    source: str = field(default=None)
+    video_streams: List[StreamVideo] = field(default_factory=list)
+    audio_streams: List[StreamAudio] = field(default_factory=list)
+    text_streams: List[StreamText] = field(default_factory=list)
+    preferred: dict = field(default_factory=dict)
 
-    # Check if we can probe the input file.
-    job["source"]["info"] = probe_media_file(job["source"]["input"]["filename"])
-    if job["source"]["info"] is None:
-        helpers.log(
-            "Could not probe the input file {}.".format(
-                job["source"]["input"]["filename"]
+    def __post_init__(self):
+
+        # Check to make sure the appropriate binary files we need are installed.
+        assert helpers.check_dependencies_binaries(required_binaries), AssertionError(
+            "Missing required binaries."
+        )
+
+        options = {
+            "hide_banner": True,
+            "loglevel": "quiet",
+            "show_error": False,
+            "show_format": True,
+            "show_streams": True,
+            "show_private_data": True,
+            "print_format": "json",
+        }
+
+        cmd = "ffprobe " + args.ffmpeg_unparser.unparse(str(self.source), **options)
+
+        # Check if we can probe the input file.
+        cmd_output = subprocess.getstatusoutput(cmd)
+
+        # If we don't get any output from above, then we can't probe the file.
+        # Return an empty StirlingMediaInfo() object.
+        if cmd_output[0] != 0 or cmd_output[1] == "":
+            return
+
+        streams = json.loads(cmd_output[1])["streams"]
+
+        for stream in streams:
+            match stream["codec_type"]:
+                case "video":
+                    self.__create_video_stream(stream)
+                case "audio":
+                    self.__create_audio_stream(stream)
+                case "subtitle":
+                    self.__create_text_stream(stream)
+
+        self.preferred["video"] = self.__set_preferred("video")
+        self.preferred["audio"] = self.__set_preferred("audio")
+
+    def __set_preferred(self, type: str):
+        m = {}
+        match type:
+            case "video":
+                for stream in self.video_streams:
+                    m[stream.stream] = [stream.width * stream.height]
+            case "audio":
+                for stream in self.audio_streams:
+                    m[stream.stream] = [stream.bitrate]
+        return max(m, key=m.get, default=None)
+
+    def __create_text_stream(self, stream: dict):
+        dispositions = []
+        if "dispositions" in stream:
+            for k, v in stream["dispositions"]:
+                if v == 1:
+                    dispositions.append(k)
+
+        self.text_streams.append(
+            StreamText(
+                stream=self.__set_default(stream, "index"),
+                duration=float(self.__set_default(stream, "duration")),
+                codec=self.__set_default(stream, "codec_name"),
+                start_time=self.__set_default(stream, "start_time"),
+                dispositions=dispositions,
+                language=self.__set_default(stream["tags"], "language", "und"),
+                channel_layout=self.__set_default(stream, "channel_layout"),
             )
         )
-        sys.exit(1)
 
-    helpers.log(
-        job, "Probed media file: " + json.dumps(job["source"]["info"], indent=4)
-    )
+    def __create_audio_stream(self, stream: dict):
+        self.audio_streams.append(
+            StreamAudio(
+                stream=self.__set_default(stream, "index"),
+                duration=float(self.__set_default(stream, "duration")),
+                codec=self.__set_default(stream, "codec_name"),
+                profile=self.__set_default(stream, "profile"),
+                bitrate=self.__set_default(stream, "bit_rate"),
+                sample_rate=self.__set_default(stream, "sample_rate"),
+                channels=self.__set_default(stream, "channels"),
+                channel_layout=self.__set_default(stream, "channel_layout"),
+            )
+        )
 
-    # Get the input streams.
-    job = get_input_streams(job)
+    def __create_video_stream(self, stream: dict):
+        self.video_streams.append(
+            StreamVideo(
+                stream=self.__set_default(stream, "index"),
+                duration=float(self.__set_default(stream, "duration")),
+                codec=self.__set_default(stream, "codec_name"),
+                profile=self.__set_default(stream, "profile"),
+                bitrate=self.__set_default(stream, "bit_rate"),
+                width=self.__set_default(stream, "width"),
+                height=self.__set_default(stream, "height"),
+                frame_rate=float(
+                    simpleeval.simple_eval(self.__set_default(stream, "avg_frame_rate"))
+                ),
+                aspect=self.__set_default(stream, "display_aspect_ratio", "0:0").split(
+                    ":"
+                ),
+                scan_type=self.__set_default(stream, "field_order", "unknown"),
+                color_bits=self.__set_default(stream, "bits_per_raw_sample", 8),
+                color_model=self.__set_default(stream, "pix_fmt", "unknown"),
+            )
+        )
 
-    #  The video must be longer than zero (0) seconds.
-    stream_duration = float(
-        job["source"]["info"]["streams"][(job["source"]["input"]["video_stream"])][
-            "duration"
-        ]
-    )
-    assert stream_duration > 0, "couldn't get duration of input file {}".format(
-        job["source"]["input"]["filename"]
-    )
-
-    # The video must be shorter than 24 hours (86400 seconds)
-    assert stream_duration <= 86400, "stream is over 24 hours, not supported {}".format(
-        job["source"]["input"]["filename"]
-    )
-
-    # The video and audio must have the input streams we've either specified
-    # automatically or either manually through the --input-audio-stream and
-    # --input-video-stream argument.
-    assert (
-        job["source"]["input"]["video_stream"] >= 0
-    ), "couldn't get video stream for file {}".format(
-        str(job["source"]["input"]["filename"])
-    )
-
-    assert (
-        job["source"]["input"]["audio_stream"] >= 0
-    ), "couldn't get audio stream for file  {}".format(
-        str(job["source"]["input"]["filename"])
-    )
-    return job
+    def __set_default(self, obj: dict, key: str, default: bool = None):
+        if key in obj:
+            return obj[key]
+        else:
+            return default
