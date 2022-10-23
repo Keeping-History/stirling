@@ -1,45 +1,3 @@
-import json
-
-from core import definitions, strings, video, jobs, audio
-from plugins import hls, peaks, transcript
-
-
-# e = probe.SterlingMediaInfo(source="https://download.samplelib.com/mp4/sample-5s.mp4")
-# print(json.dumps(e, indent=4, cls=strings.JobEncoder))
-# exit()
-
-def get_outputs(args):
-    outputs: list = []
-    for a in args:
-        outputs.append([*a.outputs])
-    return outputs
-
-def get_commands(args):
-    commands: list = []
-    for a in args:
-        commands.append(*a.commands)
-    return commands
-
-
-e = jobs.StirlingJob(source="source.mp4", debug=False)
-e.open()
-e.plugins = [audio.StirlingPluginAudio(), peaks.StirlingPluginPeaks(), video.StirlingPluginVideo(), transcript.StirlingPluginTranscript(), hls.StirlingPluginHLS()]
-e.commands()
-e.write()
-print(json.dumps(e, indent=4, cls=strings.JobEncoder))
-
-exit()
-
-
-hlsargs = hls.StirlingArgsPluginHLS()
-outputs = definitions.StirlingOutputs(
-    directory=".", outputs=[{"plugin": "a", "files": "a"}]
-)
-
-print(json.dumps(f, cls=strings.JobEncoder, indent=4))
-#print(json.dumps(j, cls=strings.JobEncoder, indent=4))
-exit()
-
 # # print(hints["log_file"])
 # f.time_start= "2020-01-01"
 # f.time_end = datetime.now()
@@ -47,7 +5,7 @@ exit()
 # f.job_file = "/path/job.json_file"
 # f.duration = "1.09"
 
-# print(json.dumps(f, cls=strings.JobEncoder, indent=4))
+# print(json.dumps(f, cls=helpers.StirlingJSONEncoder, indent=4))
 # sleep(100)
 
 

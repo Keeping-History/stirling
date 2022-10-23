@@ -1,6 +1,8 @@
 import json
 import os
 import shutil
+import subprocess
+import textwrap
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -8,11 +10,14 @@ from pathlib import Path
 from typing import List
 from urllib.parse import urlparse, urlsplit
 
+import networkx
 import requests
 import validators
-from mergedeep import merge
 
-from core import definitions, probe, strings
+from core import definitions, helpers, probe
+
+# TODO: Need this later for merging in a json job file.
+# from mergedeep import merge
 
 
 @dataclass
@@ -53,7 +58,7 @@ class StirlingJob(definitions.StirlingClass):
     ### Output variables
     # The directory to output the package. Defaults to a folder named with the
     # job's ID (a random UUID) in the current working folder.
-    output_directory: Path = Path(os.getcwd())
+    output_directory: Path = None
     # The directory to store annotations in. Defaults to a folder named annotations.
     output_annotations_directory: str = "annotations"
     # When a job is completed, a copy of the video file as it was uploaded is
@@ -75,38 +80,45 @@ class StirlingJob(definitions.StirlingClass):
     # Specific output files/directories generated are put here
     _outputs: List = field(default_factory=list)
     # Commands to fire off
-    _commands: List = field(default_factory=list)
+    commands: List[definitions.StrilingCmd] = field(default_factory=list)
 
-    def open(self):
-        # Check to see if a Job JSON file was passed and parse it
-        # TODO: see self.load()
-        # if self.job_file.is_file():
-        #    self.load()
+    def __post_init__(self):
+        if self.job_file.is_file():
+            self.load()
 
         # Setup our output directory
         self.__get_output_directory()
-        # Validate our incoming source file
-        self.__get_source()
 
         # Logging
         self.log("Starting job")
         self.log("Job Definition: ", self)
         self.log("Output Directory will be: " + str(self.output_directory))
-        self.log("File to processed will be: " + str(self.source))
+
+        # Validate our incoming source file
+        self.__get_source()
 
         # Probe the source file
         self.media_info = probe.SterlingMediaInfo(source=self.source)
         self.log("Media file {} probed: ".format(self.source), self.media_info)
+        self.write()
+
+    def add_plugins(self, *args):
+        for plugin in args:
+            self.plugins.append(plugin)
+            self.log('Added plugin "{}". '.format(plugin.plugin_name))
+        self.__parse()
+        self.write()
 
     def load(self):
         # TODO: Implement the actual merge from a JSON job file
         #  This whole function is just a
         #  placeholder stub
-        with open(self.job_file) as json_file:
-            # Load the file into our Job Object
-            new_job = json.load(json_file)
-            job = merge({}, self, new_job)
-            self.log("Loaded job: ", job)
+        # with open(self.job_file) as json_file:
+        #     # Load the file into our Job Object
+        #     new_job = json.load(json_file)
+        #     job = merge({}, self, new_job)
+        #     self.log("Loaded job: ", job)
+        pass
 
     def close(self):
         # Close out the job and update its metadata
@@ -119,13 +131,109 @@ class StirlingJob(definitions.StirlingClass):
         )
         self.write()
 
+    def run(self):
+        cmd_holder = []
+        for cmd in self.commands:
+            # Check if we can probe the input file.
+            cmd.status = definitions.StirlingCmdStatus.RUNNING
+            self.log(
+                "Starting command {} for plugin {}".format(
+                    textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                )
+            )
+            cmd_output = subprocess.getstatusoutput(cmd.command)
+            cmd.log = cmd_output[1]
+            if cmd_output[0] != 0:
+                cmd.status = definitions.StirlingCmdStatus.FAILED
+                self.log(
+                    "Command {} for plugin {} failed.".format(
+                        textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                    )
+                )
+                self.log("Command for plugin {}:".format(cmd.plugin_name), cmd.command)
+                self.log("Output:", cmd.log)
+            elif cmd_output[0] == 1:
+                self.log(
+                    "Command {} for plugin {} succeeded.".format(
+                        textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                    )
+                )
+                cmd.status = definitions.StirlingCmdStatus.SUCCESS
+
+                self.log(
+                    "Command {} for plugin {} output:".format(
+                        textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                    ),
+                    cmd.log,
+                )
+            self.write()
+
+            cmd_holder.append(cmd)
+
+        self.commands = cmd_holder
+
+    def __parse(self):
+        # Clear the commands list, as we will re-parse them all
+        self._outputs = []
+
+        # Create some holder variables
+        cmd_sort_holder = {}
+        cmd_output_holder = []
+
+        for plugin in self.plugins:
+            self.log('Parsing plugin "{}" commands.'.format(plugin.plugin_name))
+            plugin.cmd(self)
+
+            # Sort each command in the plugin by its priority/priority
+            self.commands.sort(key=lambda x: x.priority, reverse=True)
+
+            # Create a holder so we can run a topographical sort on the commands
+            for cmd in self.commands:
+                if len(cmd.depends_on) > 0:
+                    cmd_sort_holder[cmd.plugin_name] = cmd.depends_on
+
+        if len(cmd_sort_holder) > 1:
+            self.log(
+                'Parsing plugin "{}" dependencies {}.'.format(
+                    plugin.plugin_name, plugin.depends_on
+                )
+            )
+
+            # Sort the commands by their dependencies
+            cmd_sort_list = list(
+                reversed(
+                    list(networkx.topological_sort(networkx.DiGraph(cmd_sort_holder)))
+                )
+            )
+
+            # Reorder the commands based on the topographical sort
+            for v in cmd_sort_list:
+                for cmd in self.commands:
+                    if cmd.plugin_name == v:
+                        self.log(
+                            'Appending command for plugin "{}": {}.'.format(
+                                cmd.plugin_name, cmd.command
+                            )
+                        )
+                        cmd_output_holder.append(cmd)
+                        self._outputs.append(str(cmd.expected_output))
+
+        # Create the necessary folders for the plugin outputs
+        for output in self._outputs:
+            output_dir = Path(os.path.dirname(Path(output)))
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Set the commands to the sorted list
+        self.commands = cmd_output_holder
+        self.log("Plugins added {} commands.".format(len(self.commands)))
+
     def write(self):
         # Write the object to a file
         output_file = open(self.job_file, "w")
-        output_file.write(json.dumps(self, indent=4, cls=strings.JobEncoder))
+        output_file.write(json.dumps(self, indent=4, cls=helpers.StirlingJSONEncoder))
         output_file.close()
 
-    def log(self, message, *args):
+    def log(self, message: str, *args):
         stamp = datetime.now()
         obj_log = ""
         duration = str((stamp - self.time_start))
@@ -134,7 +242,10 @@ class StirlingJob(definitions.StirlingClass):
         )
 
         for object_to_log in args:
-            obj_log += self.__log_object(object_to_log)
+            if isinstance(object_to_log, str):
+                obj_log += self.__log_string(object_to_log)
+            else:
+                obj_log += self.__log_object(object_to_log)
 
         if self.debug:
             print("{}: {}{}".format(line_header, message, obj_log))
@@ -160,13 +271,13 @@ class StirlingJob(definitions.StirlingClass):
 
     def __log_object(self, obj, prefix: str = "+", header: str = "", indent: int = 4):
         return self.__log_string(
-            header + json.dumps(vars(obj), indent=indent, cls=strings.JobEncoder),
+            header
+            + json.dumps(vars(obj), indent=indent, cls=helpers.StirlingJSONEncoder),
             prefix,
             indent,
         )
 
     def __get_source(self):
-
         # If the incoming source is a URL, then let's download it.
         if validators.url(self.source, public=False):
             response = requests.get(self.source)
@@ -182,24 +293,31 @@ class StirlingJob(definitions.StirlingClass):
                         self.source, str(self.id)
                     )
                 )
+        self.log("File to processed will be: " + str(self.source))
 
         # Get a full path to name our source file when we move it. We'll use this
         # value later on as an input filename for specific commands.
-        incoming_filename = (
+        incoming_filename = Path(
             str(self.output_directory) + "/source" + Path(self.source).suffix
         )
+        source_output_directory = self.output_directory / "source"
 
         if not self.source_copy_disable:
             # Unless this is a simulation or we explicitly disabled it, copy the source
             # file to the output directory as 'source'
+            source_output_directory.mkdir(parents=True, exist_ok=True)
+
             shutil.copyfile(Path(self.source).absolute(), incoming_filename)
             if not self.source_delete_disable:
                 # Don't delete the incoming source file, in case we're testing.
                 os.remove(self.source)
 
-        self.source = Path(incoming_filename)
+            self.source = incoming_filename
 
     def __get_output_directory(self):
+        if self.output_directory is None or self.output_directory == Path("."):
+            self.output_directory = Path(Path.cwd() / "output" / str(self.id))
+
         # Make the output directory, if it doesn't exist.
         if not self.output_directory.is_dir():
             self.output_directory.mkdir(parents=True, exist_ok=True)
@@ -225,9 +343,9 @@ class StirlingJob(definitions.StirlingClass):
             )
         )
 
-    def __log_string(self, string, line_identifier="+", indent=4):
+    def __log_string(self, msg: str, line_identifier: str = "+", indent: int = 4):
         new_line_string = "\n" + line_identifier + " " * indent
-        return new_line_string + new_line_string.join(string.splitlines())
+        return new_line_string + new_line_string.join(msg.splitlines())
 
     def __is_url(self):
         try:
@@ -235,33 +353,3 @@ class StirlingJob(definitions.StirlingClass):
             return all([result.scheme, result.netloc])
         except ValueError:
             return False
-
-    def commands(self):
-        for plugin in self.plugins:
-            plugin.cmd(self)
-            for cmd in plugin.commands:
-                self._commands.append(str(cmd.command))
-        # TODO: Order the commands by their dependencies and their weight
-        return self._commands
-
-    def outputs(self):
-        for plugin in self.plugins:
-            plugin.cmd(self)
-            for out in plugin.output:
-                self._outputs.append(str(out.output))
-        return self._outputs
-
-# StirlingArgs Types
-# These StirlingArgs types include all of the arguments available to pass in to the
-# Stirling Engine (excluding any custom plugins). During startup, all StirlingArgs
-# Types will be merged into one. It is very important to note that only
-# arguments specified by the Stirling Engine and its Core Plugins can provide
-# any arguments that are not prefixed with the namespace of the plugin, followed
-# by an underscore ("_"). All Argument objects will be merged into one. In case
-# of an argument conflict, the order the arguments are merged in will determine
-# which argument, in the end, is used. First, any custom StirlingArgsPluginX types
-# will be merged together; it's important to note there is no guarantee a
-# particular plugin will be able to set a shared argument name, so it's
-# important to use name prefixes. Next, the StirlingArgsJob
-# will be merged. In case of an argument conflict, the latest merged object,
-# from the order above, will win and be set.

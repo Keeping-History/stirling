@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 from core import args, definitions, helpers, jobs
 
@@ -7,24 +6,19 @@ required_binaries = ["audiowaveform"]
 
 
 @dataclass
-class StirlingPluginPeaks(definitions.StirlingClass):
+class StirlingPluginPeaks(definitions.StirlingPlugin):
     """StirlingPluginPeaks are are for creating waveform peaks from the input
     source's audio track."""
 
-    _plugin_name: str = "peaks"
-    _depends_on: list = field(default_factory=lambda: ['audio'])
-    _weight: int = 10
+    plugin_name: str = "peaks"
+    depends_on: list = field(default_factory=lambda: ["audio"])
+    priority: int = 10
 
     # Disable the generation of audio peak data.
     peaks_disable: bool = False
 
     # Additional configuration variables for this plugin.
     peaks_output_format: str = "json"
-
-    # Command to run to execute this plugin.
-    commands: List[definitions.StrilingCmd] = field(default_factory=list)
-    # Files to output.
-    outputs: list = field(default_factory=list)
 
     ## Extract Audio from file
     def __post_init__(self):
@@ -39,7 +33,7 @@ class StirlingPluginPeaks(definitions.StirlingClass):
         output_file = (
             job.output_directory
             / job.output_annotations_directory
-            / (self._plugin_name + ".json")
+            / (self.plugin_name + ".json")
         )
 
         # Set the options to extract audio from the source file.
@@ -49,14 +43,14 @@ class StirlingPluginPeaks(definitions.StirlingClass):
             "output-format": self.peaks_output_format,
         }
 
-        self.commands.append(
+        job.commands.append(
             definitions.StrilingCmd(
-                plugin_name=self._plugin_name,
+                plugin_name=self.plugin_name,
                 command="audiowaveform {}".format(
                     args.default_unparser.unparse(**options)
                 ),
-                weight=self._weight,
-                output=output_file,
-                depends_on=self._depends_on,
+                priority=self.priority,
+                expected_output=output_file,
+                depends_on=self.depends_on,
             )
         )

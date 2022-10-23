@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 import simpleeval
 
@@ -9,12 +8,13 @@ required_binaries = ["ffmpeg"]
 
 
 @dataclass
-class StirlingPluginVideo(definitions.StirlingClass):
+class StirlingPluginVideo(definitions.StirlingPlugin):
     """StirlingPluginVideo are arguments for handling the source video
     and our archival encoded copy."""
 
-    _plugin_name: str = "video"
-    _depends_on: list = field(default_factory=list)
+    plugin_name: str = "video"
+    depends_on: list = field(default_factory=list)
+    priority: int = 0
 
     # Disable creating creating videos or processing any video-dependent
     # plugins. This is not recommended, unless your source is truly audio only.
@@ -37,11 +37,6 @@ class StirlingPluginVideo(definitions.StirlingClass):
     # from the provided value, then the default is 1 frame per second.
     frames_interval: int = 1
 
-    # The commands we will run to complete this plugin.
-    commands: List[definitions.StrilingCmd] = field(default_factory=list)
-    # Files to output.
-    outputs: list = field(default_factory=list)
-
     def __post_init__(self):
         if not self.video_frames_disable:
             # Check to make sure the appropriate binary files we need are installed.
@@ -52,10 +47,10 @@ class StirlingPluginVideo(definitions.StirlingClass):
     def cmd(self, job: jobs.StirlingJob):
         if (
             self.video_source_stream == -1
-            and job.media_info.preferred[self._plugin_name] is not None
+            and self.plugin_name in job.media_info.preferred
+            and job.media_info.preferred[self.plugin_name] is not None
         ):
-            self.video_source_stream = job.media_info.preferred[self._plugin_name]
-
+            self.video_source_stream = job.media_info.preferred[self.plugin_name]
         if not self.video_disable:
             if not self.video_frames_disable:
                 stream = [
@@ -80,21 +75,21 @@ class StirlingPluginVideo(definitions.StirlingClass):
                     "frame_pts": 1,
                 }
 
-                output_directory = job.output_directory / self._plugin_name / "frames"
+                output_directory = job.output_directory / self.plugin_name / "frames"
                 output_directory.mkdir(parents=True, exist_ok=True)
 
-                self.commands.append(
+                job.commands.append(
                     definitions.StrilingCmd(
-                        plugin_name=self._plugin_name,
-                        depends_on=self._depends_on,
+                        plugin_name=self.plugin_name,
+                        depends_on=self.depends_on,
                         command="ffmpeg {} {}".format(
-                            args.default_unparser.unparse(
+                            args.ffmpeg_unparser.unparse(
                                 str(job.media_info.source), **options
                             ),
                             str(output_directory) + "%d.jpg",
                         ),
-                        weight=0,
-                        output=str(output_directory) + "*.jpg",
+                        priority=0,
+                        expected_output=str(output_directory),
                     )
                 )
 

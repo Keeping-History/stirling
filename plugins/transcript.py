@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 from core import args, definitions, helpers, jobs
 
@@ -8,22 +7,17 @@ required_binaries = ["autosub"]
 
 
 @dataclass
-class StirlingPluginTranscript(definitions.StirlingClass):
+class StirlingPluginTranscript(definitions.StirlingPlugin):
     """StirlingPluginTranscript are for creating speech-to-text transcripts.
     These transcripts can be used as-is, or can be used later for
     confidence training, language analysis or for adding other contexts."""
 
-    _plugin_name: str = "transcript"
-    _depends_on: list = field(default_factory=lambda: ['audio'])
-    _weight: int = 10
+    plugin_name: str = "transcript"
+    depends_on: list = field(default_factory=lambda: ["audio"])
+    priority: int = 10
 
     # Disable the generation of audio peak data.
     transcript_disable: bool = False
-    # Command to run to execute this plugin.
-    commands: List[definitions.StrilingCmd] = field(default_factory=list)
-    # Files to output.
-    outputs: list = field(default_factory=list)
-
     # Additional configuration variables for this plugin.
     transcript_lang_input: str = "en"
     # Additional configuration variables for this plugin.
@@ -46,7 +40,7 @@ class StirlingPluginTranscript(definitions.StirlingClass):
         output_file = (
             job.output_directory
             / job.output_annotations_directory
-            / (self._plugin_name + ".json")
+            / (self.plugin_name + ".json")
         )
 
         # Set the options to extract audio from the source file.
@@ -58,14 +52,14 @@ class StirlingPluginTranscript(definitions.StirlingClass):
             "F": self.transcript_format,
         }
 
-        self.commands.append(
+        job.commands.append(
             definitions.StrilingCmd(
-                plugin_name=self._plugin_name,
+                plugin_name=self.plugin_name,
                 command="autosub {} {}".format(
                     args.default_unparser.unparse(**options), str(job.media_info.source)
                 ),
-                weight=self._weight,
-                output=output_file,
-                depends_on=self._depends_on,
+                priority=self.priority,
+                expected_output=output_file,
+                depends_on=self.depends_on,
             )
         )
