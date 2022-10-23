@@ -1,28 +1,65 @@
-import args
-import helpers
+from dataclasses import dataclass, field
 
-## PLUGIN FUNCTIONS
+from core import args, definitions, helpers, jobs
 
-## Extract Audio Peaks from file
-def generate_transcript(job):
-    # Peak file Generation options
+# Specify the required binaries in a list.
+required_binaries = ["autosub"]
 
-    # Where to store our calculated audio peaks JSON file.
-    output_filename = str(job["output"]["directory"]) + "/annotations/subtitles.json"
-    job["commands"]["transcript"]["options"]["o"] = output_filename
 
-    jobArgs = args.default_unparser.unparse(
-        job["commands"]["audio"]["output"], **job["commands"]["transcript"]["options"]
-    )
+@dataclass
+class StirlingPluginTranscript(definitions.StirlingPlugin):
+    """StirlingPluginTranscript are for creating speech-to-text transcripts.
+    These transcripts can be used as-is, or can be used later for
+    confidence training, language analysis or for adding other contexts."""
 
-    job["commands"]["transcript"]["command"] = "autosub " + jobArgs
+    plugin_name: str = "transcript"
+    depends_on: list = field(default_factory=lambda: ["audio"])
+    priority: int = 10
 
-    helpers.log(
-        job,
-        "Transcript Generation Command: " + job["commands"]["transcript"]["command"],
-    )
+    # Disable the generation of audio peak data.
+    transcript_disable: bool = False
+    # Additional configuration variables for this plugin.
+    transcript_lang_input: str = "en"
+    # Additional configuration variables for this plugin.
+    transcript_lang_output: str = "en"
+    # The number of concurrent API requests to make
+    transcript_concurrency: int = 10
+    # The format to output the transcript to.
+    transcript_format: str = "json"
 
-    job["commands"]["transcript"]["output"] = output_filename
-    job["output"]["outputs"].append(output_filename)
+    ## Extract Audio from file
+    def __post_init__(self):
+        if not self.transcript_disable:
+            # Check to make sure the appropriate binary files we need are installed.
+            assert helpers.check_dependencies_binaries(
+                required_binaries
+            ), AssertionError("Missing required binaries: {}".format(required_binaries))
 
-    return job
+    ## Extract Audio from file
+    def cmd(self, job: jobs.StirlingJob):
+        output_file = (
+            job.output_directory
+            / job.output_annotations_directory
+            / (self.plugin_name + ".json")
+        )
+
+        # Set the options to extract audio from the source file.
+        options = {
+            "o": str(output_file),
+            "D": self.transcript_lang_output,
+            "S": self.transcript_lang_input,
+            "C": self.transcript_concurrency,
+            "F": self.transcript_format,
+        }
+
+        job.commands.append(
+            definitions.StrilingCmd(
+                plugin_name=self.plugin_name,
+                command="autosub {} {}".format(
+                    args.default_unparser.unparse(**options), str(job.media_info.source)
+                ),
+                priority=self.priority,
+                expected_output=output_file,
+                depends_on=self.depends_on,
+            )
+        )

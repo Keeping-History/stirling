@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="-665 -251 2101 900" width="2101" height="900">
+  <defs/>
+  <g id="Canvas_1" fill-opacity="1" stroke-dasharray="none" stroke-opacity="1" stroke="none" fill="none">
+    <title>Canvas 1</title>
+    <rect fill="white" x="-665" y="-251" width="2101" height="900"/>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Group_66">
+        <g id="Group_13">
+          <g id="Graphic_11">
+            <rect x="650.75" y="-249.53264" width="346.5" height="897.0653" fill="white"/>
+            <rect x="650.75" y="-249.53264" width="346.5" height="897.0653" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <text transform="translate(655.75 -244.53264)" fill="black">
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Output Package</tspan>
+            </text>
+          </g>
+          <g id="Graphic_4">
+            <title>Folder</title>
+            <path d="M 957.75 -233.46736 L 945.75 -233.46736 C 943.55 -233.46736 941.77 -231.4829 941.77 -229.05744 L 941.75 -202.59792 C 941.75 -200.17246 943.55 -198.188 945.75 -198.188 L 977.75 -198.188 C 979.95 -198.188 981.75 -200.17246 981.75 -202.59792 L 981.75 -224.64752 C 981.75 -227.07298 979.95 -229.05744 977.75 -229.05744 L 961.75 -229.05744 L 957.75 -233.46736 Z" fill="black"/>
+          </g>
+        </g>
+        <g id="Graphic_28">
+          <text transform="translate(670.75 -197.46736)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">&lt;&lt;job-id&gt;&gt;</tspan>
+          </text>
+        </g>
+        <g id="Graphic_29">
+          <text transform="translate(695.75 -169.01936)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">job.json</tspan>
+          </text>
+        </g>
+        <g id="Graphic_30">
+          <text transform="translate(695.75 -140.57136)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">job.log</tspan>
+          </text>
+        </g>
+        <g id="Graphic_34">
+          <text transform="translate(695.75 -112.12337)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">source/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_33">
+          <text transform="translate(721.75 -83.67537)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">source.&lt;format&gt;</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35">
+          <text transform="translate(721.75 318.53264)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">subtitles.json</tspan>
+          </text>
+        </g>
+        <g id="Graphic_36">
+          <text transform="translate(721.75 346.98064)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">waveform.json</tspan>
+          </text>
+        </g>
+        <g id="Graphic_37">
+          <text transform="translate(695.75 1.6686253)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">video/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_38">
+          <text transform="translate(721.75 30.116623)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">hls/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_41">
+          <text transform="translate(695.75 261.63664)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">annotations/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_42">
+          <text transform="translate(721.75 290.08464)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">&lt;type&gt;.json</tspan>
+          </text>
+        </g>
+        <g id="Graphic_44">
+          <text transform="translate(742.75 58.56462)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">playlist.m3u8</tspan>
+          </text>
+        </g>
+        <g id="Graphic_43">
+          <text transform="translate(742.75 87.01262)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">…</tspan>
+          </text>
+        </g>
+        <g id="Graphic_47">
+          <text transform="translate(721.75 -55.22737)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">source.mp4</tspan>
+          </text>
+        </g>
+        <g id="Graphic_48">
+          <text transform="translate(721.75 -26.779373)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">source.wav</tspan>
+          </text>
+        </g>
+        <g id="Graphic_49">
+          <text transform="translate(721.75 115.46062)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">thumbs/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_50">
+          <text transform="translate(742.75 143.90862)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">thumb_&lt;time&gt;_&lt;res&gt;.jpg</tspan>
+          </text>
+        </g>
+        <g id="Graphic_51">
+          <text transform="translate(721.75 375.42864)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">faces/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_52">
+          <text transform="translate(742.75 403.87663)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">faces.json</tspan>
+          </text>
+        </g>
+        <g id="Graphic_53">
+          <text transform="translate(742.75 432.32463)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">face_&lt;x&gt;.jpg</tspan>
+          </text>
+        </g>
+        <g id="Graphic_55">
+          <text transform="translate(751.278 460.77263)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">…</tspan>
+          </text>
+        </g>
+        <g id="Graphic_56">
+          <text transform="translate(721.75 489.2206)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">segments/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_57">
+          <text transform="translate(742.75 517.6686)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">segments.json</tspan>
+          </text>
+        </g>
+        <g id="Graphic_58">
+          <text transform="translate(742.75 546.1166)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">segment_&lt;x&gt;/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_59">
+          <text transform="translate(767.566 574.5646)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">&lt;x&gt;.mp4</tspan>
+          </text>
+        </g>
+        <g id="Graphic_60">
+          <text transform="translate(767.566 603.0126)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">…</tspan>
+          </text>
+        </g>
+        <g id="Graphic_62">
+          <text transform="translate(695.75 176.29265)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">audio/</tspan>
+          </text>
+        </g>
+        <g id="Graphic_61">
+          <text transform="translate(721.75 204.74065)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">audio.mp3</tspan>
+          </text>
+        </g>
+        <g id="Graphic_63">
+          <text transform="translate(721.75 233.18864)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">audio.&lt;format&gt;</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_150">
+        <g id="Group_27">
+          <g id="Graphic_6">
+            <rect x="-225.75" y="72" width="346.5" height="254" fill="white"/>
+            <rect x="-225.75" y="72" width="346.5" height="254" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <text transform="translate(-220.75 77)" fill="black">
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Extract/Normalize</tspan>
+            </text>
+          </g>
+          <g id="Graphic_2">
+            <title>Video Cam</title>
+            <path d="M -137.75 147.78 L -137.75 140.78 C -137.75 139.68 -138.65 138.78 -139.75 138.78 L -163.75 138.78 C -164.85 138.78 -165.75 139.68 -165.75 140.78 L -165.75 160.78 C -165.75 161.88 -164.85 162.78 -163.75 162.78 L -139.75 162.78 C -138.65 162.78 -137.75 161.88 -137.75 160.78 L -137.75 153.78 L -129.75 161.78 L -129.75 139.78 L -137.75 147.78 Z" fill="black"/>
+          </g>
+          <g id="Graphic_3">
+            <title>Hearing</title>
+            <path d="M -142.408 236.1405 C -142.988 236.1405 -143.528 236.0205 -143.928 235.8405 C -145.348 235.1005 -146.348 234.0805 -147.348 231.0805 C -148.368 227.9605 -150.288 226.5005 -152.128 225.0805 C -153.708 223.8605 -155.348 222.6005 -156.768 220.0205 C -157.828 218.1005 -158.408 216.0005 -158.408 214.1405 C -158.408 208.5405 -154.008 204.1405 -148.408 204.1405 C -142.808 204.1405 -138.408 208.5405 -138.408 214.1405 L -134.408 214.1405 C -134.408 206.2805 -140.548 200.1405 -148.408 200.1405 C -156.268 200.1405 -162.408 206.2805 -162.408 214.1405 C -162.408 216.6605 -161.648 219.4405 -160.268 221.9405 C -158.448 225.2405 -156.308 226.9005 -154.568 228.2405 C -152.948 229.4805 -151.788 230.3805 -151.148 232.3405 C -149.948 235.9805 -148.408 238.0205 -145.688 239.4405 C -144.668 239.9005 -143.548 240.1405 -142.408 240.1405 C -137.988 240.1405 -134.408 236.5605 -134.408 232.1405 L -138.408 232.1405 C -138.408 234.3405 -140.208 236.1405 -142.408 236.1405 Z M -161.128 201.4205 L -163.968 198.5805 C -167.948 202.5605 -170.408 208.0605 -170.408 214.1405 C -170.408 220.2205 -167.948 225.7205 -163.968 229.7005 L -161.148 226.8805 C -164.388 223.6205 -166.408 219.1205 -166.408 214.1405 C -166.408 209.1605 -164.388 204.6605 -161.128 201.4205 Z M -153.408 214.1405 C -153.408 216.9005 -151.168 219.1405 -148.408 219.1405 C -145.648 219.1405 -143.408 216.9005 -143.408 214.1405 C -143.408 211.3805 -145.648 209.1405 -148.408 209.1405 C -151.168 209.1405 -153.408 211.3805 -153.408 214.1405 Z" fill="black"/>
+          </g>
+          <g id="Graphic_5">
+            <title>Format Color Text</title>
+            <path d="M -168.04679 290.85942 L -168.04679 297.2917 L -129.45321 297.2917 L -129.45321 290.85942 Z M -150.35807 263.5223 L -159.20243 286.03523 L -155.58428 286.03523 L -153.78324 281.21103 L -143.73284 281.21103 L -141.9318 286.03523 L -138.31366 286.03523 L -147.14193 263.5223 L -150.35807 263.5223 Z M -152.77016 277.9949 L -148.75 267.81986 L -144.9228 277.9949 L -152.77016 277.9949 Z" fill="black"/>
+          </g>
+          <g id="Graphic_9"/>
+          <g id="Graphic_24">
+            <text transform="translate(-76.25 143.78)" fill="black">
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Video: h.264, match </tspan>
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">source file</tspan>
+            </text>
+          </g>
+          <g id="Graphic_25">
+            <text transform="translate(-76.25 204.6065)" fill="black">
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Audio: WAV PCM, </tspan>
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">match source file</tspan>
+            </text>
+          </g>
+          <g id="Graphic_26">
+            <text transform="translate(-75.098 264.407)" fill="black">
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">CC: JSON time-</tspan>
+              <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">stamped</tspan>
+            </text>
+          </g>
+        </g>
+        <g id="Graphic_68">
+          <title>Shuffle</title>
+          <path d="M 84.43 95.84 L 74.07 85.5 L 71.25 88.32 L 81.59 98.66 L 84.43 95.84 Z M 92.25 85.5 L 96.33 89.58 L 71.25 114.68 L 74.07 117.5 L 99.17 92.42 L 103.25 96.5 L 103.25 85.5 L 92.25 85.5 Z M 92.91 104.32 L 90.09 107.14 L 96.35 113.4 L 92.25 117.5 L 103.25 117.5 L 103.25 106.5 L 99.17 110.58 L 92.91 104.32 Z" fill="black"/>
+        </g>
+      </g>
+      <g id="Group_107">
+        <g id="Graphic_90">
+          <rect x="212.5" y="-63.25" width="346.5" height="524.5" fill="white"/>
+          <rect x="212.5" y="-63.25" width="346.5" height="524.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(217.5 -58.25)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Plugins</tspan>
+          </text>
+        </g>
+        <g id="Graphic_89">
+          <title>Video Cam</title>
+          <path d="M 300.5 42.425996 L 300.5 35.425996 C 300.5 34.325996 299.6 33.425996 298.5 33.425996 L 274.5 33.425996 C 273.4 33.425996 272.5 34.325996 272.5 35.425996 L 272.5 55.425996 C 272.5 56.525996 273.4 57.425996 274.5 57.425996 L 298.5 57.425996 C 299.6 57.425996 300.5 56.525996 300.5 55.425996 L 300.5 48.425996 L 308.5 56.425996 L 308.5 34.425996 L 300.5 42.425996 Z" fill="black"/>
+        </g>
+        <g id="Graphic_85">
+          <text transform="translate(362 8.53)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Transcoders: capture </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">and convert video to </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">different formats and </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="70.34399">output packages</tspan>
+          </text>
+        </g>
+        <g id="Graphic_93">
+          <title>Settings Input Svideo</title>
+          <path d="M 525.95455 -37.06818 C 525.95455 -38.426364 524.8582 -39.522727 523.5 -39.522727 C 522.1418 -39.522727 521.04545 -38.426364 521.04545 -37.06818 C 521.04545 -35.71 522.1418 -34.613636 523.5 -34.613636 C 524.8582 -34.613636 525.95455 -35.71 525.95455 -37.06818 Z M 537.4091 -45.25 C 537.4091 -46.60818 536.3127 -47.704545 534.95455 -47.704545 L 530.04546 -47.704545 C 528.6873 -47.704545 527.5909 -46.60818 527.5909 -45.25 C 527.5909 -43.89182 528.6873 -42.795455 530.04546 -42.795455 L 534.95455 -42.795455 C 536.3127 -42.795455 537.4091 -43.89182 537.4091 -45.25 Z M 526.7727 -31.34091 C 525.41455 -31.34091 524.3182 -30.244545 524.3182 -28.886364 C 524.3182 -27.528182 525.41455 -26.431818 526.7727 -26.431818 C 528.1309 -26.431818 529.2273 -27.528182 529.2273 -28.886364 C 529.2273 -30.244545 528.1309 -31.34091 526.7727 -31.34091 Z M 532.5 -54.25 C 522.5673 -54.25 514.5 -46.18273 514.5 -36.25 C 514.5 -26.317273 522.5673 -18.25 532.5 -18.25 C 542.4327 -18.25 550.5 -26.317273 550.5 -36.25 C 550.5 -46.18273 542.4327 -54.25 532.5 -54.25 Z M 532.5 -21.522727 C 524.38364 -21.522727 517.7727 -28.133636 517.7727 -36.25 C 517.7727 -44.366364 524.38364 -50.97727 532.5 -50.97727 C 540.61636 -50.97727 547.2273 -44.366364 547.2273 -36.25 C 547.2273 -28.133636 540.61636 -21.522727 532.5 -21.522727 Z M 541.5 -39.522727 C 540.1418 -39.522727 539.04546 -38.426364 539.04546 -37.06818 C 539.04546 -35.71 540.1418 -34.613636 541.5 -34.613636 C 542.8582 -34.613636 543.95455 -35.71 543.95455 -37.06818 C 543.95455 -38.426364 542.8582 -39.522727 541.5 -39.522727 Z M 538.2273 -31.34091 C 536.8691 -31.34091 535.7727 -30.244545 535.7727 -28.886364 C 535.7727 -27.528182 536.8691 -26.431818 538.2273 -26.431818 C 539.58546 -26.431818 540.6818 -27.528182 540.6818 -28.886364 C 540.6818 -30.244545 539.58546 -31.34091 538.2273 -31.34091 Z" fill="black"/>
+        </g>
+        <g id="Graphic_95">
+          <title>Search</title>
+          <path d="M 296 153.51 L 294.42 153.51 L 293.86 152.97 C 295.82 150.69 297 147.73 297 144.51 C 297 137.33 291.18 131.51 284 131.51 C 276.82 131.51 271 137.33 271 144.51 C 271 151.69 276.82 157.51 284 157.51 C 287.22 157.51 290.18 156.33 292.46 154.37 L 293 154.93 L 293 156.51 L 303 166.49 L 305.98 163.51 L 296 153.51 Z M 284 153.51 C 279.02 153.51 275 149.49 275 144.51 C 275 139.53 279.02 135.51 284 135.51 C 288.98 135.51 293 139.53 293 144.51 C 293 149.49 288.98 153.51 284 153.51 Z" fill="black"/>
+        </g>
+        <g id="Graphic_96">
+          <text transform="translate(355.5 121.328)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Analysis: process the </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">normalized source data </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">and save an annotation </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="70.34399">package</tspan>
+          </text>
+        </g>
+        <g id="Graphic_97">
+          <title>Call Split</title>
+          <path d="M 292.49 248.646 L 297.07 253.226 L 291.31 258.986 L 294.15 261.826 L 299.91 256.066 L 304.49 260.646 L 304.49 248.646 Z M 284.49 248.646 L 272.49 248.646 L 272.49 260.646 L 277.07 256.066 L 286.49 265.466 L 286.49 280.646 L 290.49 280.646 L 290.49 263.826 L 279.91 253.226 Z" fill="black"/>
+        </g>
+        <g id="Graphic_98">
+          <text transform="translate(356 227.75)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Clip: Pre-select and </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">process portions of </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">media based on </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="70.34399">Analysis data</tspan>
+          </text>
+        </g>
+        <g id="Graphic_99">
+          <title>Reply</title>
+          <path d="M 286.5 370.802 L 286.5 362.802 L 272.5 376.802 L 286.5 390.802 L 286.5 382.602 C 296.5 382.602 303.5 385.802 308.5 392.802 C 306.5 382.802 300.5 372.802 286.5 370.802 Z" fill="black"/>
+        </g>
+        <g id="Graphic_100">
+          <text transform="translate(355.5 339.698)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Publish: upload the </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">video or clips directly </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">to popular services or </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="70.34399">custom hosting</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_130">
+        <g id="Graphic_120">
+          <rect x="-664" y="16" width="346.5" height="366" fill="white"/>
+          <rect x="-664" y="16" width="346.5" height="366" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-659 21)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Incoming File</tspan>
+          </text>
+        </g>
+        <g id="Graphic_121">
+          <title>Swap Verticle Circle</title>
+          <path d="M -347 24 C -358.04 24 -367 32.96 -367 44 C -367 55.04 -358.04 64 -347 64 C -335.96 64 -327 55.04 -327 44 C -327 32.96 -335.96 24 -347 24 Z M -358 38 L -351 31 L -344 38 L -349 38 L -349 46 L -353 46 L -353 38 L -358 38 Z M -336 50 L -343 57 L -350 50 L -345 50 L -345 42 L -341 42 L -341 50 L -336 50 Z" fill="black"/>
+        </g>
+        <g id="Graphic_122">
+          <title>Backup</title>
+          <path d="M -592.14004 117.77717 C -593.50004 110.87717 -599.56004 105.69717 -606.84004 105.69717 C -612.62004 105.69717 -617.64004 108.97717 -620.14004 113.77717 C -626.16004 114.41717 -630.84004 119.51717 -630.84004 125.69717 C -630.84004 132.31717 -625.46004 137.69717 -618.84004 137.69717 L -592.84004 137.69717 C -587.32004 137.69717 -582.84004 133.21717 -582.84004 127.69717 C -582.84004 122.41717 -586.94004 118.13717 -592.14004 117.77717 Z M -602.84004 123.69717 L -602.84004 131.69717 L -610.84004 131.69717 L -610.84004 123.69717 L -616.84004 123.69717 L -606.84004 113.69717 L -596.84004 123.69717 L -602.84004 123.69717 Z" fill="black"/>
+        </g>
+        <g id="Graphic_123">
+          <title>Surround Sound</title>
+          <path d="M -596.11634 201.55002 L -628.11634 201.55002 C -630.31634 201.55002 -632.11634 203.35002 -632.11634 205.55002 L -632.11634 229.55002 C -632.11634 231.75002 -630.31634 233.55002 -628.11634 233.55002 L -596.11634 233.55002 C -593.91634 233.55002 -592.11634 231.75002 -592.11634 229.55002 L -592.11634 205.55002 C -592.11634 203.35002 -593.91634 201.55002 -596.11634 201.55002 Z M -620.59634 226.03002 L -623.41634 228.85002 C -626.55634 225.75002 -628.11634 221.65002 -628.11634 217.55002 C -628.11634 213.45002 -626.55634 209.35002 -623.43634 206.23002 L -620.61634 209.05002 C -622.93634 211.41002 -624.11634 214.47002 -624.11634 217.55002 C -624.11634 220.63002 -622.93634 223.69002 -620.59634 226.03002 Z M -612.11634 225.55002 C -616.53634 225.55002 -620.11634 221.97002 -620.11634 217.55002 C -620.11634 213.13002 -616.53634 209.55002 -612.11634 209.55002 C -607.69634 209.55002 -604.11634 213.13002 -604.11634 217.55002 C -604.11634 221.97002 -607.69634 225.55002 -612.11634 225.55002 Z M -600.79634 228.87002 L -603.61634 226.05002 C -601.29634 223.69002 -600.11634 220.63002 -600.11634 217.55002 C -600.11634 214.47002 -601.29634 211.41002 -603.63634 209.07002 L -600.81634 206.25002 C -597.67634 209.35002 -596.11634 213.45002 -596.11634 217.55002 C -596.11634 221.65002 -597.67634 225.75002 -600.79634 228.87002 Z M -612.11634 213.55002 C -614.31634 213.55002 -616.11634 215.35002 -616.11634 217.55002 C -616.11634 219.75002 -614.31634 221.55002 -612.11634 221.55002 C -609.91634 221.55002 -608.11634 219.75002 -608.11634 217.55002 C -608.11634 215.35002 -609.91634 213.55002 -612.11634 213.55002 Z" fill="black"/>
+        </g>
+        <g id="Graphic_126">
+          <text transform="translate(-545 102)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Monitor file server or cloud </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">storage for uploads</tspan>
+          </text>
+        </g>
+        <g id="Graphic_127">
+          <text transform="translate(-545 195)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Capture live video from </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">stream or capture device</tspan>
+          </text>
+        </g>
+        <g id="Graphic_128">
+          <title>Public</title>
+          <path d="M -612.11634 297.40288 C -623.15634 297.40288 -632.11634 306.36288 -632.11634 317.4029 C -632.11634 328.4429 -623.15634 337.4029 -612.11634 337.4029 C -601.07634 337.4029 -592.11634 328.4429 -592.11634 317.4029 C -592.11634 306.36288 -601.07634 297.40288 -612.11634 297.40288 Z M -614.11634 333.2629 C -622.01634 332.2829 -628.11634 325.5629 -628.11634 317.4029 C -628.11634 316.1629 -627.95634 314.9829 -627.69634 313.8229 L -618.11634 323.4029 L -618.11634 325.4029 C -618.11634 327.6029 -616.31634 329.4029 -614.11634 329.4029 L -614.11634 333.2629 Z M -600.31634 328.1829 C -600.83634 326.5629 -602.31634 325.4029 -604.11634 325.4029 L -606.11634 325.4029 L -606.11634 319.4029 C -606.11634 318.3029 -607.01634 317.4029 -608.11634 317.4029 L -620.11634 317.4029 L -620.11634 313.4029 L -616.11634 313.4029 C -615.01634 313.4029 -614.11634 312.5029 -614.11634 311.4029 L -614.11634 307.40288 L -610.11634 307.40288 C -607.91634 307.40288 -606.11634 305.60288 -606.11634 303.40288 L -606.11634 302.58288 C -600.25634 304.96288 -596.11634 310.70288 -596.11634 317.4029 C -596.11634 321.5629 -597.71634 325.3429 -600.31634 328.1829 Z" fill="black"/>
+        </g>
+        <g id="Graphic_129">
+          <text transform="translate(-545 296)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Upload or notify via REST/</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">GraphQL endpoint</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_148">
+        <g id="Graphic_143">
+          <rect x="1089" y="-116" width="346.5" height="630" fill="white"/>
+          <rect x="1089" y="-116" width="346.5" height="630" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1094 -111)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Player</tspan>
+          </text>
+        </g>
+        <g id="Graphic_142">
+          <title>Video Cam</title>
+          <path d="M 1177 -10.324004 L 1177 -17.324004 C 1177 -18.424004 1176.1 -19.324004 1175 -19.324004 L 1151 -19.324004 C 1149.9 -19.324004 1149 -18.424004 1149 -17.324004 L 1149 2.675996 C 1149 3.775996 1149.9 4.675996 1151 4.675996 L 1175 4.675996 C 1176.1 4.675996 1177 3.775996 1177 2.675996 L 1177 -4.324004 L 1185 3.675996 L 1185 -18.324004 L 1177 -10.324004 Z" fill="black"/>
+        </g>
+        <g id="Graphic_141">
+          <text transform="translate(1238.5 -44.22)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">HTML5 player w/ </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">support for all major </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">platforms</tspan>
+          </text>
+        </g>
+        <g id="Graphic_139">
+          <title>Search</title>
+          <path d="M 1172.5 100.76 L 1170.92 100.76 L 1170.36 100.22 C 1172.32 97.94 1173.5 94.98 1173.5 91.76 C 1173.5 84.58 1167.68 78.76 1160.5 78.76 C 1153.32 78.76 1147.5 84.58 1147.5 91.76 C 1147.5 98.94 1153.32 104.76 1160.5 104.76 C 1163.72 104.76 1166.68 103.58 1168.96 101.62 L 1169.5 102.18 L 1169.5 103.76 L 1179.5 113.74 L 1182.48 110.76 L 1172.5 100.76 Z M 1160.5 100.76 C 1155.52 100.76 1151.5 96.74 1151.5 91.76 C 1151.5 86.78 1155.52 82.76 1160.5 82.76 C 1165.48 82.76 1169.5 86.78 1169.5 91.76 C 1169.5 96.74 1165.48 100.76 1160.5 100.76 Z" fill="black"/>
+        </g>
+        <g id="Graphic_138">
+          <text transform="translate(1232 68.578)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Network detection </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">adjusts bitrate for </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">optimal performance</tspan>
+          </text>
+        </g>
+        <g id="Graphic_137">
+          <title>Call Split</title>
+          <path d="M 1168.99 195.896 L 1173.57 200.476 L 1167.81 206.236 L 1170.65 209.076 L 1176.41 203.316 L 1180.99 207.896 L 1180.99 195.896 Z M 1160.99 195.896 L 1148.99 195.896 L 1148.99 207.896 L 1153.57 203.316 L 1162.99 212.716 L 1162.99 227.896 L 1166.99 227.896 L 1166.99 211.076 L 1156.41 200.476 Z" fill="black"/>
+        </g>
+        <g id="Graphic_136">
+          <text transform="translate(1232.5 175)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Cachable video assets </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">can be deployed on </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">any storage/CDN </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="70.34399">solution</tspan>
+          </text>
+        </g>
+        <g id="Graphic_135">
+          <title>Reply</title>
+          <path d="M 1163 318.052 L 1163 310.052 L 1149 324.052 L 1163 338.052 L 1163 329.852 C 1173 329.852 1180 333.052 1185 340.052 C 1183 330.052 1177 320.052 1163 318.052 Z" fill="black"/>
+        </g>
+        <g id="Graphic_134">
+          <text transform="translate(1232 288.51)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Enhance media with </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">annotations and our </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">powerful Player SDK </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="70.34399">and plugins</tspan>
+          </text>
+        </g>
+        <g id="Graphic_144">
+          <title>Video Collection</title>
+          <path d="M 1391 -99 L 1387 -99 L 1387 -71 C 1387 -68.8 1388.8 -67 1391 -67 L 1419 -67 L 1419 -71 L 1391 -71 L 1391 -99 Z M 1423 -107 L 1399 -107 C 1396.8 -107 1395 -105.2 1395 -103 L 1395 -79 C 1395 -76.8 1396.8 -75 1399 -75 L 1423 -75 C 1425.2 -75 1427 -76.8 1427 -79 L 1427 -103 C 1427 -105.2 1425.2 -107 1423 -107 Z M 1407 -82 L 1407 -100 L 1419 -91 L 1407 -82 Z" fill="black"/>
+        </g>
+        <g id="Graphic_145">
+          <text transform="translate(1232.5 413.308)" fill="black">
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Package and share </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="33.448">your custom player </tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="51.895996">anywhere</tspan>
+          </text>
+        </g>
+        <g id="Graphic_146">
+          <title>Reply</title>
+          <path d="M 1162.99 438.052 L 1162.99 430.052 L 1148.99 444.052 L 1162.99 458.052 L 1162.99 449.852 C 1172.99 449.852 1179.99 453.052 1184.99 460.052 C 1182.99 450.052 1176.99 440.052 1162.99 438.052 Z" fill="black"/>
+        </g>
+      </g>
+      <g id="Line_151">
+        <line x1="-225.75" y1="199" x2="-317.5" y2="199" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_152">
+        <line x1="120.75" y1="199" x2="212.5" y2="199" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_154">
+        <line x1="559" y1="199" x2="650.75" y2="199" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_155">
+        <line x1="997.25" y1="199" x2="1089" y2="199" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

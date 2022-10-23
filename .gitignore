@@ -109,6 +109,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+bin/
+include/
+pyvenv.cfg
 
 # Spyder project settings
 .spyderproject
@@ -130,22 +133,10 @@ dmypy.json
 
 # Output folder
 output/
+
+# VSCode
 .vscode
-
 .history/
-.trunk/
-bin/
-include/
 
-.flake8
-.markdownlint.yaml
-.shellcheckrc
-*.cfg
-*.mp4
-*.avi
-*.ts
-*.mp3
-*.wav
-*.h5
-*.code-workspace
+# Mac files
 .DS_Store

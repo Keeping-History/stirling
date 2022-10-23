@@ -2,4 +2,12 @@ requests
 validators
 autosub3
 argunparse
-imageai
+mergedeep
+mtcnn
+torch
+opencv-python
+numpy
+simpleeval
+python-dateutil
+mergedeep
+networkx
