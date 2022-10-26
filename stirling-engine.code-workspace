@@ -20,9 +20,6 @@
 			"sideBar.border": "#999999",
 			"statusBar.background": "#808080",
 			"statusBar.border": "#808080",
-			"statusBar.debuggingBackground": "#808080",
-			"statusBar.debuggingBorder": "#808080",
-			"statusBar.debuggingForeground": "#15202b",
 			"statusBar.foreground": "#15202b",
 			"statusBarItem.hoverBackground": "#666666",
 			"statusBarItem.remoteBackground": "#808080",
@@ -33,7 +30,10 @@
 			"titleBar.border": "#808080",
 			"titleBar.inactiveBackground": "#80808099",
 			"titleBar.inactiveForeground": "#15202b99",
-			"commandCenter.border": "#15202b99"
+			"commandCenter.border": "#15202b99",
+			"statusBar.debuggingBackground": "#808080",
+			"statusBar.debuggingBorder": "#808080",
+			"statusBar.debuggingForeground": "#15202b"
 		},
 		"peacock.color": "gray",
 		"cSpell.words": [

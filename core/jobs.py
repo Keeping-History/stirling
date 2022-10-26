@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import List
-from urllib.parse import urlparse, urlsplit
+from urllib.parse import urlsplit
 
 import networkx
 import requests
@@ -22,67 +22,76 @@ from core import definitions, helpers, probe
 
 @dataclass
 class StirlingJob(definitions.StirlingClass):
-    """A Stirling Engine Job definition are the base arguments and information
-    necessary to start up the Stirling job runner. These includes things like
+    """A collection of arguments, plugins, and commands to process on a source file.
+
+    A StirlingJob contains the base arguments, functions and information
+    necessary to start up a Stirling job. These includes things like
     input and output file and directories, and other options related to the
-    running of the job."""
+    running of the job.
 
-    ### Required Variables
-    # The input source filename
-    source: str
-    ### Job-specific variables
-    # id is the ID of the job. We create a random UUID whenever a job is
-    # created, however a custom one can be supplied so long as it is assured to
-    # be globally unique (or at least try your best).
+
+    Attributes:
+        source (str): The input source filename (required)
+        id (uuid.UUID): The unique ID of the job. We create a random UUID v4
+            whenever a job is created, however a custom one can be supplied so
+            long as it is a UUID v4.
+        time_start (datetime.datetime): The start time of the job in UTC.
+        time_end (datetime.datetime): The end time of the job in UTC.
+        duration (float): the length of the job run time, in seconds.
+        log_file (pathlib.Path): The filename to output logs from the job.
+        job_file (pathlib.Path): A JSON document describing the job. This
+            file is created when the job is created, and updated as the job
+            progresses. Alternately, a job can be created from a JSON file
+            passed in as this argument.
+        input_directory (pathlib.Path): The folder prefix where incoming files
+            are located. Defaults to the current working directory
+        source_delete_disable (bool): Delete the temporary incoming source file
+            when finished. By default, the temporary incoming source file is
+            deleted.
+        output_directory (pathlib.Path): The directory to output the package.
+            Defaults to a folder named with the job's ID (a random UUID) in the
+            current working folder.
+        output_annotations_directory (str): The directory prefix to use when
+            storing annotations. Defaults to `annotations`.
+        source_copy_disable (bool): When a job is completed, a copy of the
+            video file as it was uploaded is created in the output directory
+            as "source". This can be disabled.
+        simulate (bool): A debugging option that attempts to setup a full
+            job without actually doing any of the external
+            transcoding/extraction or running and plugins.. This is poorly
+            supported and will be removed in a future version.
+        debug (bool): Enable additional debugging output
+        media_info (probe.StirlingMediaInfo): Contains metadata about the
+            source media file, after it is probed.
+
+    Raises:
+        FileNotFoundError: _description_
+
+    """ """"""
+
+    source: str  # required
     id: uuid.UUID = uuid.uuid4()
-    # time_start is the start time of the job, as a datetime.datetime object in
-    # UTC.
     time_start: datetime = datetime.now()
-    # time_end is the end time of the job, as a datetime.datetime object in UTC.
     time_end: datetime = None
-    # duration is the length of the job run time, in seconds.
     duration: float = 0.0
-    # log_file is the filename of the job log file.
     log_file: Path = Path("./job.log")
-    # job_file is the filename of the JSON job file to save.
     job_file: Path = Path("./job.json")
-
-    ### Source input variables
-    # The folder prefix where incoming files are located. Defaults to the
-    # current working directory.
     input_directory: Path = Path(os.getcwd())
-    # Delete the temporary incoming source file when finished. By default, the
-    # temporary incoming source file is deleted.
     source_delete_disable: bool = True
-
-    ### Output variables
-    # The directory to output the package. Defaults to a folder named with the
-    # job's ID (a random UUID) in the current working folder.
     output_directory: Path = None
-    # The directory to store annotations in. Defaults to a folder named annotations.
     output_annotations_directory: str = "annotations"
-    # When a job is completed, a copy of the video file as it was uploaded is
-    # created in the output directory as "source". This can be disabled.
     source_copy_disable: bool = True
-
-    ### Others
-    # A debugging option that attempts to setup a full job without actually
-    # doing any of the external transcoding/extraction. This should be removed.
     simulate: bool = False
-    # Enable additional debugging output.
     debug: bool = True
-
-    ### Variable Holders
-    # media_info contains source information after being probed.
     media_info: probe.StirlingMediaInfo = None
-    # plugins is a holder for plugin arguments we'll use later.
-    plugins: List = field(default_factory=list)
-    # Specific output files/directories generated are put here
+
+    _plugins: List = field(default_factory=list)
     _outputs: List = field(default_factory=list)
-    # Commands to fire off
-    commands: List[definitions.StrilingCmd] = field(default_factory=list)
+    _commands: List[definitions.StrilingCmd] = field(default_factory=list)
 
     def __post_init__(self):
+
+        # If the job file has been passed in, then load it.
         if self.job_file.is_file():
             self.load()
 
@@ -102,14 +111,57 @@ class StirlingJob(definitions.StirlingClass):
         self.log("Media file {} probed: ".format(self.source), self.media_info)
         self.write()
 
-    def add_plugins(self, *args):
+    @property
+    def commands(self):
+        """Get a list of commands to run.
+
+        Returns:
+            list[StrilingCmd]: A list of commands to run
+        """
+
+        return self._commands
+
+    @property
+    def outputs(self):
+        """Get a list of expected outputs from job and plugin commands.
+        are run.
+
+        Returns:
+            list[str]: A list of expected outputs from every command
+                in the job after it is run.
+        """
+
+        return self._outputs
+
+    @property
+    def plugins(self):
+        """Return a list of plugins add to the job.
+
+        Returns:
+            list[]: _description_
+        """
+
+        return self._plugins
+
+    @plugins.setter
+    def plugins(self, *args):
+        """Add new plugins to the job.
+
+        It is not currently possible to remove plugins from a job once they
+        have been added.
+
+        Args:
+            *args: A single plugin, or list of plugins to add to the job.
+        """
+
         for plugin in args:
-            self.plugins.append(plugin)
+            self._plugins.append(plugin)
             self.log('Added plugin "{}". '.format(plugin.plugin_name))
         self.__parse()
         self.write()
 
     def load(self):
+        """Load a job from the specified JSON job file."""
         # TODO: Implement the actual merge from a JSON job file
         #  This whole function is just a
         #  placeholder stub
@@ -121,7 +173,8 @@ class StirlingJob(definitions.StirlingClass):
         pass
 
     def close(self):
-        # Close out the job and update its metadata
+        """Close out the job and update its metadata"""
+
         self.time_end = datetime.now()
         self.duration = (self.time_end - self.time_start).total_seconds()
         self.log(
@@ -132,6 +185,8 @@ class StirlingJob(definitions.StirlingClass):
         self.write()
 
     def run(self):
+        """Run all the commands in the job."""
+
         cmd_holder = []
         for cmd in self.commands:
             # Check if we can probe the input file.
@@ -170,10 +225,181 @@ class StirlingJob(definitions.StirlingClass):
 
             cmd_holder.append(cmd)
 
-        self.commands = cmd_holder
+        self._commands = cmd_holder
+
+    def write(self):
+        """Log an object (in JSON format) to the job log file."""
+
+        output_file = open(self.job_file, "w")
+        output_file.write(json.dumps(self, indent=4, cls=helpers.StirlingJSONEncoder))
+        output_file.close()
+
+    def log(self, message: str, *args):
+        """Write a message to the log file.
+
+        Args:
+            message (str): The message to write to the log file.
+            *args (object): Any additional objects to log to the file (as JSON).
+        """
+
+        stamp = datetime.now()
+        obj_log = ""
+        duration = str((stamp - self.time_start))
+        line_header = "[{}] [+{}] [{}]".format(
+            stamp.strftime("%Y-%m-%d %H:%M:%S"), duration, self.id
+        )
+
+        for object_to_log in args:
+            if isinstance(object_to_log, str):
+                obj_log += self.__log_string(object_to_log)
+            else:
+                obj_log += self.__log_object(object_to_log)
+
+        if self.debug:
+            print("{}: {}{}".format(line_header, message, obj_log))
+
+        try:
+            file1 = open(self.log_file, "a")  # append mode
+            file1.write("{}: {}".format(line_header, message))
+
+            # If we have any objects to log, log them
+            for line in obj_log.split("\n"):
+                # We're looping here in case we want to prettify each line
+                # (like above) in the future.
+                file1.write(line + "\n")
+
+            file1.close()
+
+        except OSError:
+            raise FileNotFoundError(
+                "can't access the log file: {}, stopping execution for job {}".format(
+                    self.log_file, str(self.id)
+                )
+            )
+
+    def __log_string(self, msg: str, line_identifier: str = "+", indent: int = 4):
+        """Log a string to the job log file."""
+
+        new_line_string = "\n" + line_identifier + " " * indent
+        return new_line_string + new_line_string.join(msg.splitlines())
+
+    def __log_object(self, obj, prefix: str = "+", header: str = "", indent: int = 4):
+        """Log an object to the job log file.
+
+        Args:
+            obj: The object to log
+            prefix (str): The prefix to use for each line
+            header (str): A header to print before each line
+            indent (int): The number of spaces to indent each line of JSON
+
+        Returns:
+            str: The object as a string for logging
+        """
+
+        return self.__log_string(
+            header
+            + json.dumps(vars(obj), indent=indent, cls=helpers.StirlingJSONEncoder),
+            prefix,
+            indent,
+        )
+
+    def __get_source(self):
+        """Get the source file for the job.
+
+        The source file is the only required field for a Stirling Job. If
+            it doesn't exist, or is inaccessible, then the job will fail.
+
+        Raises:
+            FileNotFoundError: _description_
+        """
+
+        # If the incoming source is a URL, then let's download it.
+        if validators.url(self.source, public=False):
+            response = requests.get(self.source)
+            incoming_filename = "".join(
+                os.path.splitext(os.path.basename(urlsplit(self.source).path))
+            )
+            self.source = incoming_filename
+            if response.ok:
+                open(incoming_filename, "wb").write(response.content)
+            else:
+                raise FileNotFoundError(
+                    "unable to download source file from URL {}, stopping execution for job {}".format(
+                        self.source, str(self.id)
+                    )
+                )
+        self.log("File to processed will be: " + str(self.source))
+
+        # Get a full path to name our source file when we move it. We'll use this
+        # value later on as an input filename for specific commands.
+        incoming_filename = Path(
+            str(self.output_directory) + "/source" + Path(self.source).suffix
+        )
+        source_output_directory = self.output_directory / "source"
+
+        if not self.source_copy_disable:
+            # Unless this is a simulation or we explicitly disabled it, copy the source
+            # file to the output directory as 'source'
+            source_output_directory.mkdir(parents=True, exist_ok=True)
+
+            shutil.copyfile(Path(self.source).absolute(), incoming_filename)
+            if not self.source_delete_disable:
+                # Don't delete the incoming source file, in case we're testing.
+                os.remove(self.source)
+
+            self.source = incoming_filename
+
+    def __get_output_directory(self):
+        """Get the full path to the output directory for this job.
+
+        We need to create the output directory if it doesn't exist, and
+        ensure that we can create other directories in that path.
+        """
+
+        if self.output_directory is None or self.output_directory == Path("."):
+            self.output_directory = Path(Path.cwd() / "output" / str(self.id))
+
+        # Make the output directory, if it doesn't exist.
+        if not self.output_directory.is_dir():
+            self.output_directory.mkdir(parents=True, exist_ok=True)
+            annotations_output_directory = (
+                self.output_directory / self.output_annotations_directory
+            )
+            annotations_output_directory.mkdir(parents=True, exist_ok=True)
+
+        self.log_file = self.output_directory / self.log_file
+        self.job_file = self.output_directory / self.job_file
+
+        # Make sure we have a directory for the output files
+        assert self.output_directory.is_dir(), AssertionError(
+            "could not find the path {} for output files for job {}".format(
+                str(self.output_directory), str(self.id)
+            ),
+        )
+
+        # Make sure we can write to the directory for the output files
+        assert os.access(self.output_directory, os.W_OK), AssertionError(
+            "could not write to path {} for output files for job {}".format(
+                str(self.output_directory), str(self.id)
+            )
+        )
+
+        # Make sure we can write to the directory for the output files by
+        # testing out log file
+        test_file = open(str(self.log_file), "a")
+
+        assert test_file.writable(), AssertionError(
+            "could not write to the log file the path {} for job {}".format(
+                str(self.log_file), str(self.id)
+            ),
+        )
+
+        test_file.close()
 
     def __parse(self):
-        # Clear the commands list, as we will re-parse them all
+        """Parse the job and plugins to generate a list of commands to run."""
+
+        # Clear the previous expected outputs
         self._outputs = []
 
         # Create some holder variables
@@ -224,132 +450,5 @@ class StirlingJob(definitions.StirlingClass):
             output_dir.mkdir(parents=True, exist_ok=True)
 
         # Set the commands to the sorted list
-        self.commands = cmd_output_holder
+        self._commands = cmd_output_holder
         self.log("Plugins added {} commands.".format(len(self.commands)))
-
-    def write(self):
-        # Write the object to a file
-        output_file = open(self.job_file, "w")
-        output_file.write(json.dumps(self, indent=4, cls=helpers.StirlingJSONEncoder))
-        output_file.close()
-
-    def log(self, message: str, *args):
-        stamp = datetime.now()
-        obj_log = ""
-        duration = str((stamp - self.time_start))
-        line_header = "[{}] [+{}] [{}]".format(
-            stamp.strftime("%Y-%m-%d %H:%M:%S"), duration, self.id
-        )
-
-        for object_to_log in args:
-            if isinstance(object_to_log, str):
-                obj_log += self.__log_string(object_to_log)
-            else:
-                obj_log += self.__log_object(object_to_log)
-
-        if self.debug:
-            print("{}: {}{}".format(line_header, message, obj_log))
-
-        try:
-            file1 = open(self.log_file, "a")  # append mode
-            file1.write("{}: {}".format(line_header, message))
-
-            # If we have any objects to log, log them
-            for line in obj_log.split("\n"):
-                # We're looping here in case we want to prettify each line
-                # (like above) in the future.
-                file1.write(line + "\n")
-
-            file1.close()
-
-        except OSError:
-            raise FileNotFoundError(
-                "can't access the log file: {}, stopping execution for job {}".format(
-                    self.log_file, str(self.id)
-                )
-            )
-
-    def __log_object(self, obj, prefix: str = "+", header: str = "", indent: int = 4):
-        return self.__log_string(
-            header
-            + json.dumps(vars(obj), indent=indent, cls=helpers.StirlingJSONEncoder),
-            prefix,
-            indent,
-        )
-
-    def __get_source(self):
-        # If the incoming source is a URL, then let's download it.
-        if validators.url(self.source, public=False):
-            response = requests.get(self.source)
-            incoming_filename = "".join(
-                os.path.splitext(os.path.basename(urlsplit(self.source).path))
-            )
-            self.source = incoming_filename
-            if response.ok:
-                open(incoming_filename, "wb").write(response.content)
-            else:
-                raise FileNotFoundError(
-                    "unable to download source file from URL {}, stopping execution for job {}".format(
-                        self.source, str(self.id)
-                    )
-                )
-        self.log("File to processed will be: " + str(self.source))
-
-        # Get a full path to name our source file when we move it. We'll use this
-        # value later on as an input filename for specific commands.
-        incoming_filename = Path(
-            str(self.output_directory) + "/source" + Path(self.source).suffix
-        )
-        source_output_directory = self.output_directory / "source"
-
-        if not self.source_copy_disable:
-            # Unless this is a simulation or we explicitly disabled it, copy the source
-            # file to the output directory as 'source'
-            source_output_directory.mkdir(parents=True, exist_ok=True)
-
-            shutil.copyfile(Path(self.source).absolute(), incoming_filename)
-            if not self.source_delete_disable:
-                # Don't delete the incoming source file, in case we're testing.
-                os.remove(self.source)
-
-            self.source = incoming_filename
-
-    def __get_output_directory(self):
-        if self.output_directory is None or self.output_directory == Path("."):
-            self.output_directory = Path(Path.cwd() / "output" / str(self.id))
-
-        # Make the output directory, if it doesn't exist.
-        if not self.output_directory.is_dir():
-            self.output_directory.mkdir(parents=True, exist_ok=True)
-            annotations_output_directory = (
-                self.output_directory / self.output_annotations_directory
-            )
-            annotations_output_directory.mkdir(parents=True, exist_ok=True)
-
-        self.log_file = self.output_directory / self.log_file
-        self.job_file = self.output_directory / self.job_file
-
-        # Make sure we have a directory for the output files
-        assert self.output_directory.is_dir(), AssertionError(
-            "could not find the path {} for output files for job {}".format(
-                str(self.output_directory), str(self.id)
-            ),
-        )
-
-        # Make sure we can write to the directory for the output files
-        assert os.access(self.output_directory, os.W_OK), AssertionError(
-            "could not write to path {} for output files for job {}".format(
-                str(self.output_directory), str(self.id)
-            )
-        )
-
-    def __log_string(self, msg: str, line_identifier: str = "+", indent: int = 4):
-        new_line_string = "\n" + line_identifier + " " * indent
-        return new_line_string + new_line_string.join(msg.splitlines())
-
-    def __is_url(self):
-        try:
-            result = urlparse.urlparse(self.source)
-            return all([result.scheme, result.netloc])
-        except ValueError:
-            return False
