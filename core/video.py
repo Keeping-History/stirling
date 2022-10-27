@@ -58,6 +58,7 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
                     for item in job.media_info.video_streams
                     if item.stream == self.video_source_stream
                 ]
+                print("streams", stream)
                 fps = stream[0].frame_rate
 
                 # Set the options to extract audio from the source file.

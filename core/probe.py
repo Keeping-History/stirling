@@ -95,7 +95,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
         # Return an empty StirlingMediaInfo() object.
         if cmd_output[0] != 0 or cmd_output[1] == "":
             return
-
+        
         streams = json.loads(cmd_output[1])["streams"]
 
         for stream in streams:
@@ -107,10 +107,25 @@ class StirlingMediaInfo(definitions.StirlingClass):
                 case "subtitle":
                     self.__create_text_stream(stream)
 
+        # If a specific audio or video stream are not passed in as arguments,
+        # attempt to get the preferred video and audio streams based on their
+        # quality, bitrate, etc.
         self.preferred["video"] = self.__set_preferred("video")
         self.preferred["audio"] = self.__set_preferred("audio")
 
     def __set_preferred(self, type: str):
+        """Find the preferred stream based on it's metadata.
+
+        When a stream is not specified specifically in the arguments, we need
+        to determine the best stream to use on behalf of the user. This is done
+        by some simple calculations based on the stream's metadata.
+
+        Args:
+            type (str): The type of stream to find the preferred stream for.
+
+        Returns:
+            int: The index of the preferred stream.
+        """
         m = {}
         match type:
             case "video":

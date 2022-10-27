@@ -34,8 +34,9 @@ class StirlingClass(object):
             match proper_type.__name__:
                 case "PurePath" | "PurePosixPath" | "PureWindowsPath" | "Path" | "PosixPath" | "WindowsPath":
                     if value is None:
-                        value = ""
-                    value = Path(value)
+                        value = None
+                    else:
+                        value = Path(value)
                 case "UUID":
                     try:
                         value = uuid.UUID(value)
