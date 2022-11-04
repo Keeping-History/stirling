@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 import simpleeval
 
@@ -12,7 +13,7 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
     """StirlingPluginVideo are arguments for handling the source video
     and our archival encoded copy."""
 
-    plugin_name: str = "video"
+    name: str = "video"
     depends_on: list = field(default_factory=list)
     priority: int = 0
 
@@ -37,6 +38,9 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
     # from the provided value, then the default is 1 frame per second.
     frames_interval: int = 1
 
+    # Contains outputs from the plugin for use in other plugins.
+    assets: List[definitions.StirlingPluginAssets] = field(default_factory=list)
+
     def __post_init__(self):
         if not self.video_frames_disable:
             # Check to make sure the appropriate binary files we need are installed.
@@ -47,10 +51,10 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
     def cmd(self, job: jobs.StirlingJob):
         if (
             self.video_source_stream == -1
-            and self.plugin_name in job.media_info.preferred
-            and job.media_info.preferred[self.plugin_name] is not None
+            and self.name in job.media_info.preferred
+            and job.media_info.preferred[self.name] is not None
         ):
-            self.video_source_stream = job.media_info.preferred[self.plugin_name]
+            self.video_source_stream = job.media_info.preferred[self.name]
         if not self.video_disable:
             if not self.video_frames_disable:
                 stream = [
@@ -58,13 +62,11 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
                     for item in job.media_info.video_streams
                     if item.stream == self.video_source_stream
                 ]
-                print("streams", stream)
                 fps = stream[0].frame_rate
 
                 # Set the options to extract audio from the source file.
                 options = {
                     "hide_banner": True,
-                    "loglevel": "quiet",
                     "y": True,
                     "i": job.media_info.source,
                     "f": "image2",
@@ -76,18 +78,22 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
                     "frame_pts": 1,
                 }
 
-                output_directory = job.output_directory / self.plugin_name / "frames"
+                output_directory = job.output_directory / self.name / "frames"
                 output_directory.mkdir(parents=True, exist_ok=True)
 
+                self.assets.append(
+                    definitions.StirlingPluginAssets(name="frames_directory", path=output_directory)
+                )
+
                 job.commands.append(
-                    definitions.StrilingCmd(
-                        plugin_name=self.plugin_name,
+                    definitions.StirlingCmd(
+                        name=self.name,
                         depends_on=self.depends_on,
                         command="ffmpeg {} {}".format(
                             args.ffmpeg_unparser.unparse(
-                                str(job.media_info.source), **options
+                                **options
                             ),
-                            str(output_directory) + "%d.jpg",
+                            str(output_directory) + "/%d.jpg",
                         ),
                         priority=0,
                         expected_output=str(output_directory),

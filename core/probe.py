@@ -77,8 +77,8 @@ class StirlingMediaInfo(definitions.StirlingClass):
         )
 
         options = {
-            "hide_banner": True,
             "loglevel": "quiet",
+            "hide_banner": True,
             "show_error": False,
             "show_format": True,
             "show_streams": True,
@@ -95,7 +95,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
         # Return an empty StirlingMediaInfo() object.
         if cmd_output[0] != 0 or cmd_output[1] == "":
             return
-        
+
         streams = json.loads(cmd_output[1])["streams"]
 
         for stream in streams:

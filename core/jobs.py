@@ -82,7 +82,7 @@ class StirlingJob(definitions.StirlingClass):
     source_delete_disable: bool = True
     output_directory: Path = None
     output_annotations_directory: str = "annotations"
-    source_copy_disable: bool = True
+    source_copy_disable: bool = False
     simulate: bool = False
     debug: bool = True
     media_info: probe.StirlingMediaInfo = None
@@ -90,7 +90,7 @@ class StirlingJob(definitions.StirlingClass):
     # Private fields
     _plugins: List = field(default_factory=list)
     _outputs: List = field(default_factory=list)
-    _commands: List[definitions.StrilingCmd] = field(default_factory=list)
+    _commands: List[definitions.StirlingCmd] = field(default_factory=list)
 
     def __post_init__(self):
         """Setup the job after it is created.
@@ -126,7 +126,6 @@ class StirlingJob(definitions.StirlingClass):
 
         # Probe the source file
         self.media_info = probe.StirlingMediaInfo(source=self.source)
-        print(self.media_info)
         self.log("Media file {} probed: ".format(self.source), self.media_info)
         self.write()
 
@@ -135,7 +134,7 @@ class StirlingJob(definitions.StirlingClass):
         """Get a list of commands to run.
 
         Returns:
-            list[StrilingCmd]: A list of commands to run
+            list[StirlingCmd]: A list of commands to run
         """
 
         return self._commands
@@ -175,6 +174,42 @@ class StirlingJob(definitions.StirlingClass):
 
         return self._plugins
 
+    def get_plugin(self, plugin_name: str):
+        """Get a plugin by name.
+
+        Args:
+            plugin_name (str): The name of the plugin to get
+        """
+
+        for plugin in self.plugins:
+            if plugin.name == plugin_name:
+                return plugin
+
+    def get_plugin_assets(self, plugin_name: str) -> List:
+        """Get a plugin by name.
+
+        Args:
+            plugin_name (str): The name of the plugin to get
+        """
+
+        plugin = self.get_plugin(plugin_name)
+        return plugin.assets
+
+    def get_plugin_asset(self, plugin_name: str, asset_name: str) -> List:
+        """Get a plugin by name.
+
+        Args:
+            plugin_name (str): The name of the plugin to get
+        """
+
+        assets = self.get_plugin_assets(plugin_name)
+
+        for asset in assets:
+            if asset.name == asset_name:
+                return asset.path
+            else:
+                raise ValueError("Asset not found")
+
     def add_plugins(self, *args):
         """Add new plugins to the job.
 
@@ -187,7 +222,7 @@ class StirlingJob(definitions.StirlingClass):
 
         for plugin in args:
             self._plugins.append(plugin)
-            self.log('Added plugin "{}". '.format(plugin.plugin_name))
+            self.log('Added plugin "{}". '.format(plugin.name))
         self.__parse()
         self.write()
 
@@ -225,7 +260,7 @@ class StirlingJob(definitions.StirlingClass):
             cmd.status = definitions.StirlingCmdStatus.RUNNING
             self.log(
                 "Starting command {} for plugin {}".format(
-                    textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                    textwrap.shorten(cmd.command, width=20), cmd.name
                 )
             )
             cmd_output = subprocess.getstatusoutput(cmd.command)
@@ -234,22 +269,22 @@ class StirlingJob(definitions.StirlingClass):
                 cmd.status = definitions.StirlingCmdStatus.FAILED
                 self.log(
                     "Command {} for plugin {} failed.".format(
-                        textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                        textwrap.shorten(cmd.command, width=20), cmd.name
                     )
                 )
-                self.log("Command for plugin {}:".format(cmd.plugin_name), cmd.command)
+                self.log("Command for plugin {}:".format(cmd.name), cmd.command)
                 self.log("Output:", cmd.log)
             elif cmd_output[0] == 1:
                 self.log(
                     "Command {} for plugin {} succeeded.".format(
-                        textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                        textwrap.shorten(cmd.command, width=20), cmd.name
                     )
                 )
                 cmd.status = definitions.StirlingCmdStatus.SUCCESS
 
                 self.log(
                     "Command {} for plugin {} output:".format(
-                        textwrap.shorten(cmd.command, width=20), cmd.plugin_name
+                        textwrap.shorten(cmd.command, width=20), cmd.name
                     ),
                     cmd.log,
                 )
@@ -365,7 +400,7 @@ class StirlingJob(definitions.StirlingClass):
         # Get a full path to name our source file when we move it. We'll use this
         # value later on as an input filename for specific commands.
         incoming_filename = Path(
-            str(self.output_directory) + "/source" + Path(self.source).suffix
+            str(self.output_directory) + "/source" + str(Path(self.source).suffix)
         )
         source_output_directory = self.output_directory / "source"
 
@@ -399,7 +434,6 @@ class StirlingJob(definitions.StirlingClass):
             )
             annotations_output_directory.mkdir(parents=True, exist_ok=True)
 
-        print(self.job_file)
         self.log_file = self.output_directory / self.log_file
         self.job_file = self.output_directory / self.job_file
 
@@ -440,7 +474,7 @@ class StirlingJob(definitions.StirlingClass):
         cmd_output_holder = []
 
         for plugin in self.plugins:
-            self.log('Parsing plugin "{}" commands.'.format(plugin.plugin_name))
+            self.log('Parsing plugin "{}" commands.'.format(plugin.name))
             plugin.cmd(self)
 
             # Sort each command in the plugin by its priority/priority
@@ -449,12 +483,12 @@ class StirlingJob(definitions.StirlingClass):
             # Create a holder so we can run a topographical sort on the commands
             for cmd in self.commands:
                 if len(cmd.depends_on) > 0:
-                    cmd_sort_holder[cmd.plugin_name] = cmd.depends_on
+                    cmd_sort_holder[cmd.name] = cmd.depends_on
 
         if len(cmd_sort_holder) > 1:
             self.log(
                 'Parsing plugin "{}" dependencies {}.'.format(
-                    plugin.plugin_name, plugin.depends_on
+                    plugin.name, plugin.depends_on
                 )
             )
 
@@ -468,10 +502,10 @@ class StirlingJob(definitions.StirlingClass):
             # Reorder the commands based on the topographical sort
             for v in cmd_sort_list:
                 for cmd in self.commands:
-                    if cmd.plugin_name == v:
+                    if cmd.name == v:
                         self.log(
                             'Appending command for plugin "{}": {}.'.format(
-                                cmd.plugin_name, cmd.command
+                                cmd.name, cmd.command
                             )
                         )
                         cmd_output_holder.append(cmd)

@@ -174,7 +174,7 @@ An example JSON job (as of v0.0.2) from a job is below:
     },
     "plugins": [
         {
-            "plugin_name": "audio",
+            "name": "audio",
             "depends_on": [],
             "priority": 0,
             "audio_disable": false,
@@ -185,7 +185,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             ]
         },
         {
-            "plugin_name": "peaks",
+            "name": "peaks",
             "depends_on": [
                 "audio"
             ],
@@ -194,7 +194,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             "peaks_output_format": "json"
         },
         {
-            "plugin_name": "video",
+            "name": "video",
             "depends_on": [],
             "priority": 0,
             "video_disable": false,
@@ -203,7 +203,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             "frames_interval": 1
         },
         {
-            "plugin_name": "transcript",
+            "name": "transcript",
             "depends_on": [
                 "audio"
             ],
@@ -215,7 +215,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             "transcript_format": "json"
         },
         {
-            "plugin_name": "hls",
+            "name": "hls",
             "depends_on": [
                 "video"
             ],
@@ -269,7 +269,7 @@ An example JSON job (as of v0.0.2) from a job is below:
     ],
     "commands": [
         {
-            "plugin_name": "video",
+            "name": "video",
             "command": "ffmpeg -hide_banner -loglevel quiet -y -i source.mp4 -f image2 -map 0:v:1 -vf fps=1 -vsync 0 -frame_pts 1 source.mp4 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/video/frames%d.jpg",
             "priority": 0,
             "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/video/frames",
@@ -278,7 +278,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             "log": ""
         },
         {
-            "plugin_name": "audio",
+            "name": "audio",
             "command": "ffmpeg -hide_banner -y -loglevel quiet -i source.mp4 -f wav -map 0:a:0 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/audio/source.wav",
             "priority": 0,
             "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/audio/source.wav",
@@ -287,7 +287,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             "log": ""
         },
         {
-            "plugin_name": "hls",
+            "name": "hls",
             "command": "ffmpeg -hide_banner -loglevel quiet -y -i source.mp4 -map 0:v:1 -vcodec h264 -profile:v main -crf 20 -sc_threshold 40 -g 12 -keyint_min 25 -hls_time 2 -hls_playlist_type vod -movflags +faststart -map 0:a:0 -acodec aac -ar 48000 -vf scale=w=160:h=120:force_original_aspect_ratio=decrease -b:v 128k -maxrate 136.96k -bufsize 192.0k -b:a 32k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p.m3u8\"-vf scale=w=320:h=240:force_original_aspect_ratio=decrease -b:v 300k -maxrate 321.0k -bufsize 450.0k -b:a 64k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p.m3u8\"-vf scale=w=640:h=480:force_original_aspect_ratio=decrease -b:v 800k -maxrate 856.0k -bufsize 1200.0k -b:a 96k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p.m3u8\"",
             "priority": 50,
             "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls",
@@ -298,7 +298,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             "log": ""
         },
         {
-            "plugin_name": "transcript",
+            "name": "transcript",
             "command": "autosub -o /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/transcript.json -D en -S en -C 10 -F json source.mp4",
             "priority": 10,
             "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/transcript.json",
@@ -309,7 +309,7 @@ An example JSON job (as of v0.0.2) from a job is below:
             "log": null
         },
         {
-            "plugin_name": "peaks",
+            "name": "peaks",
             "command": "audiowaveform -i source.mp4 -o /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/peaks.json --output-format json",
             "priority": 10,
             "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/peaks.json",

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 from core import args, definitions, helpers, jobs
 
@@ -11,7 +12,7 @@ class StirlingPluginAudio(definitions.StirlingClass):
     extracting audio from a video file. This file is intended as a long-term
     archival version."""
 
-    plugin_name: str = "audio"
+    name: str = "audio"
     depends_on: list = field(default_factory=list)
     priority: int = 0
     # Disables all audio-related tasks. This includes transcripts and peak data
@@ -26,6 +27,9 @@ class StirlingPluginAudio(definitions.StirlingClass):
     # encoder format, the file extension is the second value.
     audio_output_format: tuple = ("wav", "wav")
 
+    # Contains outputs from the plugin for use in other plugins.
+    assets: List[definitions.StirlingPluginAssets] = field(default_factory=list)
+
     ## Extract Audio from file
     def __post_init__(self):
         if not self.audio_disable:
@@ -38,30 +42,33 @@ class StirlingPluginAudio(definitions.StirlingClass):
     def cmd(self, job: jobs.StirlingJob):
         if (
             self.audio_source_stream == -1
-            and self.plugin_name in job.media_info.preferred
-            and job.media_info.preferred[self.plugin_name] is not None
+            and self.name in job.media_info.preferred
+            and job.media_info.preferred[self.name] is not None
         ):
-            self.audio_source_stream = job.media_info.preferred[self.plugin_name]
+            self.audio_source_stream = job.media_info.preferred[self.name]
 
         # Set the options to extract audio from the source file.
         options = {
             "hide_banner": True,
             "y": True,
-            "loglevel": "quiet",
             "i": job.media_info.source,
             "f": self.audio_output_format[0],
-            "map": "0:a:{}".format(self.audio_source_stream),
+            "map": "0:a:{}".format(self.audio_source_stream - len(job.media_info.video_streams)),
         }
 
-        output_directory = job.output_directory / self.plugin_name
+        output_directory = job.output_directory / self.name
         output_directory.mkdir(parents=True, exist_ok=True)
         output_file = output_directory / (
             "source.{}".format(self.audio_output_format[1])
         )
 
+        self.assets.append(
+            definitions.StirlingPluginAssets(name="normalized_audio", path=output_file)
+        )
+
         job.commands.append(
-            definitions.StrilingCmd(
-                plugin_name=self.plugin_name,
+            definitions.StirlingCmd(
+                name=self.name,
                 command="ffmpeg {} {}".format(
                     args.ffmpeg_unparser.unparse(**options), output_file
                 ),

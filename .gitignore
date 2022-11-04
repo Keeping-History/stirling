@@ -140,3 +140,5 @@ output/
 
 # Mac files
 .DS_Store
+.trunk/actions
+.trunk/notifications

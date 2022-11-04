@@ -10,7 +10,7 @@ from plugins import hls, peaks, transcript
 if __name__ == "__main__":
 
     # Create a new job
-    my_job = jobs.StirlingJob(source="source.mp4", debug=False)
+    my_job = jobs.StirlingJob(source="source.mp4", debug=True)
 
     # Add plugins to the job
     my_job.add_plugins(

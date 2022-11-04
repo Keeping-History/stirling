@@ -10,7 +10,7 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
     """StirlingPluginHLS is for creating an HLS VOD streaming package from
     the input source video."""
 
-    plugin_name: str = "hls"
+    name: str = "hls"
     depends_on: list = field(default_factory=lambda: ["video"])
     priority: int = 50
 
@@ -94,17 +94,22 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                 self.audio_source_stream = job.media_info.preferred["audio"]
 
             if self.hls_audio_sample_rate == 0:
-                self.hls_audio_sample_rate = job.media_info.audio_streams[
-                    self.audio_source_stream
-                ].sample_rate
+                stream = [
+                    item
+                    for item in job.media_info.audio_streams
+                    if item.stream == self.audio_source_stream
+                ]
 
-            output_directory = job.output_directory / self.plugin_name
+                self.hls_audio_sample_rate = stream[0].sample_rate
+
+            output_directory = job.output_directory / self.name
             output_directory.mkdir(parents=True, exist_ok=True)
+
+            outputs = []
 
             # Set the options to encode an HLS package.
             options = {
                 "hide_banner": True,
-                "loglevel": "quiet",
                 "y": True,
                 "i": job.media_info.source,
             }
@@ -114,21 +119,22 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                 "vcodec": self.hls_video_codec,
                 "profile:v": self.hls_video_profile,
                 "crf": self.hls_crf,
-                "sc_threshold": self.hls_sc_threshold,
-                "g": self.hls_gop_size,
-                "keyint_min": self.hls_keyint_min,
-                "hls_time": self.hls_target_segment_duration,
+                # "hls_time": self.hls_target_segment_duration,
                 "hls_playlist_type": self.hls_playlist_type,
+                # "sc_threshold": self.hls_sc_threshold,
+                # "g": self.hls_gop_size,
+                # "keyint_min": self.hls_keyint_min,
                 "movflags": self.hls_movflags,
             }
 
             audio_options = {
-                "map": "0:a:{}".format(self.audio_source_stream),
+                "map": "0:a:{}".format(self.audio_source_stream - len(job.media_info.video_streams)),
                 "acodec": self.hls_audio_codec,
                 "ar": self.hls_audio_sample_rate,
             }
 
             renditions = ""
+            master_playlist_contents = "#EXTM3U\n#EXT-X-VERSION:3\n"
             for rendition in self.hls_encoder_profiles:
                 rendition_command = {
                     # Scale the video to the appropriate resolution (width and height)
@@ -149,16 +155,40 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                     # Set the audio output bitrate.
                     "b:a": "{0}k".format(rendition["audio-bitrate"]),
                     # Set the output filename for the HLS segment.
-                    "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8".format(
+                    "hls_segment_filename": "'{0}/{1}_%09d.ts'".format(
                         str(output_directory), rendition["name"]
                     ),
                 }
+                master_playlist_contents += (
+                    "#EXT-X-STREAM-INF:BANDWIDTH={},RESOLUTION={}x{}\n{}.m3u8\n".format(
+                        int(rendition["bitrate"]) * 1000,
+                        rendition["width"],
+                        rendition["height"],
+                        rendition["name"],
+                    )
+                )
 
-                renditions += args.ffmpeg_unparser.unparse(**rendition_command)
+                rendition_playlist = "{0}/{1}.m3u8".format(str(output_directory), rendition["name"])
+                outputs.append(output_directory / rendition_playlist)
+
+                renditions += args.ffmpeg_unparser.unparse(**rendition_command) + " " + rendition_playlist + " "
+
+            master_playlist = "playlist.m3u8"
+            outputs.append(output_directory / master_playlist)
 
             job.commands.append(
-                definitions.StrilingCmd(
-                    plugin_name=self.plugin_name,
+                definitions.StirlingCmd(
+                    name=self.name + "_master_playlist",
+                    command="echo '{}' > {}".format(master_playlist_contents, str(output_directory / master_playlist)),
+                    priority=self.priority,
+                    expected_output=output_directory / master_playlist,
+                    depends_on=self.depends_on
+                )
+            )
+
+            job.commands.append(
+                definitions.StirlingCmd(
+                    name=self.name,
                     command="ffmpeg {} {} {} {}".format(
                         args.ffmpeg_unparser.unparse(**options),
                         args.ffmpeg_unparser.unparse(**video_options),
