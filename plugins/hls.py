@@ -119,11 +119,11 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                 "vcodec": self.hls_video_codec,
                 "profile:v": self.hls_video_profile,
                 "crf": self.hls_crf,
-                # "hls_time": self.hls_target_segment_duration,
+                "hls_time": self.hls_target_segment_duration,
                 "hls_playlist_type": self.hls_playlist_type,
-                # "sc_threshold": self.hls_sc_threshold,
-                # "g": self.hls_gop_size,
-                # "keyint_min": self.hls_keyint_min,
+                "sc_threshold": self.hls_sc_threshold,
+                "g": self.hls_gop_size,
+                "keyint_min": self.hls_keyint_min,
                 "movflags": self.hls_movflags,
             }
 
@@ -154,6 +154,9 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                     ),
                     # Set the audio output bitrate.
                     "b:a": "{0}k".format(rendition["audio-bitrate"]),
+                    # Ensure the m3u8 contains the entire stream, as ffmpeg
+                    # will default and limit this to only 5 entries.
+                    "hls_list_size": 0,
                     # Set the output filename for the HLS segment.
                     "hls_segment_filename": "'{0}/{1}_%09d.ts'".format(
                         str(output_directory), rendition["name"]
