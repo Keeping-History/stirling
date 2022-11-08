@@ -39,5 +39,7 @@
 		"cSpell.words": [
 			"audiowaveform"
 		],
+		"blocksort.enableCodeActions": "*",
+		"VSCodeCounter.exclude": ["docs/*"]
 	}
 }

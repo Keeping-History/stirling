@@ -40,14 +40,14 @@ class StirlingPluginVideoFrames(definitions.StirlingPlugin):
             ), AssertionError("Missing required binaries: {}".format(required_binaries))
 
     def cmd(self, job: jobs.StirlingJob):
-        if (
-            self.video_source_stream == -1
-            and self.name in job.media_info.preferred
-            and job.media_info.preferred[self.name] is not None
-        ):
-            self.video_source_stream = job.media_info.preferred[self.name]
-
         if not self.video_frames_disable:
+            if (
+                self.video_source_stream == -1
+                and self.name in job.media_info.preferred
+                and job.media_info.preferred[self.name] is not None
+            ):
+                self.video_source_stream = job.media_info.preferred[self.name]
+
             stream = [
                 item
                 for item in job.media_info.video_streams

@@ -138,7 +138,12 @@ output/
 .vscode
 .history/
 
-# Mac files
-.DS_Store
+# VSCode Extensions
 .trunk/actions
 .trunk/notifications
+.trunk/
+.VSCodeCounter
+.flake8
+
+# Mac files
+.DS_Store

@@ -79,7 +79,6 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
             ), AssertionError("Missing required binaries: {}".format(required_binaries))
 
     def cmd(self, job: jobs.StirlingJob):
-
         if not self.hls_disable:
             if (
                 self.video_source_stream == -1
