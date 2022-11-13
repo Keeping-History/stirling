@@ -131,8 +131,6 @@ class StirlingCmd(StirlingClass):
     log: str = None
 
 
-
-
 # VideoEncoderRenditions is a a dict that holds the Video Renditions we support.
 # A rendition is a version of the video file that will be transcoded,
 # based on the resolution and bitrate settings. The order of these renditions

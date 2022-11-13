@@ -69,7 +69,7 @@ class StirlingJob(definitions.StirlingClass):
     Raises:
         FileNotFoundError: _description_
 
-    """ """"""
+    """
 
     source: str  # required
     id: uuid.UUID = uuid.uuid4()
@@ -77,10 +77,10 @@ class StirlingJob(definitions.StirlingClass):
     time_end: datetime = None
     duration: float = 0.0
     job_file: Path = None
-    log_file: Path = "job.log"
+    log_file: Path = Path("job.log")
     input_directory: Path = Path(os.getcwd())
     source_delete_disable: bool = True
-    output_directory: Path = None
+    output_directory: Path = Path("")
     output_annotations_directory: str = "annotations"
     source_copy_disable: bool = False
     simulate: bool = False
@@ -473,11 +473,11 @@ class StirlingJob(definitions.StirlingClass):
         cmd_sort_holder = {}
         cmd_output_holder = []
 
-        for plugin in self.plugins:
+        for plugin in self._plugins:
             self.log('Parsing plugin "{}" commands.'.format(plugin.name))
             plugin.cmd(self)
 
-            # Sort each command in the plugin by its priority/priority
+            # Sort each command in the plugin by its priority
             self.commands.sort(key=lambda x: x.priority, reverse=True)
 
             # Create a holder so we can run a topographical sort on the commands
@@ -485,7 +485,7 @@ class StirlingJob(definitions.StirlingClass):
                 if len(cmd.depends_on) > 0:
                     cmd_sort_holder[cmd.name] = cmd.depends_on
 
-        if len(cmd_sort_holder) > 1:
+        if len(cmd_sort_holder) > 0:
             self.log(
                 'Parsing plugin "{}" dependencies {}.'.format(
                     plugin.name, plugin.depends_on
@@ -510,6 +510,7 @@ class StirlingJob(definitions.StirlingClass):
                         )
                         cmd_output_holder.append(cmd)
                         self._outputs.append(str(cmd.expected_output))
+            self._commands = cmd_output_holder
 
         # Create the necessary folders for the plugin outputs
         for output in self._outputs:
@@ -517,5 +518,4 @@ class StirlingJob(definitions.StirlingClass):
             output_dir.mkdir(parents=True, exist_ok=True)
 
         # Set the commands to the sorted list
-        self._commands = cmd_output_holder
         self.log("Plugins added {} commands.".format(len(self.commands)))

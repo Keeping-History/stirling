@@ -14,7 +14,7 @@ class StirlingPluginAudio(definitions.StirlingClass):
 
     name: str = "audio"
     depends_on: list = field(default_factory=list)
-    priority: int = 0
+    priority: int = 100
     # Disables all audio-related tasks. This includes transcripts and peak data
     # generation.
     audio_disable: bool = False
@@ -41,12 +41,9 @@ class StirlingPluginAudio(definitions.StirlingClass):
     ## Extract Audio from file
     def cmd(self, job: jobs.StirlingJob):
         if not self.audio_disable:
-            if (
-                self.audio_source_stream == -1
-                and self.name in job.media_info.preferred
-                and job.media_info.preferred[self.name] is not None
-            ):
-                self.audio_source_stream = job.media_info.preferred[self.name]
+            if self.audio_source_stream != -1:
+                # If a specific video stream was requested, use that.
+                job.media_info.preferred["audio"] = self.video_source_stream
 
             # Set the options to extract audio from the source file.
             options = {
@@ -54,7 +51,7 @@ class StirlingPluginAudio(definitions.StirlingClass):
                 "y": True,
                 "i": job.media_info.source,
                 "f": self.audio_output_format[0],
-                "map": "0:a:{}".format(self.audio_source_stream - len(job.media_info.video_streams)),
+                "map": "0:a:{}".format(job.media_info.preferred["audio"] - len(job.media_info.video_streams)),
             }
 
             output_directory = job.output_directory / self.name
@@ -74,7 +71,7 @@ class StirlingPluginAudio(definitions.StirlingClass):
                         args.ffmpeg_unparser.unparse(**options), output_file
                     ),
                     priority=self.priority,
-                    expected_output=output_file,
+                    expected_output=str(output_file),
                     depends_on=self.depends_on,
                 )
             )

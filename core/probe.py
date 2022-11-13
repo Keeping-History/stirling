@@ -9,13 +9,15 @@ from core import args, definitions, helpers
 
 required_binaries = ["ffprobe"]
 
-
 @dataclass
-class StreamVideo:
+class Stream:
     stream: int
-
     duration: float
     codec: str
+    content_type: str
+
+@dataclass(kw_only=True)
+class StreamVideo(Stream):
     profile: str
     bitrate: int
 
@@ -31,12 +33,8 @@ class StreamVideo:
     content_type: str = "video"
 
 
-@dataclass
-class StreamAudio:
-    stream: int
-
-    duration: float
-    codec: str
+@dataclass(kw_only=True)
+class StreamAudio(Stream):
     profile: str
     bitrate: int
 
@@ -47,12 +45,8 @@ class StreamAudio:
     content_type: str = "audio"
 
 
-@dataclass
-class StreamText:
-    stream: int
-
-    duration: float
-    codec: str
+@dataclass(kw_only=True)
+class StreamText(Stream):
     start_time: float
 
     dispositions: list
@@ -110,10 +104,41 @@ class StirlingMediaInfo(definitions.StirlingClass):
         # If a specific audio or video stream are not passed in as arguments,
         # attempt to get the preferred video and audio streams based on their
         # quality, bitrate, etc.
-        self.preferred["video"] = self.__set_preferred("video")
-        self.preferred["audio"] = self.__set_preferred("audio")
+        self.preferred["video"] = self.__auto_set_preferred("video")
+        self.preferred["audio"] = self.__auto_set_preferred("audio")
 
-    def __set_preferred(self, type: str):
+    def get_stream(self, type: str, id: int):
+        match type:
+            case "video":
+                return self.__get_video_stream(id)
+            case "audio":
+                return self.__get_audio_stream(id)
+            case "text":
+                return self.__get_text_stream(id)
+            case _:
+                raise ValueError("Invalid stream type.")
+
+    def get_preferred_stream(self, stream_type: str):
+        match stream_type:
+            case "video":
+                return self.__get_video_stream(self.preferred["video"])
+            case "audio":
+                return self.__get_audio_stream(self.preferred["audio"])
+            case "text":
+                return self.__get_text_stream(self.preferred["text"])
+            case _:
+                raise ValueError("Invalid stream type.")
+
+    def __get_video_stream(self, stream_id: int):
+        return next((stream for stream in self.video_streams if stream.stream == stream_id))
+
+    def __get_audio_stream(self, stream_id: int):
+        return next((stream for stream in self.audio_streams if stream.stream == stream_id))
+
+    def __get_text_stream(self, stream_id: int):
+        return next((stream for stream in self.text_streams if stream.stream == stream_id))
+
+    def __auto_set_preferred(self, type: str):
         """Find the preferred stream based on it's metadata.
 
         When a stream is not specified specifically in the arguments, we need

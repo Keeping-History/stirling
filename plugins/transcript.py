@@ -62,7 +62,7 @@ class StirlingPluginTranscript(definitions.StirlingPlugin):
                         args.default_unparser.unparse(**options), str(input_file)
                     ),
                     priority=self.priority,
-                    expected_output=output_file,
+                    expected_output=str(output_file),
                     depends_on=self.depends_on,
                 )
             )

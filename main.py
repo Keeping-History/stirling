@@ -1,9 +1,8 @@
 from core import audio, jobs, video
-from plugins import hls, peaks, transcript
+from plugins import hls, peaks, transcript, frames
 
 # TODO: Add support for multiple audio tracks.
 # TODO: Add support for multiple transcripts/languages
-# TODO: Revisit https://github.com/kkroening/ffmpeg-python/tree/master/ffmpeg for argument creation
 # TODO: We need to create a separate ffmpeg call with the lowest quality settings
 # at the source files resolution for previewing and fast editor preview.
 
@@ -14,9 +13,10 @@ if __name__ == "__main__":
 
     # Add plugins to the job
     my_job.add_plugins(
+        video.StirlingPluginVideo(),
         audio.StirlingPluginAudio(),
         peaks.StirlingPluginPeaks(),
-        video.StirlingPluginVideo(),
+        frames.StirlingPluginFrames(),
         transcript.StirlingPluginTranscript(),
         hls.StirlingPluginHLS(),
     )

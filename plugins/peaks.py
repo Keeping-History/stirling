@@ -53,7 +53,7 @@ class StirlingPluginPeaks(definitions.StirlingPlugin):
                         args.default_unparser.unparse(**options)
                     ),
                     priority=self.priority,
-                    expected_output=output_file,
+                    expected_output=str(output_file),
                     depends_on=self.depends_on,
                 )
             )

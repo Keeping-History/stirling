@@ -8,15 +8,15 @@ from core import args, definitions, helpers, jobs
 required_binaries = ["ffmpeg"]
 
 @dataclass
-class StirlingPluginVideoFrames(definitions.StirlingPlugin):
-    """StirlingPluginVideoFrames creates image stills from a source video."""
+class StirlingPluginFrames(definitions.StirlingPlugin):
+    """StirlingPluginFrames creates image stills from a source video."""
 
     name: str = "frames"
-    depends_on: list = field(default_factory=list)
+    depends_on: list = field(default_factory=lambda: ["video"])
     priority: int = 0
 
     # Disable creating individual image frames from the input video.
-    video_frames_disable: bool = False
+    frames_disable: bool = False
     # The number of frames to capture per second. Can be an integer, a float
     # (decimal), a string that can be parsed to an integer or float, OR it can
     # accept simple mathematical calculations, such as a fraction as a string
@@ -33,35 +33,25 @@ class StirlingPluginVideoFrames(definitions.StirlingPlugin):
     assets: List[definitions.StirlingPluginAssets] = field(default_factory=list)
 
     def __post_init__(self):
-        if not self.video_frames_disable:
+        if not self.frames_disable:
             # Check to make sure the appropriate binary files we need are installed.
             assert helpers.check_dependencies_binaries(
                 required_binaries
             ), AssertionError("Missing required binaries: {}".format(required_binaries))
 
     def cmd(self, job: jobs.StirlingJob):
-        if not self.video_frames_disable:
-            if (
-                self.video_source_stream == -1
-                and self.name in job.media_info.preferred
-                and job.media_info.preferred[self.name] is not None
-            ):
-                self.video_source_stream = job.media_info.preferred[self.name]
-
-            stream = [
-                item
-                for item in job.media_info.video_streams
-                if item.stream == self.video_source_stream
-            ]
-            fps = stream[0].frame_rate
+        if not self.frames_disable:
+            stream = job.media_info.get_preferred_stream("video")
+            fps = stream.frame_rate
 
             # Set the options to extract audio from the source file.
             options = {
                 "hide_banner": True,
                 "y": True,
+                "loglevel": "error",
                 "i": job.media_info.source,
                 "f": "image2",
-                "map": "0:v:{}".format(self.video_source_stream),
+                "map": "0:v:{}".format(stream.stream),
                 "vf": "fps={}".format(
                     self.__get_frames_interval(self.frames_interval, fps)
                 ),
@@ -69,7 +59,7 @@ class StirlingPluginVideoFrames(definitions.StirlingPlugin):
                 "frame_pts": 1,
             }
 
-            output_directory = job.output_directory / self.name / "frames"
+            output_directory = job.output_directory / self.name
             output_directory.mkdir(parents=True, exist_ok=True)
 
             self.assets.append(

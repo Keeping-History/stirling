@@ -80,26 +80,17 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 
     def cmd(self, job: jobs.StirlingJob):
         if not self.hls_disable:
-            if (
-                self.video_source_stream == -1
-                and job.media_info.preferred["video"] is not None
-            ):
-                self.video_source_stream = job.media_info.preferred["video"]
+            preferred_audio_stream = job.media_info.get_preferred_stream("audio")
+            preferred_video_stream = job.media_info.get_preferred_stream("video")
 
-            if (
-                self.audio_source_stream == -1
-                and job.media_info.preferred["audio"] is not None
-            ):
-                self.audio_source_stream = job.media_info.preferred["audio"]
+            if self.video_source_stream == -1:
+                self.video_source_stream = preferred_video_stream.stream
+
+            if self.audio_source_stream == -1:
+                self.audio_source_stream = preferred_audio_stream.stream
 
             if self.hls_audio_sample_rate == 0:
-                stream = [
-                    item
-                    for item in job.media_info.audio_streams
-                    if item.stream == self.audio_source_stream
-                ]
-
-                self.hls_audio_sample_rate = stream[0].sample_rate
+                self.hls_audio_sample_rate = preferred_audio_stream.sample_rate
 
             output_directory = job.output_directory / self.name
             output_directory.mkdir(parents=True, exist_ok=True)
@@ -127,7 +118,9 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
             }
 
             audio_options = {
-                "map": "0:a:{}".format(self.audio_source_stream - len(job.media_info.video_streams)),
+                "map": "0:a:{}".format(
+                    self.audio_source_stream - len(job.media_info.video_streams)
+                ),
                 "acodec": self.hls_audio_codec,
                 "ar": self.hls_audio_sample_rate,
             }
@@ -170,10 +163,17 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                     )
                 )
 
-                rendition_playlist = "{0}/{1}.m3u8".format(str(output_directory), rendition["name"])
+                rendition_playlist = "{0}/{1}.m3u8".format(
+                    str(output_directory), rendition["name"]
+                )
                 outputs.append(output_directory / rendition_playlist)
 
-                renditions += args.ffmpeg_unparser.unparse(**rendition_command) + " " + rendition_playlist + " "
+                renditions += (
+                    args.ffmpeg_unparser.unparse(**rendition_command)
+                    + " "
+                    + rendition_playlist
+                    + " "
+                )
 
             master_playlist = "playlist.m3u8"
             outputs.append(output_directory / master_playlist)
@@ -181,10 +181,13 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
             job.commands.append(
                 definitions.StirlingCmd(
                     name=self.name + "_master_playlist",
-                    command="echo '{}' > {}".format(master_playlist_contents, str(output_directory / master_playlist)),
+                    command="echo '{}' > {}".format(
+                        master_playlist_contents,
+                        str(output_directory / master_playlist),
+                    ),
                     priority=self.priority,
-                    expected_output=output_directory / master_playlist,
-                    depends_on=self.depends_on
+                    expected_output=str(output_directory / master_playlist),
+                    depends_on=self.depends_on,
                 )
             )
 
@@ -198,7 +201,7 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                         renditions,
                     ),
                     priority=self.priority,
-                    expected_output=output_directory,
+                    expected_output=str(output_directory),
                     depends_on=self.depends_on,
                 )
             )
