@@ -7,6 +7,7 @@ from core import args, definitions, helpers, jobs
 
 required_binaries = ["ffmpeg"]
 
+
 @dataclass
 class StirlingPluginFrames(definitions.StirlingPlugin):
     """StirlingPluginFrames creates image stills from a source video."""
@@ -63,7 +64,9 @@ class StirlingPluginFrames(definitions.StirlingPlugin):
             output_directory.mkdir(parents=True, exist_ok=True)
 
             self.assets.append(
-                definitions.StirlingPluginAssets(name="frames_directory", path=output_directory)
+                definitions.StirlingPluginAssets(
+                    name="frames_directory", path=output_directory
+                )
             )
 
             job.commands.append(
@@ -71,9 +74,7 @@ class StirlingPluginFrames(definitions.StirlingPlugin):
                     name=self.name,
                     depends_on=self.depends_on,
                     command="ffmpeg {} {}".format(
-                        args.ffmpeg_unparser.unparse(
-                            **options
-                        ),
+                        args.ffmpeg_unparser.unparse(**options),
                         str(output_directory) + "/%d.jpg",
                     ),
                     priority=0,

@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import get_type_hints, List
+from typing import List, get_type_hints
 
 from dateutil import parser as date_parser
 
@@ -83,6 +83,7 @@ class StirlingPluginAssets(StirlingClass):
 
     name: str = ""
     path: Path = None
+
 
 # StirlingPlugin is the base class for all plugins. Any plugin class definition should use this as its parent class.
 class StirlingPlugin(StirlingClass):

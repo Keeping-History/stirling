@@ -1,8 +1,6 @@
-
 from dataclasses import dataclass, field
 
-from core import definitions, args
-
+from core import args, definitions
 
 
 @dataclass
@@ -24,11 +22,12 @@ class StirlingMediaFramework(definitions.StirlingClass):
     name: str
     version: str
 
+
 @dataclass(kw_only=True)
 class StirlingMediaFrameworkFFMPEG(StirlingMediaFramework):
     """StirlingMediaFrameworkFFMPEG is a class for using the `ffmpeg` Media
     Framework to interact with media files and their metadata.
-    
+
     Note that `ffmpeg` will require additional arguments to be passed at build
     time to enable support for specific Video Compression Formats (VCFs).
     For MacOS, the preferred `ffmpeg` distribution, installable using Homebrew,
@@ -48,22 +47,26 @@ class StirlingMediaFrameworkFFMPEG(StirlingMediaFramework):
         }
 
     def cmd(self):
-        return (self.binary_transcoder, args.ffmpeg_unparser.unparse(**self.default_options))
-    
+        return (
+            self.binary_transcoder,
+            args.ffmpeg_unparser.unparse(**self.default_options),
+        )
+
     def resize(self, width, height):
         return ("-vf", f"scale={width}:{height}")
+
 
 @dataclass
 class StirlingEncoder(definitions.StirlingClass):
     """StirlingEncoder is a class for handling encoder options.
-    
-        Attributes:
-            name (str): The name of the encoder. We prefer to focus on the name
-                of the underlying Video Coding Format (or Video Compression
-                Format/Standard, VCF for short) and not the container format or
-                codec. For example, we use `AVC` (for h.264 standard video)
-                instead of `mp4` or `ts`, or `AV1` instead of `webm` or `mkv`.
-            options (dict): A dictionary of options to pass to the encoder.
+
+    Attributes:
+        name (str): The name of the encoder. We prefer to focus on the name
+            of the underlying Video Coding Format (or Video Compression
+            Format/Standard, VCF for short) and not the container format or
+            codec. For example, we use `AVC` (for h.264 standard video)
+            instead of `mp4` or `ts`, or `AV1` instead of `webm` or `mkv`.
+        options (dict): A dictionary of options to pass to the encoder.
 
     """
 
@@ -167,38 +170,48 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
             case "aom":
                 self.options = {
                     "c:v": "libaom-av1",
-                    "g": self.encoder_keyframe_interval * self.encoder_fps, # Set to the same as the keyframe interval.
-                    "keyint_min": self.encoder_keyframe_interval * self.encoder_fps, # The keyframe interval
+                    "g": self.encoder_keyframe_interval
+                    * self.encoder_fps,  # Set to the same as the keyframe interval.
+                    "keyint_min": self.encoder_keyframe_interval
+                    * self.encoder_fps,  # The keyframe interval
                 }
                 match self.encoder_mode:
                     case "vbr":
                         vbr_options = {
                             "crf": self.encoder_quality_level,
-                            "b:v": 0, # Must be set to 0 for CRF.
+                            "b:v": 0,  # Must be set to 0 for CRF.
                         }
                         self.options = {**self.options, **vbr_options}
                     case "cbr":
                         cbr_options = {
                             "b:v": self.encoder_bitrate_target + "k",
                         }
-                        if self.encoder_bitrate_min is not None and self.encoder_bitrate_max is not None:
+                        if (
+                            self.encoder_bitrate_min is not None
+                            and self.encoder_bitrate_max is not None
+                        ):
                             cbr_bitrate_options = {
-                                "minrate": self.encoder_bitrate_min+ "k",
-                                "maxrate": self.encoder_bitrate_max+ "k",
+                                "minrate": self.encoder_bitrate_min + "k",
+                                "maxrate": self.encoder_bitrate_max + "k",
                             }
                         else:
                             cbr_bitrate_options = {
                                 "b:v": self.encoder_bitrate_target + "k",
                                 "crf": self.encoder_quality_level,
                             }
-                        self.options = {**self.options, **cbr_options, **cbr_bitrate_options}
-
+                        self.options = {
+                            **self.options,
+                            **cbr_options,
+                            **cbr_bitrate_options,
+                        }
 
             case "svt":
-                self.options =  {
+                self.options = {
                     "c:v": "libsvtav1",
                     "crf": self.encoder_quality_level,
                     "g": self.encoder_keyframe_interval * self.encoder_fps,
                     "preset": int(self.encoder_quality_profile),
-                    "svtav1-params": "tune={}".format(0 if self.encoder_subjective else 1)
+                    "svtav1-params": "tune={}".format(
+                        0 if self.encoder_subjective else 1
+                    ),
                 }

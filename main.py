@@ -1,5 +1,5 @@
 from core import audio, jobs, video
-from plugins import hls, peaks, transcript, frames
+from plugins import frames, hls, peaks, transcript
 
 # TODO: Add support for multiple audio tracks.
 # TODO: Add support for multiple transcripts/languages

@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from core import args, definitions, helpers, jobs, encoders
+from core import args, definitions, encoders, helpers, jobs
 
 required_binaries = ["ffmpeg"]
+
 
 @dataclass
 class StirlingPluginVideo(definitions.StirlingPlugin):
@@ -49,8 +50,12 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
             case "av1":
                 stream = job.media_info.get_preferred_stream("video")
                 keyframe_interval = stream.frame_rate * self.video_keyframe_interval
-                self.video_encoder_options = encoders.StirlingVideoEncoderAV1().get_encoder_options("aom")
-                self.video_encoder_options["g"] = self.video_encoder_options["keyint_min"] = keyframe_interval
+                self.video_encoder_options = (
+                    encoders.StirlingVideoEncoderAV1().get_encoder_options("aom")
+                )
+                self.video_encoder_options["g"] = self.video_encoder_options[
+                    "keyint_min"
+                ] = keyframe_interval
                 return definitions.EncoderOptionsAV1
 
     def cmd(self, job: jobs.StirlingJob):
@@ -71,7 +76,9 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
             output_directory.mkdir(parents=True, exist_ok=True)
 
             self.assets.append(
-                definitions.StirlingPluginAssets(name="video_archive", path=output_directory)
+                definitions.StirlingPluginAssets(
+                    name="video_archive", path=output_directory
+                )
             )
 
             job.commands.append(
@@ -79,9 +86,7 @@ class StirlingPluginVideo(definitions.StirlingPlugin):
                     name=self.name,
                     depends_on=self.depends_on,
                     command="ffmpeg {} {}".format(
-                        args.ffmpeg_unparser.unparse(
-                            **options
-                        ),
+                        args.ffmpeg_unparser.unparse(**options),
                         "source.mp4",
                     ),
                     priority=0,

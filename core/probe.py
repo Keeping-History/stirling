@@ -9,12 +9,14 @@ from core import args, definitions, helpers
 
 required_binaries = ["ffprobe"]
 
+
 @dataclass
 class Stream:
     stream: int
     duration: float
     codec: str
     content_type: str
+
 
 @dataclass(kw_only=True)
 class StreamVideo(Stream):
@@ -130,13 +132,19 @@ class StirlingMediaInfo(definitions.StirlingClass):
                 raise ValueError("Invalid stream type.")
 
     def __get_video_stream(self, stream_id: int):
-        return next((stream for stream in self.video_streams if stream.stream == stream_id))
+        return next(
+            (stream for stream in self.video_streams if stream.stream == stream_id)
+        )
 
     def __get_audio_stream(self, stream_id: int):
-        return next((stream for stream in self.audio_streams if stream.stream == stream_id))
+        return next(
+            (stream for stream in self.audio_streams if stream.stream == stream_id)
+        )
 
     def __get_text_stream(self, stream_id: int):
-        return next((stream for stream in self.text_streams if stream.stream == stream_id))
+        return next(
+            (stream for stream in self.text_streams if stream.stream == stream_id)
+        )
 
     def __auto_set_preferred(self, type: str):
         """Find the preferred stream based on it's metadata.

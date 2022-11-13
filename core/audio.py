@@ -51,7 +51,10 @@ class StirlingPluginAudio(definitions.StirlingClass):
                 "y": True,
                 "i": job.media_info.source,
                 "f": self.audio_output_format[0],
-                "map": "0:a:{}".format(job.media_info.preferred["audio"] - len(job.media_info.video_streams)),
+                "map": "0:a:{}".format(
+                    job.media_info.preferred["audio"]
+                    - len(job.media_info.video_streams)
+                ),
             }
 
             output_directory = job.output_directory / self.name
@@ -61,7 +64,9 @@ class StirlingPluginAudio(definitions.StirlingClass):
             )
 
             self.assets.append(
-                definitions.StirlingPluginAssets(name="normalized_audio", path=output_file)
+                definitions.StirlingPluginAssets(
+                    name="normalized_audio", path=output_file
+                )
             )
 
             job.commands.append(
