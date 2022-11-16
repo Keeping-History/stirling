@@ -132,6 +132,59 @@ class StirlingCmd(StirlingClass):
     log: str = None
 
 
+
+@dataclass
+class Stream:
+    """Stream is the base class for all streams."""
+    stream: int
+    duration: float
+    codec: str
+    content_type: str
+
+
+@dataclass(kw_only=True)
+class StreamVideo(Stream):
+    """The video stream class."""
+    profile: str
+    bitrate: int
+
+    width: int
+    height: int
+    frame_rate: float  # avg_frame_rate
+    aspect: List
+
+    color_bits: int = 8
+    color_model: str = "unknown"
+    scan_type: str = "unknown"
+
+    content_type: str = "video"
+
+
+@dataclass(kw_only=True)
+class StreamAudio(Stream):
+    """The audio stream class."""
+    profile: str
+    bitrate: int
+
+    sample_rate: int
+    channels: int
+    channel_layout: str
+
+    content_type: str = "audio"
+
+
+@dataclass(kw_only=True)
+class StreamText(Stream):
+    """The text stream class."""
+    start_time: float
+
+    dispositions: list
+    language: str = "und"  # undetermined
+
+    content_type: str = "subtitle"
+
+
+
 # VideoEncoderRenditions is a a dict that holds the Video Renditions we support.
 # A rendition is a version of the video file that will be transcoded,
 # based on the resolution and bitrate settings. The order of these renditions

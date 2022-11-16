@@ -52,8 +52,10 @@ class StirlingMediaFrameworkFFMPEG(StirlingMediaFramework):
             args.ffmpeg_unparser.unparse(**self.default_options),
         )
 
-    def resize(self, width, height):
-        return ("-vf", f"scale={width}:{height}")
+    def resize(self, width: float, height: float, relative: bool =False) -> tuple:
+        if relative:
+            return {"-vf": f"scale=iw*{width}:ih*{height}"}
+        return {"-vf": f"scale={width}:{height}"}
 
 
 @dataclass
@@ -97,7 +99,7 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
             for AV1. SVT-AV1 is the newest reference encoder going forward.
             Currently, we are not providing support for `librav1e` (which
             promises to be faster, but has poorer documentation IMHO).
-        encoder_keyframe_interval (float): Sets the number of seconds between
+        encoder_keyframe_fps_interval (float): Sets the number of seconds between
             keyframes. This value is multiplied by the frames-per-second (fps)
             of the source video file to determine how many frames should pass
             before inserting a new keyframe. For AV1, this will also set the GOP
@@ -166,14 +168,16 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
             return self.__get_encoder_options(encoder, encoder_options)
 
     def __get_encoder_options(self, encoder: str, encoder_options: dict):
+        keyframe_fps_interval = self.encoder_keyframe_interval * self.encoder_fps
+        if keyframe_fps_interval <= 0:
+            keyframe_fps_interval = 30 # default to 1 frame every 30 frames
+
         match encoder:
             case "aom":
                 self.options = {
                     "c:v": "libaom-av1",
-                    "g": self.encoder_keyframe_interval
-                    * self.encoder_fps,  # Set to the same as the keyframe interval.
-                    "keyint_min": self.encoder_keyframe_interval
-                    * self.encoder_fps,  # The keyframe interval
+                    "g": keyframe_fps_interval,
+                    "keyint_min": keyframe_fps_interval,
                 }
                 match self.encoder_mode:
                     case "vbr":
@@ -208,10 +212,12 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
             case "svt":
                 self.options = {
                     "c:v": "libsvtav1",
-                    "crf": self.encoder_quality_level,
-                    "g": self.encoder_keyframe_interval * self.encoder_fps,
-                    "preset": int(self.encoder_quality_profile),
-                    "svtav1-params": "tune={}".format(
-                        0 if self.encoder_subjective else 1
-                    ),
+                    "g": self.encoder_keyframe_fps_interval * self.encoder_fps,
                 }
+                match self.encoder_mode:
+                    case "vbr":
+                        vbr_options = {
+                            "crf": self.encoder_quality_level,
+                            "preset": int(self.encoder_quality_profile),
+                            "svtav1-params": f"tune={0 if self.encoder_subjective else 1}",
+                        }

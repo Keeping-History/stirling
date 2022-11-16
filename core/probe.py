@@ -11,58 +11,11 @@ required_binaries = ["ffprobe"]
 
 
 @dataclass
-class Stream:
-    stream: int
-    duration: float
-    codec: str
-    content_type: str
-
-
-@dataclass(kw_only=True)
-class StreamVideo(Stream):
-    profile: str
-    bitrate: int
-
-    width: int
-    height: int
-    frame_rate: float  # avg_frame_rate
-    aspect: List
-
-    color_bits: int = 8
-    color_model: str = "unknown"
-    scan_type: str = "unknown"
-
-    content_type: str = "video"
-
-
-@dataclass(kw_only=True)
-class StreamAudio(Stream):
-    profile: str
-    bitrate: int
-
-    sample_rate: int
-    channels: int
-    channel_layout: str
-
-    content_type: str = "audio"
-
-
-@dataclass(kw_only=True)
-class StreamText(Stream):
-    start_time: float
-
-    dispositions: list
-    language: str = "und"  # undetermined
-
-    content_type: str = "subtitle"
-
-
-@dataclass
 class StirlingMediaInfo(definitions.StirlingClass):
     source: str = field(default=None)
-    video_streams: List[StreamVideo] = field(default_factory=list)
-    audio_streams: List[StreamAudio] = field(default_factory=list)
-    text_streams: List[StreamText] = field(default_factory=list)
+    video_streams: List[definitions.StreamVideo] = field(default_factory=list)
+    audio_streams: List[definitions.StreamAudio] = field(default_factory=list)
+    text_streams: List[definitions.StreamText] = field(default_factory=list)
     preferred: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -177,7 +130,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
                     dispositions.append(k)
 
         self.text_streams.append(
-            StreamText(
+            definitions.StreamText(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
@@ -190,7 +143,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
 
     def __create_audio_stream(self, stream: dict):
         self.audio_streams.append(
-            StreamAudio(
+            definitions.StreamAudio(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
@@ -204,7 +157,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
 
     def __create_video_stream(self, stream: dict):
         self.video_streams.append(
-            StreamVideo(
+            definitions.StreamVideo(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
