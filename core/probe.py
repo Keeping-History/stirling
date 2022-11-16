@@ -11,62 +11,11 @@ required_binaries = ["ffprobe"]
 
 
 @dataclass
-class StreamVideo:
-    stream: int
-
-    duration: float
-    codec: str
-    profile: str
-    bitrate: int
-
-    width: int
-    height: int
-    frame_rate: float  # avg_frame_rate
-    aspect: List
-
-    color_bits: int = 8
-    color_model: str = "unknown"
-    scan_type: str = "unknown"
-
-    content_type: str = "video"
-
-
-@dataclass
-class StreamAudio:
-    stream: int
-
-    duration: float
-    codec: str
-    profile: str
-    bitrate: int
-
-    sample_rate: int
-    channels: int
-    channel_layout: str
-
-    content_type: str = "audio"
-
-
-@dataclass
-class StreamText:
-    stream: int
-
-    duration: float
-    codec: str
-    start_time: float
-
-    dispositions: list
-    language: str = "und"  # undetermined
-
-    content_type: str = "subtitle"
-
-
-@dataclass
 class StirlingMediaInfo(definitions.StirlingClass):
     source: str = field(default=None)
-    video_streams: List[StreamVideo] = field(default_factory=list)
-    audio_streams: List[StreamAudio] = field(default_factory=list)
-    text_streams: List[StreamText] = field(default_factory=list)
+    video_streams: List[definitions.StreamVideo] = field(default_factory=list)
+    audio_streams: List[definitions.StreamAudio] = field(default_factory=list)
+    text_streams: List[definitions.StreamText] = field(default_factory=list)
     preferred: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -77,8 +26,8 @@ class StirlingMediaInfo(definitions.StirlingClass):
         )
 
         options = {
-            "hide_banner": True,
             "loglevel": "quiet",
+            "hide_banner": True,
             "show_error": False,
             "show_format": True,
             "show_streams": True,
@@ -107,10 +56,62 @@ class StirlingMediaInfo(definitions.StirlingClass):
                 case "subtitle":
                     self.__create_text_stream(stream)
 
-        self.preferred["video"] = self.__set_preferred("video")
-        self.preferred["audio"] = self.__set_preferred("audio")
+        # If a specific audio or video stream are not passed in as arguments,
+        # attempt to get the preferred video and audio streams based on their
+        # quality, bitrate, etc.
+        self.preferred["video"] = self.__auto_set_preferred("video")
+        self.preferred["audio"] = self.__auto_set_preferred("audio")
 
-    def __set_preferred(self, type: str):
+    def get_stream(self, type: str, id: int):
+        match type:
+            case "video":
+                return self.__get_video_stream(id)
+            case "audio":
+                return self.__get_audio_stream(id)
+            case "text":
+                return self.__get_text_stream(id)
+            case _:
+                raise ValueError("Invalid stream type.")
+
+    def get_preferred_stream(self, stream_type: str):
+        match stream_type:
+            case "video":
+                return self.__get_video_stream(self.preferred["video"])
+            case "audio":
+                return self.__get_audio_stream(self.preferred["audio"])
+            case "text":
+                return self.__get_text_stream(self.preferred["text"])
+            case _:
+                raise ValueError("Invalid stream type.")
+
+    def __get_video_stream(self, stream_id: int):
+        return next(
+            (stream for stream in self.video_streams if stream.stream == stream_id)
+        )
+
+    def __get_audio_stream(self, stream_id: int):
+        return next(
+            (stream for stream in self.audio_streams if stream.stream == stream_id)
+        )
+
+    def __get_text_stream(self, stream_id: int):
+        return next(
+            (stream for stream in self.text_streams if stream.stream == stream_id)
+        )
+
+    def __auto_set_preferred(self, type: str):
+        """Find the preferred stream based on it's metadata.
+
+        When a stream is not specified specifically in the arguments, we need
+        to determine the best stream to use on behalf of the user. This is done
+        by some simple calculations based on the stream's metadata.
+
+        Args:
+            type (str): The type of stream to find the preferred stream for.
+
+        Returns:
+            int: The index of the preferred stream.
+        """
         m = {}
         match type:
             case "video":
@@ -129,7 +130,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
                     dispositions.append(k)
 
         self.text_streams.append(
-            StreamText(
+            definitions.StreamText(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
@@ -142,7 +143,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
 
     def __create_audio_stream(self, stream: dict):
         self.audio_streams.append(
-            StreamAudio(
+            definitions.StreamAudio(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
@@ -156,7 +157,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
 
     def __create_video_stream(self, stream: dict):
         self.video_streams.append(
-            StreamVideo(
+            definitions.StreamVideo(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
