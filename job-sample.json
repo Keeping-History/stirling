@@ -1,289 +1,199 @@
 {
-    "info": {
-        "id": "27d73201-3351-431b-acc2-9cf12dbcbc38",
-        "time_start": "2022-07-18 09:52:25.862582",
-        "time_end": "2022-07-18 09:56:21.626865",
-        "duration": 235.764283,
-        "log_file": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/job.log",
-        "job_file": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/job.json",
-        "arguments": {
-            "source": "source.mp4",
-            "output": null,
-            "input_directory": "",
-            "output_directory_prefix": "output",
-            "disable_delete_source": true,
-            "disable_source_copy": false,
-            "disable_audio": false,
-            "disable_transcript": false,
-            "disable_peaks": false,
-            "disable_hls": false,
+    "source": "source.mp4",
+    "id": "9db89deb-aa09-44e1-a055-c98bc7ecdcff",
+    "time_start": "2022-10-23 15:40:37.634918",
+    "log_file": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/job.log",
+    "job_file": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/job.json",
+    "input_directory": "/Users/robbiebyrd/Projects/stirling",
+    "source_delete_disable": true,
+    "output_directory": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff",
+    "output_annotations_directory": "annotations",
+    "source_copy_disable": true,
+    "media_info": {
+        "source": "source.mp4",
+        "video_streams": [
+            {
+                "stream": 1,
+                "duration": 1489.120967,
+                "codec": "h264",
+                "profile": "High",
+                "bitrate": "753340",
+                "width": 480,
+                "height": 360,
+                "frame_rate": 29.97002997002997,
+                "aspect": [
+                    "4",
+                    "3"
+                ],
+                "color_bits": "8",
+                "color_model": "yuv420p",
+                "scan_type": "progressive",
+                "content_type": "video"
+            }
+        ],
+        "audio_streams": [
+            {
+                "stream": 0,
+                "duration": 1489.120958,
+                "codec": "aac",
+                "profile": "LC",
+                "bitrate": "252135",
+                "sample_rate": "48000",
+                "channels": 2,
+                "channel_layout": "stereo",
+                "content_type": "audio"
+            }
+        ],
+        "preferred": {
+            "video": 1
+        }
+    },
+    "plugins": [
+        {
+            "plugin_name": "audio",
+            "depends_on": [],
+            "priority": 0,
+            "audio_disable": false,
+            "audio_source_stream": 0,
+            "audio_output_format": [
+                "wav",
+                "wav"
+            ]
+        },
+        {
+            "plugin_name": "peaks",
+            "depends_on": [
+                "audio"
+            ],
+            "priority": 10,
+            "peaks_disable": false,
+            "peaks_output_format": "json"
+        },
+        {
+            "plugin_name": "video",
+            "depends_on": [],
+            "priority": 0,
+            "video_disable": false,
+            "video_source_stream": 1,
+            "video_frames_disable": false,
+            "frames_interval": 1
+        },
+        {
+            "plugin_name": "transcript",
+            "depends_on": [
+                "audio"
+            ],
+            "priority": 10,
+            "transcript_disable": false,
+            "transcript_lang_input": "en",
+            "transcript_lang_output": "en",
+            "transcript_concurrency": 10,
+            "transcript_format": "json"
+        },
+        {
+            "plugin_name": "hls",
+            "depends_on": [
+                "video"
+            ],
+            "priority": 50,
+            "video_source_stream": 1,
+            "audio_source_stream": 0,
+            "hls_disable": false,
             "hls_profile": "sd",
-            "input_video_stream": -1,
-            "input_audio_stream": -1,
             "hls_segment_duration": 4,
             "hls_bitrate_ratio": 1.07,
             "hls_buffer_ratio": 1.5,
             "hls_crf": 20,
             "hls_keyframe_multiplier": 1,
-            "simulate": false,
-            "debug": true
-        }
-    },
-    "output": {
-        "directory": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38",
-        "outputs": [
-            "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/peaks.json",
-            "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/subtitles.json",
-            "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/hls"
-        ],
-        "audio_extract": "Audio",
-        "audio_peak_generation": "Peak",
-        "transcript_generation": "Transcript",
-        "video_hls_generation": "Video"
-    },
-    "commands": {
-        "hls": {
-            "command": "",
-            "output": null,
-            "hls_args": {
-                "hls_profile": "sd",
-                "hls_bitrate_ratio": 1,
-                "hls_buffer_ratio": 1
-            },
-            "input_options": {
-                "i": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.mp4",
-                "map": "0:1"
-            },
-            "output_options": {
-                "directory": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/hls"
-            },
-            "cli_options": {
-                "hide_banner": true,
-                "y": true,
-                "loglevel": "debug"
-            },
-            "options": {
-                "acodec": "aac",
-                "ar": "44100",
-                "vcodec": "h264",
-                "profile:v": "main",
-                "crf": "20",
-                "sc_threshold": "40",
-                "g": "59.94005994005994",
-                "keyint_min": "59.94005994005994",
-                "hls_time": "2",
-                "hls_playlist_type": "vod",
-                "movflags": "+faststart",
-                "vf": "",
-                "b:v": "",
-                "maxrate": "",
-                "bufsize": "",
-                "b:a": ""
-            },
-            "rendition_options": {
-                "vf": "scale=w={}:h={}:force_original_aspect_ratio=decrease",
-                "b:v": "{}k",
-                "maxrate": "{0}k",
-                "bufsize": "{0}k",
-                "b:a": "{0}k",
-                "hls_segment_filename": "{0}/{1}_%09d.ts' '{0}/{1}.m3u8"
-            }
-        },
-        "transcript": {
-            "command": "autosub -o /Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/subtitles.json -D en -S en -C 10 -F json /Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.wav",
-            "output": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/subtitles.json",
-            "options": {
-                "o": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/subtitles.json",
-                "D": "en",
-                "S": "en",
-                "C": "10",
-                "F": "json"
-            }
-        },
-        "peaks": {
-            "command": "audiowaveform -i /Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.wav -o /Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/peaks.json",
-            "output": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/peaks.json",
-            "options": {
-                "i": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.wav",
-                "o": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/annotations/peaks.json"
-            }
-        },
-        "audio": {
-            "command": "ffmpeg -hide_banner -y -loglevel debug -i /Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.mp4 -ac 1 -acodec pcm_s16le -ar 44800 -map 0:0 /Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.wav",
-            "output": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.wav",
-            "cli_options": {
-                "hide_banner": true,
-                "y": true,
-                "loglevel": "debug"
-            },
-            "options": {
-                "i": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.mp4",
-                "ac": "1",
-                "acodec": "pcm_s16le",
-                "ar": "44800",
-                "map": "0:0"
-            }
-        },
-        "thumbnails": {
-            "command": null,
-            "output": null,
-            "cli_options": {
-                "hide_banner": true,
-                "y": true,
-                "loglevel": "debug"
-            },
-            "options": {
-                "i": "",
-                "f": "image2",
-                "vf": "fps=fps=1/10"
-            }
-        }
-    },
-    "source": {
-        "info": {
-            "programs": [],
-            "streams": [
+            "hls_audio_codec": "aac",
+            "hls_audio_sample_rate": 48000,
+            "hls_video_codec": "h264",
+            "hls_video_profile": "main",
+            "hls_sc_threshold": 40,
+            "hls_gop_size": 12,
+            "hls_keyint_min": 25,
+            "hls_target_segment_duration": 2,
+            "hls_playlist_type": "vod",
+            "hls_movflags": "+faststart",
+            "hls_encoder_profiles": [
                 {
-                    "index": 0,
-                    "codec_name": "aac",
-                    "codec_long_name": "AAC (Advanced Audio Coding)",
-                    "profile": "LC",
-                    "codec_type": "audio",
-                    "codec_tag_string": "mp4a",
-                    "codec_tag": "0x6134706d",
-                    "sample_fmt": "fltp",
-                    "sample_rate": "48000",
-                    "channels": 2,
-                    "channel_layout": "stereo",
-                    "bits_per_sample": 0,
-                    "id": "0x1",
-                    "r_frame_rate": "0/0",
-                    "avg_frame_rate": "0/0",
-                    "time_base": "1/48000",
-                    "start_pts": 0,
-                    "start_time": "0.000000",
-                    "duration_ts": 71477806,
-                    "duration": "1489.120958",
-                    "bit_rate": "252135",
-                    "nb_frames": "69805",
-                    "extradata_size": 2,
-                    "disposition": {
-                        "default": 1,
-                        "dub": 0,
-                        "original": 0,
-                        "comment": 0,
-                        "lyrics": 0,
-                        "karaoke": 0,
-                        "forced": 0,
-                        "hearing_impaired": 0,
-                        "visual_impaired": 0,
-                        "clean_effects": 0,
-                        "attached_pic": 0,
-                        "timed_thumbnails": 0,
-                        "captions": 0,
-                        "descriptions": 0,
-                        "metadata": 0,
-                        "dependent": 0,
-                        "still_image": 0
-                    },
-                    "tags": {
-                        "creation_time": "2017-10-09T19:23:41.000000Z",
-                        "language": "eng",
-                        "handler_name": "Core Media Audio",
-                        "vendor_id": "[0][0][0][0]"
-                    }
+                    "name": "120p",
+                    "width": "160",
+                    "height": "120",
+                    "bitrate": "128",
+                    "audio-bitrate": "32",
+                    "ratio": "4:3"
                 },
                 {
-                    "index": 1,
-                    "codec_name": "h264",
-                    "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
-                    "profile": "High",
-                    "codec_type": "video",
-                    "codec_tag_string": "avc1",
-                    "codec_tag": "0x31637661",
-                    "width": 480,
-                    "height": 360,
-                    "coded_width": 480,
-                    "coded_height": 360,
-                    "closed_captions": 0,
-                    "film_grain": 0,
-                    "has_b_frames": 0,
-                    "sample_aspect_ratio": "1:1",
-                    "display_aspect_ratio": "4:3",
-                    "pix_fmt": "yuv420p",
-                    "level": 30,
-                    "color_range": "tv",
-                    "color_space": "smpte170m",
-                    "color_transfer": "bt709",
-                    "color_primaries": "smpte170m",
-                    "chroma_location": "left",
-                    "field_order": "progressive",
-                    "refs": 1,
-                    "is_avc": "true",
-                    "nal_length_size": "4",
-                    "id": "0x2",
-                    "r_frame_rate": "30000/1001",
-                    "avg_frame_rate": "30000/1001",
-                    "time_base": "1/30000",
-                    "start_pts": 0,
-                    "start_time": "0.000000",
-                    "duration_ts": 44673629,
-                    "duration": "1489.120967",
-                    "bit_rate": "753340",
-                    "bits_per_raw_sample": "8",
-                    "nb_frames": "44629",
-                    "extradata_size": 36,
-                    "disposition": {
-                        "default": 1,
-                        "dub": 0,
-                        "original": 0,
-                        "comment": 0,
-                        "lyrics": 0,
-                        "karaoke": 0,
-                        "forced": 0,
-                        "hearing_impaired": 0,
-                        "visual_impaired": 0,
-                        "clean_effects": 0,
-                        "attached_pic": 0,
-                        "timed_thumbnails": 0,
-                        "captions": 0,
-                        "descriptions": 0,
-                        "metadata": 0,
-                        "dependent": 0,
-                        "still_image": 0
-                    },
-                    "tags": {
-                        "creation_time": "2017-10-09T19:23:41.000000Z",
-                        "language": "und",
-                        "handler_name": "Core Media Video",
-                        "vendor_id": "[0][0][0][0]"
-                    }
+                    "name": "240p",
+                    "width": "320",
+                    "height": "240",
+                    "bitrate": "300",
+                    "audio-bitrate": "64",
+                    "ratio": "4:3"
+                },
+                {
+                    "name": "480p",
+                    "width": "640",
+                    "height": "480",
+                    "bitrate": "800",
+                    "audio-bitrate": "96",
+                    "ratio": "4:3"
                 }
-            ],
-            "chapters": [],
-            "format": {
-                "filename": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.mp4",
-                "nb_streams": 2,
-                "nb_programs": 0,
-                "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
-                "format_long_name": "QuickTime / MOV",
-                "start_time": "0.000000",
-                "duration": "1489.120967",
-                "size": "187786787",
-                "bit_rate": "1008846",
-                "probe_score": 100,
-                "tags": {
-                    "major_brand": "mp42",
-                    "minor_version": "1",
-                    "compatible_brands": "mp41mp42isom",
-                    "creation_time": "2017-10-09T19:23:41.000000Z"
-                }
-            }
-        },
-        "input": {
-            "filename": "/Users/robbiebyrd/Projects/stirling/output/27d73201-3351-431b-acc2-9cf12dbcbc38/source.mp4",
-            "video_stream": 1,
-            "audio_stream": 0
+            ]
         }
-    }
+    ],
+    "commands": [
+        {
+            "plugin_name": "video",
+            "command": "ffmpeg -hide_banner -loglevel quiet -y -i source.mp4 -f image2 -map 0:v:1 -vf fps=1 -vsync 0 -frame_pts 1 source.mp4 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/video/frames%d.jpg",
+            "priority": 0,
+            "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/video/frames",
+            "depends_on": [],
+            "status": "FAILED",
+            "log": ""
+        },
+        {
+            "plugin_name": "audio",
+            "command": "ffmpeg -hide_banner -y -loglevel quiet -i source.mp4 -f wav -map 0:a:0 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/audio/source.wav",
+            "priority": 0,
+            "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/audio/source.wav",
+            "depends_on": [],
+            "status": "RUNNING",
+            "log": ""
+        },
+        {
+            "plugin_name": "hls",
+            "command": "ffmpeg -hide_banner -loglevel quiet -y -i source.mp4 -map 0:v:1 -vcodec h264 -profile:v main -crf 20 -sc_threshold 40 -g 12 -keyint_min 25 -hls_time 2 -hls_playlist_type vod -movflags +faststart -map 0:a:0 -acodec aac -ar 48000 -vf scale=w=160:h=120:force_original_aspect_ratio=decrease -b:v 128k -maxrate 136.96k -bufsize 192.0k -b:a 32k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p.m3u8\"-vf scale=w=320:h=240:force_original_aspect_ratio=decrease -b:v 300k -maxrate 321.0k -bufsize 450.0k -b:a 64k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p.m3u8\"-vf scale=w=640:h=480:force_original_aspect_ratio=decrease -b:v 800k -maxrate 856.0k -bufsize 1200.0k -b:a 96k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p.m3u8\"",
+            "priority": 50,
+            "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls",
+            "depends_on": [
+                "video"
+            ],
+            "status": "FAILED",
+            "log": ""
+        },
+        {
+            "plugin_name": "transcript",
+            "command": "autosub -o /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/transcript.json -D en -S en -C 10 -F json source.mp4",
+            "priority": 10,
+            "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/transcript.json",
+            "depends_on": [
+                "audio"
+            ],
+            "status": "QUEUED",
+            "log": null
+        },
+        {
+            "plugin_name": "peaks",
+            "command": "audiowaveform -i source.mp4 -o /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/peaks.json --output-format json",
+            "priority": 10,
+            "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/annotations/peaks.json",
+            "depends_on": [
+                "audio"
+            ],
+            "status": "QUEUED",
+            "log": null
+        }
+    ]
 }
