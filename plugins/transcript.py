@@ -12,7 +12,7 @@ class StirlingPluginTranscript(definitions.StirlingPlugin):
     These transcripts can be used as-is, or can be used later for
     confidence training, language analysis or for adding other contexts."""
 
-    plugin_name: str = "transcript"
+    name: str = "transcript"
     depends_on: list = field(default_factory=lambda: ["audio"])
     priority: int = 10
 
@@ -37,29 +37,32 @@ class StirlingPluginTranscript(definitions.StirlingPlugin):
 
     ## Extract Audio from file
     def cmd(self, job: jobs.StirlingJob):
-        output_file = (
-            job.output_directory
-            / job.output_annotations_directory
-            / (self.plugin_name + ".json")
-        )
-
-        # Set the options to extract audio from the source file.
-        options = {
-            "o": str(output_file),
-            "D": self.transcript_lang_output,
-            "S": self.transcript_lang_input,
-            "C": self.transcript_concurrency,
-            "F": self.transcript_format,
-        }
-
-        job.commands.append(
-            definitions.StrilingCmd(
-                plugin_name=self.plugin_name,
-                command="autosub {} {}".format(
-                    args.default_unparser.unparse(**options), str(job.media_info.source)
-                ),
-                priority=self.priority,
-                expected_output=output_file,
-                depends_on=self.depends_on,
+        if not self.transcript_disable:
+            output_file = (
+                job.output_directory
+                / job.output_annotations_directory
+                / (self.name + ".json")
             )
-        )
+
+            input_file = job.get_plugin_asset("audio", "normalized_audio")
+
+            # Set the options to extract audio from the source file.
+            options = {
+                "o": str(output_file),
+                "D": self.transcript_lang_output,
+                "S": self.transcript_lang_input,
+                "C": self.transcript_concurrency,
+                "F": self.transcript_format,
+            }
+
+            job.commands.append(
+                definitions.StirlingCmd(
+                    name=self.name,
+                    command="autosub {} {}".format(
+                        args.default_unparser.unparse(**options), str(input_file)
+                    ),
+                    priority=self.priority,
+                    expected_output=str(output_file),
+                    depends_on=self.depends_on,
+                )
+            )
