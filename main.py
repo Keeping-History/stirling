@@ -1,5 +1,5 @@
-from core import audio, jobs, video
-from plugins import frames, hls, peaks, transcript
+import core.job as job
+from plugins import audio, video, frames, hls, peaks, transcript
 
 # TODO: Add support for multiple audio tracks.
 # TODO: Add support for multiple transcripts/languages
@@ -9,7 +9,7 @@ from plugins import frames, hls, peaks, transcript
 if __name__ == "__main__":
 
     # Create a new job
-    my_job = jobs.StirlingJob(source="source.mp4", debug=True)
+    my_job = job.StirlingJob(source="source.mp4", debug=True)
 
     # Add plugins to the job
     my_job.add_plugins(

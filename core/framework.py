@@ -3,27 +3,83 @@ import subprocess
 from dataclasses import dataclass, field
 from typing import List
 
+import argunparse
 import simpleeval
 
-from core import args, definitions, helpers
-
-required_binaries = ["ffprobe"]
+from core import core
 
 
 @dataclass
-class StirlingMediaInfo(definitions.StirlingClass):
-    source: str = field(default=None)
-    video_streams: List[definitions.StreamVideo] = field(default_factory=list)
-    audio_streams: List[definitions.StreamAudio] = field(default_factory=list)
-    text_streams: List[definitions.StreamText] = field(default_factory=list)
-    preferred: dict = field(default_factory=dict)
+class StirlingMediaFramework(core.StirlingClass):
+    """StirlingMediaFramework is a class for handling the underlying system
+    media framework used to interact with media files.
 
+
+    Attributes:
+        name (str): The encoder framework to use. For example, `ffmpeg` is a
+            media framework that can be used to interact with video and audio
+            files; `Mencoder` and `MLT` are other examples of media frameworks.
+
+        version (str): The version of the encoder framework to use. Helpful
+            when multiple versions of the same framework are needed to support
+            a specific Video Compression Format (VCS).
+    """
+
+    name: str
+    version: str
+    encoders: List[str] = field(default_factory=list)
+    formats: List[str] = field(default_factory=list)
+
+
+@dataclass(kw_only=True)
+class StirlingMediaFrameworkFFmpeg(StirlingMediaFramework):
+    """StirlingMediaFrameworkFFmpeg is a class for using the `ffmpeg` Media
+    Framework to interact with media files and their metadata.
+
+    Note that `ffmpeg` will require additional arguments to be passed at build
+    time to enable support for specific Video Compression Formats (VCFs).
+    For MacOS, the preferred `ffmpeg` distribution, installable using Homebrew,
+    is available at https://github.com/skyzyx/homebrew-ffmpeg.
+    """
+
+    name: str = "FFmpeg"
+    binary_transcoder: str = "ffmpeg"
+    binary_probe: str = "ffprobe"
+    version: str = "5.1.2"
+    default_options: dict = field(default_factory=dict)
+
+    def __post_init__(self):
+        self.default_options = {
+            "hide_banner": True,
+            "y": True,
+            "loglevel": "warning",
+        }
+
+    def cmd(self):
+        return (
+            self.binary_transcoder,
+            self.unparser.unparse(**self.default_options),
+        )
+
+    def resize(self, width: float, height: float, relative: bool = False) -> tuple:
+        if relative:
+            return {"-vf": f"scale=iw*{width}:ih*{height}"}
+        return {"-vf": f"scale={width}:{height}"}
+
+    def unparser(self):
+        return argunparse.ArgumentUnparser(
+            long_opt="-", opt_value=" ", begin_delim="", end_delim=""
+        )
+
+
+@dataclass
+class StirlingMediaInfoFFmpeg(core.StirlingMediaInfo):
     def __post_init__(self):
 
         # Check to make sure the appropriate binary files we need are installed.
-        assert helpers.check_dependencies_binaries(required_binaries), AssertionError(
-            "Missing required binaries."
-        )
+        assert core.check_dependencies_binaries(
+            [self.binary_transcoder, self.binary_probe]
+        ), AssertionError("Missing required binaries.")
 
         options = {
             "loglevel": "quiet",
@@ -35,7 +91,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
             "print_format": "json",
         }
 
-        cmd = "ffprobe " + args.ffmpeg_unparser.unparse(str(self.source), **options)
+        cmd = "ffprobe " + core.ffmpeg_unparser.unparse(str(self.source), **options)
 
         # Check if we can probe the input file.
         cmd_output = subprocess.getstatusoutput(cmd)
@@ -130,7 +186,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
                     dispositions.append(k)
 
         self.text_streams.append(
-            definitions.StreamText(
+            core.StreamText(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
@@ -143,7 +199,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
 
     def __create_audio_stream(self, stream: dict):
         self.audio_streams.append(
-            definitions.StreamAudio(
+            core.StreamAudio(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),
@@ -157,7 +213,7 @@ class StirlingMediaInfo(definitions.StirlingClass):
 
     def __create_video_stream(self, stream: dict):
         self.video_streams.append(
-            definitions.StreamVideo(
+            core.StreamVideo(
                 stream=self.__set_default(stream, "index"),
                 duration=float(self.__set_default(stream, "duration")),
                 codec=self.__set_default(stream, "codec_name"),

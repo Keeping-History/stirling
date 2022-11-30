@@ -3,13 +3,13 @@ from typing import List
 
 import simpleeval
 
-from core import args, definitions, helpers, jobs
+from core import core, job
 
 required_binaries = ["ffmpeg"]
 
 
 @dataclass
-class StirlingPluginFrames(definitions.StirlingPlugin):
+class StirlingPluginFrames(core.StirlingPlugin):
     """StirlingPluginFrames creates image stills from a source video."""
 
     name: str = "frames"
@@ -31,18 +31,18 @@ class StirlingPluginFrames(definitions.StirlingPlugin):
     frames_interval: int = 1
 
     # Contains outputs from the plugin for use in other plugins.
-    assets: List[definitions.StirlingPluginAssets] = field(default_factory=list)
+    assets: List[core.StirlingPluginAssets] = field(default_factory=list)
 
     def __post_init__(self):
         if not self.frames_disable:
             # Check to make sure the appropriate binary files we need are installed.
-            assert helpers.check_dependencies_binaries(
-                required_binaries
-            ), AssertionError("Missing required binaries: {}".format(required_binaries))
+            assert core.check_dependencies_binaries(required_binaries), AssertionError(
+                "Missing required binaries: {}".format(required_binaries)
+            )
 
-    def cmd(self, job: jobs.StirlingJob):
+    def cmd(self, this_job: job.StirlingJob):
         if not self.frames_disable:
-            stream = job.media_info.get_preferred_stream("video")
+            stream = this_job.media_info.get_preferred_stream("video")
             fps = stream.frame_rate
 
             # Set the options to extract audio from the source file.
@@ -50,7 +50,7 @@ class StirlingPluginFrames(definitions.StirlingPlugin):
                 "hide_banner": True,
                 "y": True,
                 "loglevel": "error",
-                "i": job.media_info.source,
+                "i": this_job.media_info.source,
                 "f": "image2",
                 "map": "0:v:{}".format(stream.stream),
                 "vf": "fps={}".format(
@@ -60,21 +60,21 @@ class StirlingPluginFrames(definitions.StirlingPlugin):
                 "frame_pts": 1,
             }
 
-            output_directory = job.output_directory / self.name
+            output_directory = this_job.output_directory / self.name
             output_directory.mkdir(parents=True, exist_ok=True)
 
             self.assets.append(
-                definitions.StirlingPluginAssets(
+                core.StirlingPluginAssets(
                     name="frames_directory", path=output_directory
                 )
             )
 
-            job.commands.append(
-                definitions.StirlingCmd(
+            this_job.commands.append(
+                core.StirlingCmd(
                     name=self.name,
                     depends_on=self.depends_on,
                     command="ffmpeg {} {}".format(
-                        args.ffmpeg_unparser.unparse(**options),
+                        core.ffmpeg_unparser.unparse(**options),
                         str(output_directory) + "/%d.jpg",
                     ),
                     priority=0,

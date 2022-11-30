@@ -1,65 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import List
 
-from core import args, definitions
-
-
-@dataclass
-class StirlingMediaFramework(definitions.StirlingClass):
-    """StirlingMediaFramework is a class for handling the underlying system
-    media framework used to interact with media files.
-
-
-    Attributes:
-        name (str): The encoder framework to use. For example, `ffmpeg` is a
-            media framework that can be used to interact with video and audio
-            files; `Mencoder` and `MLT` are other examples of media frameworks.
-
-        version (str): The version of the encoder framework to use. Helpful
-            when multiple versions of the same framework are needed to support
-            a specific Video Compression Format (VCS).
-    """
-
-    name: str
-    version: str
-
-
-@dataclass(kw_only=True)
-class StirlingMediaFrameworkFFMPEG(StirlingMediaFramework):
-    """StirlingMediaFrameworkFFMPEG is a class for using the `ffmpeg` Media
-    Framework to interact with media files and their metadata.
-
-    Note that `ffmpeg` will require additional arguments to be passed at build
-    time to enable support for specific Video Compression Formats (VCFs).
-    For MacOS, the preferred `ffmpeg` distribution, installable using Homebrew,
-    is available at https://github.com/skyzyx/homebrew-ffmpeg.
-    """
-
-    name: str = "FFmpeg"
-    binary_transcoder: str = "ffmpeg"
-    binary_probe: str = "ffprobe"
-    default_options: dict = field(default_factory=dict)
-
-    def __post_init__(self):
-        self.default_options = {
-            "hide_banner": True,
-            "y": True,
-            "loglevel": "warning",
-        }
-
-    def cmd(self):
-        return (
-            self.binary_transcoder,
-            args.ffmpeg_unparser.unparse(**self.default_options),
-        )
-
-    def resize(self, width: float, height: float, relative: bool =False) -> tuple:
-        if relative:
-            return {"-vf": f"scale=iw*{width}:ih*{height}"}
-        return {"-vf": f"scale={width}:{height}"}
+from core import core, framework
 
 
 @dataclass
-class StirlingEncoder(definitions.StirlingClass):
+class StirlingEncoder(core.StirlingClass):
     """StirlingEncoder is a class for handling encoder options.
 
     Attributes:
@@ -73,8 +19,10 @@ class StirlingEncoder(definitions.StirlingClass):
     """
 
     name: str
-    options: dict = field(default_factory=dict)
-    frameworks: list = field(default_factory=dict)
+    encoder_library_default: str
+    options: dict
+    frameworks: List[framework.StirlingMediaFramework]
+    encoder_libraries: List[str]
 
 
 @dataclass(kw_only=True)
@@ -91,11 +39,11 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
     Attributes:
         name (str): The name of the encoder. This is `av1`.
         frameworks (str): A list of frameworks supported by this encoder.
-        encoders (list): A list of available encoder libraries for the AV1 Video Coding Format.
+        encoder_libraries (list): A list of available encoder libraries for the AV1 Video Coding Format.
         options (dict): A holder for all the encoder's options, until
             they are ready to be parsed into a command (or arguments for a
             command).
-        encoder_default (str): The encoder or encoder library to use. Defaults
+        encoder_library_default (str): The encoder or encoder library to use. Defaults
             to `aom` (or `libaom-av1`), which is the current reference encoder
             for AV1. SVT-AV1 is the newest reference encoder going forward.
             Currently, we are not providing support for `librav1e` (which
@@ -147,6 +95,7 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
     name: str = "av1"
     frameworks: list = field(default_factory=lambda: ["ffmpeg"])
     encoders: list = field(default_factory=lambda: ["aom", "svt"])
+    formats: list = field(default_factory=lambda: ["av1"]) # TODO: WHAT ARE WE TRYING TO ACCOMPLISH HERE?
     options: dict = field(default_factory=dict)
     encoder_default: str = "aom"
     encoder_keyframe_interval: float = 10
@@ -158,22 +107,42 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
     encoder_bitrate_min: int = 0
     encoder_bitrate_max: int = 0
     encoder_subjective: bool = True
+    encoder_keyframe_interval: float
+    encoder_fps: int
+    encoder_mode: str
+    encoder_quality_level: int
+    encoder_quality_profile: str
+    encoder_bitrate_target: int
+    encoder_bitrate_min: int
+    encoder_bitrate_max: int
+    encoder_subjective: bool
 
     def __post_init__(self):
-        pass
+        self.name = "av1"
+        self.frameworks = [framework.StirlingMediaFrameworkFFmpeg]
+        self.encoder_libraries = ["aom", "svt"]
+        self.encoder_library_default = "aom"
+        self.encoder_mode = "vbr"
+        self.encoder_quality_level = 12
+        self.encoder_quality_profile = "0"
+        self.encoder_bitrate_target = 0
+        self.encoder_bitrate_min = 0
+        self.encoder_bitrate_max = 0
+        self.encoder_subjective = True
+        self.encoder_keyframe_interval = 10.0
 
-    def get(self, encoder: str, options: dict = None):
-        if encoder is None:
-            encoder = self.encoder_default
-        if encoder in self.options:
-            return self.__get_encoder_options(encoder, options)
+    def get(self, encoder_library: str, options: dict = None):
+        if encoder_library is None:
+            encoder_library = self.encoder_library_default
+        if encoder_library in self.options:
+            return self.__get_encoder_options(encoder_library, options)
 
-    def __get_encoder_options(self, encoder: str, options: dict):
+    def __get_encoder_options(self, encoder_library: str, options: dict):
         keyframe_fps_interval = self.encoder_keyframe_interval * self.encoder_fps
         if keyframe_fps_interval <= 0:
-            keyframe_fps_interval = 30 # default to 1 frame every 30 frames
+            keyframe_fps_interval = 30  # default to 1 frame every 30 frames
 
-        match encoder:
+        match encoder_library:
             case "aom":
                 self.options = {
                     "c:v": "libaom-av1",

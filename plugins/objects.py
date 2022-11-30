@@ -4,7 +4,7 @@
 # import cv2
 # from mtcnn import MTCNN
 
-# from core import args, helpers
+# from core import core
 
 # # from core import pytorch
 # from plugins import plugins
@@ -117,7 +117,7 @@
 #         )
 
 #         for rendition_option in renditions_options:
-#             encoder_renditions += " " + args.default_unparser.unparse(
+#             encoder_renditions += " " + core.default_unparser.unparse(
 #                 **(job["commands"]["hls"]["options"] | rendition_option)
 #             )
 
@@ -125,7 +125,7 @@
 #         encoder_renditions = encoder_renditions.replace("'", '"')
 
 #         job["commands"]["hls"]["command"] = "ffmpeg " + (
-#             args.ffmpeg_unparser.unparse(
+#             core.ffmpeg_unparser.unparse(
 #                 **(
 #                     job["commands"]["hls"]["cli_options"]
 #                     | job["commands"]["hls"]["input_options"]
@@ -135,10 +135,10 @@
 #             + encoder_renditions
 #         )
 
-#         helpers.log(job, "HLS Encoding Command: " + job["commands"]["hls"]["command"])
+#         core.log(job, "HLS Encoding Command: " + job["commands"]["hls"]["command"])
 
 #         # Convert the video file to packaged HLS.
-#         helpers.log(
+#         core.log(
 #             job,
 #             "Generating HLS package from source file '{}' to directory '{}'".format(
 #                 job["commands"]["hls"]["input_options"]["i"],
@@ -152,7 +152,7 @@
 #         job["output"]["video_hls_generation"] = plugins.do(
 #             job["commands"]["hls"]["command"], job["arguments"]["simulate"]
 #         )
-#         helpers.log(
+#         core.log(
 #             job,
 #             "Created HLS video package in {0}".format(
 #                 str(job["commands"]["hls"]["output_options"]["directory"])
