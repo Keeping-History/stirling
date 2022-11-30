@@ -1,3 +1,4 @@
+import dataclasses
 import json
 import os
 import shutil
@@ -14,14 +15,14 @@ import networkx
 import requests
 import validators
 
-from core import definitions, helpers, probe
+from core import core, probe
 
 # TODO: Need this later for merging in a json job file.
 # from mergedeep import merge
 
 
 @dataclass
-class StirlingJob(definitions.StirlingClass):
+class StirlingJob(core.StirlingClass):
     """A collection of arguments, plugins, and commands to process on a source file.
 
     A StirlingJob contains the base arguments, functions and information
@@ -86,11 +87,12 @@ class StirlingJob(definitions.StirlingClass):
     simulate: bool = False
     debug: bool = True
     media_info: probe.StirlingMediaInfo = None
+    frameworks: List[core.StirlingFramework] = field(default_factory=list)
 
     # Private fields
-    _plugins: List = field(default_factory=list)
+    _plugins: List = field(default_factory=lambda: [core.StirlingPlugin()])
     _outputs: List = field(default_factory=list)
-    _commands: List[definitions.StirlingCmd] = field(default_factory=list)
+    _commands: List[core.StirlingCmd] = field(default_factory=list)
 
     def __post_init__(self):
         """Setup the job after it is created.
@@ -174,7 +176,7 @@ class StirlingJob(definitions.StirlingClass):
 
         return self._plugins
 
-    def get_plugin(self, plugin_name: str):
+    def get_plugin(self, plugin_name: str) -> core.StirlingPlugin:
         """Get a plugin by name.
 
         Args:
@@ -257,7 +259,7 @@ class StirlingJob(definitions.StirlingClass):
         cmd_holder = []
         for cmd in self.commands:
             # Check if we can probe the input file.
-            cmd.status = definitions.StirlingCmdStatus.RUNNING
+            cmd.status = core.StirlingCmdStatus.RUNNING
             self.log(
                 "Starting command {} for plugin {}".format(
                     textwrap.shorten(cmd.command, width=20), cmd.name
@@ -266,7 +268,7 @@ class StirlingJob(definitions.StirlingClass):
             cmd_output = subprocess.getstatusoutput(cmd.command)
             cmd.log = cmd_output[1]
             if cmd_output[0] != 0:
-                cmd.status = definitions.StirlingCmdStatus.FAILED
+                cmd.status = core.StirlingCmdStatus.FAILED
                 self.log(
                     "Command {} for plugin {} failed.".format(
                         textwrap.shorten(cmd.command, width=20), cmd.name
@@ -280,7 +282,7 @@ class StirlingJob(definitions.StirlingClass):
                         textwrap.shorten(cmd.command, width=20), cmd.name
                     )
                 )
-                cmd.status = definitions.StirlingCmdStatus.SUCCESS
+                cmd.status = core.StirlingCmdStatus.SUCCESS
 
                 self.log(
                     "Command {} for plugin {} output:".format(
@@ -298,7 +300,7 @@ class StirlingJob(definitions.StirlingClass):
         """Log an object (in JSON format) to the job log file."""
 
         output_file = open(self.job_file, "w")
-        output_file.write(json.dumps(self, indent=4, cls=helpers.StirlingJSONEncoder))
+        output_file.write(json.dumps(self, indent=4, cls=self.StirlingJobJSONEncoder))
         output_file.close()
 
     def log(self, message: str, *args):
@@ -365,7 +367,7 @@ class StirlingJob(definitions.StirlingClass):
 
         return self.__log_string(
             header
-            + json.dumps(vars(obj), indent=indent, cls=helpers.StirlingJSONEncoder),
+            + json.dumps(vars(obj), indent=indent, cls=self.StirlingJobJSONEncoder),
             prefix,
             indent,
         )
@@ -519,3 +521,25 @@ class StirlingJob(definitions.StirlingClass):
 
         # Set the commands to the sorted list
         self.log("Plugins added {} commands.".format(len(self.commands)))
+
+    # The StirlingJobEncoder class is used to serialize the StirlingJob class into JSON.
+    class StirlingJobJSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if dataclasses.is_dataclass(obj):
+                d = dataclasses.asdict(obj)
+                return self._remove_hidden_keys(d)
+            elif isinstance(obj, uuid.UUID):
+                # if the obj is uuid, we simply return the value of uuid
+                return str(obj)
+            elif isinstance(obj, datetime):
+                return str(obj)
+            elif isinstance(obj, Path):
+                return str(obj)
+            return super().default(obj)
+
+        def _remove_hidden_keys(self, _d):
+            return {
+                a: self._remove_hidden_keys(b) if isinstance(b, dict) else b
+                for a, b in _d.items()
+                if b and not a.startswith("_")
+            }

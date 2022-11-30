@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from core import args, definitions, helpers, jobs
+from core import core, job
 
 required_binaries = ["ffmpeg"]
 
 
 @dataclass
-class StirlingPluginAudio(definitions.StirlingClass):
+class StirlingPluginAudio(core.StirlingPlugin):
     """StirlingPluginAudio are for using a source audio-only file or for
     extracting audio from a video file. This file is intended as a long-term
     archival version."""
@@ -28,18 +28,18 @@ class StirlingPluginAudio(definitions.StirlingClass):
     audio_output_format: tuple = ("wav", "wav")
 
     # Contains outputs from the plugin for use in other plugins.
-    assets: List[definitions.StirlingPluginAssets] = field(default_factory=list)
+    assets: List[core.StirlingPluginAssets] = field(default_factory=list)
 
     ## Extract Audio from file
     def __post_init__(self):
         if not self.audio_disable:
             # Check to make sure the appropriate binary files we need are installed.
-            assert helpers.check_dependencies_binaries(
-                required_binaries
-            ), AssertionError("missing required binaries {}".format(required_binaries))
+            assert core.check_dependencies_binaries(required_binaries), AssertionError(
+                "missing required binaries {}".format(required_binaries)
+            )
 
     ## Extract Audio from file
-    def cmd(self, job: jobs.StirlingJob):
+    def cmd(self, job: job.StirlingJob):
         if not self.audio_disable:
             if self.audio_source_stream != -1:
                 # If a specific video stream was requested, use that.
@@ -64,16 +64,14 @@ class StirlingPluginAudio(definitions.StirlingClass):
             )
 
             self.assets.append(
-                definitions.StirlingPluginAssets(
-                    name="normalized_audio", path=output_file
-                )
+                core.StirlingPluginAssets(name="normalized_audio", path=output_file)
             )
 
             job.commands.append(
-                definitions.StirlingCmd(
+                core.StirlingCmd(
                     name=self.name,
                     command="ffmpeg {} {}".format(
-                        args.ffmpeg_unparser.unparse(**options), output_file
+                        core.ffmpeg_unparser.unparse(**options), output_file
                     ),
                     priority=self.priority,
                     expected_output=str(output_file),

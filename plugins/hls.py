@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 
-from core import args, definitions, helpers, jobs
+from core import core, job
 
 required_binaries = ["ffmpeg"]
 
 
 @dataclass
-class StirlingPluginHLS(definitions.StirlingPlugin):
+class StirlingPluginHLS(core.StirlingPlugin):
     """StirlingPluginHLS is for creating an HLS VOD streaming package from
     the input source video."""
 
@@ -62,26 +62,24 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
     # Enable faster file streaming start for HLS files by moving some of the
     # metadata to the beginning of the file after transcode.
     hls_movflags: str = "+faststart"
-    # The encoder profiles to use. Load defaults from the core definitions
+    # The encoder profiles to use. Load defaults from the core core
     # package.
     hls_encoder_profiles: dict = field(default_factory=dict)
 
     def __post_init__(self):
         if self.hls_profile not in self.hls_encoder_profiles:
-            self.hls_encoder_profiles = definitions.VideoEncoderProfiles[
-                self.hls_profile
-            ]
+            self.hls_encoder_profiles = core.VideoEncoderProfiles[self.hls_profile]
 
         if not self.hls_disable:
             # Check to make sure the appropriate binary files we need are installed.
-            assert helpers.check_dependencies_binaries(
-                required_binaries
-            ), AssertionError("Missing required binaries: {}".format(required_binaries))
+            assert core.check_dependencies_binaries(required_binaries), AssertionError(
+                "Missing required binaries: {}".format(required_binaries)
+            )
 
-    def cmd(self, job: jobs.StirlingJob):
+    def cmd(self, this_job: job.StirlingJob):
         if not self.hls_disable:
-            preferred_audio_stream = job.media_info.get_preferred_stream("audio")
-            preferred_video_stream = job.media_info.get_preferred_stream("video")
+            preferred_audio_stream = this_job.media_info.get_preferred_stream("audio")
+            preferred_video_stream = this_job.media_info.get_preferred_stream("video")
 
             if self.video_source_stream == -1:
                 self.video_source_stream = preferred_video_stream.stream
@@ -92,7 +90,7 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
             if self.hls_audio_sample_rate == 0:
                 self.hls_audio_sample_rate = preferred_audio_stream.sample_rate
 
-            output_directory = job.output_directory / self.name
+            output_directory = this_job.output_directory / self.name
             output_directory.mkdir(parents=True, exist_ok=True)
 
             outputs = []
@@ -101,7 +99,7 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
             options = {
                 "hide_banner": True,
                 "y": True,
-                "i": job.media_info.source,
+                "i": this_job.media_info.source,
             }
 
             video_options = {
@@ -119,7 +117,7 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 
             audio_options = {
                 "map": "0:a:{}".format(
-                    self.audio_source_stream - len(job.media_info.video_streams)
+                    self.audio_source_stream - len(this_job.media_info.video_streams)
                 ),
                 "acodec": self.hls_audio_codec,
                 "ar": self.hls_audio_sample_rate,
@@ -169,7 +167,7 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                 outputs.append(output_directory / rendition_playlist)
 
                 renditions += (
-                    args.ffmpeg_unparser.unparse(**rendition_command)
+                    core.ffmpeg_unparser.unparse(**rendition_command)
                     + " "
                     + rendition_playlist
                     + " "
@@ -178,8 +176,8 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
             master_playlist = "playlist.m3u8"
             outputs.append(output_directory / master_playlist)
 
-            job.commands.append(
-                definitions.StirlingCmd(
+            this_job.commands.append(
+                core.StirlingCmd(
                     name=self.name + "_master_playlist",
                     command="echo '{}' > {}".format(
                         master_playlist_contents,
@@ -191,13 +189,13 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
                 )
             )
 
-            job.commands.append(
-                definitions.StirlingCmd(
+            this_job.commands.append(
+                core.StirlingCmd(
                     name=self.name,
                     command="ffmpeg {} {} {} {}".format(
-                        args.ffmpeg_unparser.unparse(**options),
-                        args.ffmpeg_unparser.unparse(**video_options),
-                        args.ffmpeg_unparser.unparse(**audio_options),
+                        core.ffmpeg_unparser.unparse(**options),
+                        core.ffmpeg_unparser.unparse(**video_options),
+                        core.ffmpeg_unparser.unparse(**audio_options),
                         renditions,
                     ),
                     priority=self.priority,
@@ -209,30 +207,30 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 
 # ## PLUGIN FUNCTIONS
 # ## Generate an HLS Package from file
-# def create_rendition(job):
+# def create_rendition(this_job):
 #     # Set some holding variables
 #     renditions_options, encoder_renditions = [], ""
 
 #     # Set some variables for easier reading
-#     encoding_profile = job["commands"]["hls"]["args"]["hls_profile"]
+#     encoding_profile = this_job["commands"]["hls"]["core"]["hls_profile"]
 
-#     job["commands"]["hls"]["output_options"]["directory"] = pathlib.Path(
-#         job["commands"]["hls"]["output_options"]["directory"]
+#     this_job["commands"]["hls"]["output_options"]["directory"] = pathlib.Path(
+#         this_job["commands"]["hls"]["output_options"]["directory"]
 #     )
 
 #     # Holder for the master m3u8 file contents.
 #     output_playlist = "#EXTM3U\n#EXT-X-VERSION:3\n"
-#     helpers.log(job, "Creating renditions.")
-#     helpers.log(
-#         job,
+#     core.log(this_job, "Creating renditions.")
+#     core.log(
+#         this_job,
 #         "Profile in use is '{}'.".format(encoding_profile),
 #     )
 
-#     for rendition in job["commands"]["hls"]["encoder_profiles"][encoding_profile]:
-#         helpers.log(
-#             job,
+#     for rendition in this_job["commands"]["hls"]["encoder_profiles"][encoding_profile]:
+#         core.log(
+#             this_job,
 #             "Creating rendition options for file  {}, rendition {}.".format(
-#                 str(job["commands"]["hls"]["output_options"]["directory"]),
+#                 str(this_job["commands"]["hls"]["output_options"]["directory"]),
 #                 str(rendition["name"]),
 #             ),
 #         )
@@ -246,7 +244,7 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 #             )
 #         )
 
-#         this_rendition = job["commands"]["hls"]["rendition_options"].copy()
+#         this_rendition = this_job["commands"]["hls"]["rendition_options"].copy()
 #         this_rendition["vf"] = this_rendition["vf"].format(
 #             rendition["width"], rendition["height"]
 #         )
@@ -255,33 +253,33 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 #         this_rendition["maxrate"] = this_rendition["maxrate"].format(
 #             int(
 #                 float(rendition["bitrate"])
-#                 * job["commands"]["hls"]["args"]["hls_bitrate_ratio"]
+#                 * this_job["commands"]["hls"]["core"]["hls_bitrate_ratio"]
 #             )
 #         )
 #         this_rendition["bufsize"] = this_rendition["bufsize"].format(
 #             int(
 #                 float(rendition["bitrate"])
-#                 * job["commands"]["hls"]["args"]["hls_buffer_ratio"]
+#                 * this_job["commands"]["hls"]["core"]["hls_buffer_ratio"]
 #             )
 #         )
 #         this_rendition["c"] = this_rendition["hls_segment_filename"].format(
-#             str(job["commands"]["hls"]["output_options"]["directory"]),
+#             str(this_job["commands"]["hls"]["output_options"]["directory"]),
 #             rendition["name"],
 #         )
 #         renditions_options.append(this_rendition)
 
-#     return job, renditions_options, encoder_renditions, output_playlist
+#     return this_job, renditions_options, encoder_renditions, output_playlist
 
 
-# def create_hls(job):
-#     if not job["arguments"]["hls_disable"]:
+# def create_hls(this_job):
+#     if not this_job["arguments"]["hls_disable"]:
 #         # Check to make sure the appropriate binary files we need are installed.
-#         assert helpers.check_dependencies_binaries(required_binaries), helpers.log(
-#             helpers.check_dependencies_binaries(required_binaries)
+#         assert core.check_dependencies_binaries(required_binaries), core.log(
+#             core.check_dependencies_binaries(required_binaries)
 #         )
 
 #         # Create the directory for the hls package.
-#         hls_output_directory = job["output"]["directory"] / "video" / "hls"
+#         hls_output_directory = this_job["output"]["directory"] / "video" / "hls"
 #         hls_output_directory.mkdir(parents=True, exist_ok=True)
 
 #         # Video encoding options Set the output folder for the HLS segments and
@@ -292,8 +290,8 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 #         try:
 #             kf_interval = (
 #                 eval(
-#                     job["source"]["info"]["streams"][
-#                         job["source"]["input"]["video_stream"]
+#                     this_job["source"]["info"]["streams"][
+#                         this_job["source"]["input"]["video_stream"]
 #                     ]["avg_frame_rate"]
 #                 )
 #                 * 2
@@ -302,116 +300,116 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 #             kf_interval = 60
 
 #         # Where to save the HLS output package files.
-#         job["commands"]["hls"]["output_options"]["directory"] = str(
+#         this_job["commands"]["hls"]["output_options"]["directory"] = str(
 #             hls_output_directory
 #         )
 
 #         # Set the minimum distance between keyframes.
-#         job["commands"]["hls"]["options"]["keyint_min"] = str(kf_interval)
+#         this_job["commands"]["hls"]["options"]["keyint_min"] = str(kf_interval)
 
 #         # Set the maximum distance between keyframes. Currently, we"re setting
 #         # this the same as kf_interval.
-#         job["commands"]["hls"]["options"]["g"] = str(
-#             kf_interval * job["arguments"]["hls_keyframe_multiplier"]
+#         this_job["commands"]["hls"]["options"]["g"] = str(
+#             kf_interval * this_job["arguments"]["hls_keyframe_multiplier"]
 #         )
 
 #         # Set the Constant Rate Factor to normalize the bitrate throughout for
 #         # easier streaming.
-#         job["commands"]["hls"]["options"]["crf"] = str(job["arguments"]["hls_crf"])
+#         this_job["commands"]["hls"]["options"]["crf"] = str(this_job["arguments"]["hls_crf"])
 
 #         # Set the length of each h.264 TS segment file.
-#         job["commands"]["hls"]["options"]["hls_time"] == str(
-#             job["arguments"]["hls_segment_duration"]
+#         this_job["commands"]["hls"]["options"]["hls_time"] == str(
+#             this_job["arguments"]["hls_segment_duration"]
 #         )
 
 #         # The main input file
-#         job["commands"]["hls"]["input_options"]["i"] = job["source"]["input"][
+#         this_job["commands"]["hls"]["input_options"]["i"] = this_job["source"]["input"][
 #             "filename"
 #         ]
-#         job["commands"]["hls"]["input_options"]["map"] = "0:{}".format(
-#             str(job["source"]["input"]["video_stream"])
+#         this_job["commands"]["hls"]["input_options"]["map"] = "0:{}".format(
+#             str(this_job["source"]["input"]["video_stream"])
 #         )
 
 #         # The HLS profile to use. See encoder_profiles for more information.
-#         job["commands"]["hls"]["args"]["hls_profile"] == str(
-#             job["arguments"]["hls_profile"]
+#         this_job["commands"]["hls"]["core"]["hls_profile"] == str(
+#             this_job["arguments"]["hls_profile"]
 #         )
 
 #         # These two values help us fine-tune the HLS encoding.
-#         job["commands"]["hls"]["args"]["hls_bitrate_ratio"] == str(
-#             job["arguments"]["hls_bitrate_ratio"]
+#         this_job["commands"]["hls"]["core"]["hls_bitrate_ratio"] == str(
+#             this_job["arguments"]["hls_bitrate_ratio"]
 #         )
-#         job["commands"]["hls"]["args"]["hls_buffer_ratio"] == str(
-#             job["arguments"]["hls_buffer_ratio"]
+#         this_job["commands"]["hls"]["core"]["hls_buffer_ratio"] == str(
+#             this_job["arguments"]["hls_buffer_ratio"]
 #         )
 
 #         # Create template entries for each of the encoder renditions specified
 #         # in the profile.
-#         job, renditions_options, encoder_renditions, output_playlist = create_rendition(
-#             job
+#         this_job, renditions_options, encoder_renditions, output_playlist = create_rendition(
+#             this_job
 #         )
 
 #         for rendition_option in renditions_options:
-#             encoder_renditions += " " + args.default_unparser.unparse(
-#                 **(job["commands"]["hls"]["options"] | rendition_option)
+#             encoder_renditions += " " + core.default_unparser.unparse(
+#                 **(this_job["commands"]["hls"]["options"] | rendition_option)
 #             )
 
 #         # Fix unargparsers insistence on "deciding" which types of quotes to
 #         # use.
 #         encoder_renditions = encoder_renditions.replace("'", '"')
 
-#         job["commands"]["hls"]["command"] = "ffmpeg " + (
-#             args.ffmpeg_unparser.unparse(
+#         this_job["commands"]["hls"]["command"] = "ffmpeg " + (
+#             core.ffmpeg_unparser.unparse(
 #                 **(
-#                     job["commands"]["hls"]["cli_options"]
-#                     | job["commands"]["hls"]["input_options"]
+#                     this_job["commands"]["hls"]["cli_options"]
+#                     | this_job["commands"]["hls"]["input_options"]
 #                 )
 #             )
 #             + " "
 #             + encoder_renditions
 #         )
 
-#         helpers.log(job, "HLS Encoding Command: " + job["commands"]["hls"]["command"])
+#         core.log(this_job, "HLS Encoding Command: " + this_job["commands"]["hls"]["command"])
 
 #         # Convert the video file to packaged HLS.
-#         helpers.log(
-#             job,
+#         core.log(
+#             this_job,
 #             "Generating HLS package from source file '{}' to directory '{}'".format(
-#                 job["commands"]["hls"]["input_options"]["i"],
-#                 str(job["commands"]["hls"]["output_options"]["directory"]),
+#                 this_job["commands"]["hls"]["input_options"]["i"],
+#                 str(this_job["commands"]["hls"]["output_options"]["directory"]),
 #             ),
 #         )
 
 #         # Create an m3u8 file to hold all the renditions.
-#         job = create_master_playlist(job, output_playlist)
+#         this_job = create_master_playlist(this_job, output_playlist)
 
-#         job["output"]["video_hls_generation"] = plugins.do(
-#             job["commands"]["hls"]["command"], job["arguments"]["simulate"]
+#         this_job["output"]["video_hls_generation"] = plugins.do(
+#             this_job["commands"]["hls"]["command"], this_job["arguments"]["simulate"]
 #         )
-#         helpers.log(
-#             job,
+#         core.log(
+#             this_job,
 #             "Created HLS video package in {0}".format(
-#                 str(job["commands"]["hls"]["output_options"]["directory"])
+#                 str(this_job["commands"]["hls"]["output_options"]["directory"])
 #             ),
 #         )
 
-#         job["output"]["outputs"].append(
-#             job["commands"]["hls"]["output_options"]["directory"]
+#         this_job["output"]["outputs"].append(
+#             this_job["commands"]["hls"]["output_options"]["directory"]
 #         )
 
-#     return job
+#     return this_job
 
 
-# def create_master_playlist(job, output_playlist):
+# def create_master_playlist(this_job, output_playlist):
 #     playlist = str(
-#         job["commands"]["hls"]["output_options"]["directory"] / "playlist.m3u8"
+#         this_job["commands"]["hls"]["output_options"]["directory"] / "playlist.m3u8"
 #     )
 #     # Create an m3u8 file to hold all the renditions.
-#     helpers.log(
-#         job,
+#     core.log(
+#         this_job,
 #         "Creating m3u8 playlist file {0}".format(playlist),
 #     )
-#     if not job["arguments"]["simulate"]:
+#     if not this_job["arguments"]["simulate"]:
 #         m3u8_file = open(
 #             playlist,
 #             "w",
@@ -419,13 +417,13 @@ class StirlingPluginHLS(definitions.StirlingPlugin):
 #         m3u8_file.write(output_playlist)
 #         m3u8_file.close()
 
-#         helpers.log(
-#             job,
+#         core.log(
+#             this_job,
 #             "Created m3u8 playlist file {0}".format(playlist),
 #         )
 
-#         job["output"]["outputs"].append(
-#             job["commands"]["hls"]["output_options"]["directory"] / "playlist.m3u8"
+#         this_job["output"]["outputs"].append(
+#             this_job["commands"]["hls"]["output_options"]["directory"] / "playlist.m3u8"
 #         )
 
-#     return job
+#     return this_job

@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 
-from core import args, definitions, helpers, jobs
+from core import core, job
 
 required_binaries = ["audiowaveform"]
 
 
 @dataclass
-class StirlingPluginPeaks(definitions.StirlingPlugin):
+class StirlingPluginPeaks(core.StirlingPlugin):
     """StirlingPluginPeaks are are for creating waveform peaks from the input
     source's audio track."""
 
@@ -24,20 +24,20 @@ class StirlingPluginPeaks(definitions.StirlingPlugin):
     def __post_init__(self):
         if not self.peaks_disable:
             # Check to make sure the appropriate binary files we need are insta##lled.
-            assert helpers.check_dependencies_binaries(
-                required_binaries
-            ), AssertionError("Missing required binaries: {}".format(required_binaries))
+            assert core.check_dependencies_binaries(required_binaries), AssertionError(
+                "Missing required binaries: {}".format(required_binaries)
+            )
 
     ## Extract Audio from file
-    def cmd(self, job: jobs.StirlingJob):
+    def cmd(self, this_job: job.StirlingJob):
         if not self.peaks_disable:
             output_file = (
-                job.output_directory
-                / job.output_annotations_directory
+                this_job.output_directory
+                / this_job.output_annotations_directory
                 / (self.name + ".json")
             )
 
-            input_file = job.get_plugin_asset("audio", "normalized_audio")
+            input_file = this_job.get_plugin_asset("audio", "normalized_audio")
 
             # Set the options to extract audio from the source file.
             options = {
@@ -46,11 +46,11 @@ class StirlingPluginPeaks(definitions.StirlingPlugin):
                 "output-format": self.peaks_output_format,
             }
 
-            job.commands.append(
-                definitions.StirlingCmd(
+            this_job.commands.append(
+                core.StirlingCmd(
                     name=self.name,
                     command="audiowaveform {}".format(
-                        args.default_unparser.unparse(**options)
+                        core.default_unparser.unparse(**options)
                     ),
                     priority=self.priority,
                     expected_output=str(output_file),

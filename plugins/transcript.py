@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 
-from core import args, definitions, helpers, jobs
+from core import core, job
 
 # Specify the required binaries in a list.
 required_binaries = ["autosub"]
 
 
 @dataclass
-class StirlingPluginTranscript(definitions.StirlingPlugin):
+class StirlingPluginTranscript(core.StirlingPlugin):
     """StirlingPluginTranscript are for creating speech-to-text transcripts.
     These transcripts can be used as-is, or can be used later for
     confidence training, language analysis or for adding other contexts."""
@@ -31,12 +31,12 @@ class StirlingPluginTranscript(definitions.StirlingPlugin):
     def __post_init__(self):
         if not self.transcript_disable:
             # Check to make sure the appropriate binary files we need are installed.
-            assert helpers.check_dependencies_binaries(
-                required_binaries
-            ), AssertionError("Missing required binaries: {}".format(required_binaries))
+            assert core.check_dependencies_binaries(required_binaries), AssertionError(
+                "Missing required binaries: {}".format(required_binaries)
+            )
 
     ## Extract Audio from file
-    def cmd(self, job: jobs.StirlingJob):
+    def cmd(self, job: job.StirlingJob):
         if not self.transcript_disable:
             output_file = (
                 job.output_directory
@@ -56,10 +56,10 @@ class StirlingPluginTranscript(definitions.StirlingPlugin):
             }
 
             job.commands.append(
-                definitions.StirlingCmd(
+                core.StirlingCmd(
                     name=self.name,
                     command="autosub {} {}".format(
-                        args.default_unparser.unparse(**options), str(input_file)
+                        core.default_unparser.unparse(**options), str(input_file)
                     ),
                     priority=self.priority,
                     expected_output=str(output_file),
