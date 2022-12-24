@@ -148,3 +148,4 @@ output/
 # Mac files
 .DS_Store
 *.dot
+.idea

@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, field
 
-from core import core, encoder, job
+from stirling import core, encoders, job
 
 required_binaries = ["ffmpeg"]
 
@@ -48,9 +48,9 @@ class StirlingPluginVideo(core.StirlingPlugin):
                 stream = this_job.media_info.get_preferred_stream("video")
                 keyframe_interval = stream.frame_rate * self.video_keyframe_interval
                 self.video_encoder_options = (
-                    encoder.StirlingVideoEncoderAV1().get("aom")
+                    encoders.StirlingVideoEncoderAV1().get("aom")
                 )
-                return encoder.EncoderOptionsAV1
+                return encoders.EncoderOptionsAV1
 
     def cmd(self, this_job: job.StirlingJob):
         if not self.video_disable:

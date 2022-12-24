@@ -15,7 +15,7 @@ import networkx
 import requests
 import validators
 
-from core import core, probe
+from stirling import core, framework
 
 # TODO: Need this later for merging in a json job file.
 # from mergedeep import merge
@@ -64,7 +64,7 @@ class StirlingJob(core.StirlingClass):
             transcoding/extraction or running and plugins.. This is poorly
             supported and will be removed in a future version.
         debug (bool): Enable additional debugging output
-        media_info (probe.StirlingMediaInfo): Contains metadata about the
+        media_info (core.StirlingMediaInfo): Contains metadata about the
             source media file, after it is probed.
 
     Raises:
@@ -86,11 +86,11 @@ class StirlingJob(core.StirlingClass):
     source_copy_disable: bool = False
     simulate: bool = False
     debug: bool = True
-    media_info: probe.StirlingMediaInfo = None
-    frameworks: List[core.StirlingFramework] = field(default_factory=list)
+    media_info: core.StirlingMediaInfo = None
+    frameworks: List[framework.StirlingMediaFramework] = field(default_factory=list)
 
     # Private fields
-    _plugins: List = field(default_factory=lambda: [core.StirlingPlugin()])
+    _plugins: List[core.StirlingPlugin] = field(default_factory=lambda: [core.StirlingPlugin()])
     _outputs: List = field(default_factory=list)
     _commands: List[core.StirlingCmd] = field(default_factory=list)
 
@@ -127,7 +127,7 @@ class StirlingJob(core.StirlingClass):
         self.__get_source()
 
         # Probe the source file
-        self.media_info = probe.StirlingMediaInfo(source=self.source)
+        self.media_info = core.StirlingMediaInfo(source=self.source)
         self.log("Media file {} probed: ".format(self.source), self.media_info)
         self.write()
 

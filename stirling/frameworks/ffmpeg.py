@@ -1,39 +1,16 @@
 import json
 import subprocess
 from dataclasses import dataclass, field
-from typing import List
+import csv
 
 import argunparse
 import simpleeval
 
-from core import core
-
-
-@dataclass
-class StirlingMediaFramework(core.StirlingClass):
-    """StirlingMediaFramework is a class for handling the underlying system
-    media framework used to interact with media files.
-
-
-    Attributes:
-        name (str): The encoder framework to use. For example, `ffmpeg` is a
-            media framework that can be used to interact with video and audio
-            files; `Mencoder` and `MLT` are other examples of media frameworks.
-
-        version (str): The version of the encoder framework to use. Helpful
-            when multiple versions of the same framework are needed to support
-            a specific Video Compression Format (VCS).
-    """
-
-    name: str
-    version: str
-    encoders: List[str] = field(default_factory=list)
-    formats: List[str] = field(default_factory=list)
-
+from stirling import core, framework
 
 @dataclass(kw_only=True)
-class StirlingMediaFrameworkFFmpeg(StirlingMediaFramework):
-    """StirlingMediaFrameworkFFmpeg is a class for using the `ffmpeg` Media
+class StirlingMediaFrameworkFFMpeg(framework.StirlingMediaFramework):
+    """StirlingMediaFrameworkFFMpeg is a class for using the `ffmpeg` Media
     Framework to interact with media files and their metadata.
 
     Note that `ffmpeg` will require additional arguments to be passed at build
@@ -42,7 +19,7 @@ class StirlingMediaFrameworkFFmpeg(StirlingMediaFramework):
     is available at https://github.com/skyzyx/homebrew-ffmpeg.
     """
 
-    name: str = "FFmpeg"
+    name: str = "FFMpeg"
     binary_transcoder: str = "ffmpeg"
     binary_probe: str = "ffprobe"
     version: str = "5.1.2"
@@ -71,9 +48,26 @@ class StirlingMediaFrameworkFFmpeg(StirlingMediaFramework):
             long_opt="-", opt_value=" ", begin_delim="", end_delim=""
         )
 
+    def get_capabilities(self):
+        return []
+
+    def __get_encoders(self):
+        encoders = []
+
+        cmd = "ffmpeg -hide_banner -encoders"
+        cmd_output = subprocess.getstatusoutput(cmd)
+        if cmd_output[0] == 0:
+
+            csv.register_dialect('ssv', delimiter=' ', skipinitialspace=True)
+            reader = csv.reader(cmd_output[1], 'ssv')
+            for row in reader:
+                floats = [str(column) for column in row]
+                encoders.append([floats[0], floats[1], ' '.join(floats[2:])])
+
+        return encoders
 
 @dataclass
-class StirlingMediaInfoFFmpeg(core.StirlingMediaInfo):
+class StirlingMediaInfoFFMpeg(core.StirlingMediaInfo):
     def __post_init__(self):
 
         # Check to make sure the appropriate binary files we need are installed.
@@ -233,7 +227,7 @@ class StirlingMediaInfoFFmpeg(core.StirlingMediaInfo):
             )
         )
 
-    def __set_default(self, obj: dict, key: str, default: bool = None):
+    def __set_default(self, obj: dict, key: str, default: str = None):
         if key in obj:
             return obj[key]
         else:

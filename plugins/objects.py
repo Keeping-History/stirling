@@ -4,14 +4,14 @@
 # import cv2
 # from mtcnn import MTCNN
 
-# from core import core
+# from stirling import core
 
 # # from core import pytorch
 # from plugins import plugins
 
 
 # ## PLUGIN FUNCTIONS
-# ## Generate an HLS Package from file
+# ## Generate an HLS Package from fil\
 # def generate_face_detection(job):
 #     if not job["arguments"]["disable_object_detection"]:
 #         # Create the directory for the faces.

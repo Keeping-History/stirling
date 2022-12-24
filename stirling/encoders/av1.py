@@ -1,32 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
-from core import core, framework
-
-
-@dataclass
-class StirlingEncoder(core.StirlingClass):
-    """StirlingEncoder is a class for handling encoder options.
-
-    Attributes:
-        name (str): The name of the encoder. We prefer to focus on the name
-            of the underlying Video Coding Format (or Video Compression
-            Format/Standard, VCF for short) and not the container format or
-            codec. For example, we use `AVC` (for h.264 standard video)
-            instead of `mp4` or `ts`, or `AV1` instead of `webm` or `mkv`.
-        options (dict): A dictionary of options to pass to the encoder.
-
-    """
-
-    name: str
-    encoder_library_default: str
-    options: dict
-    frameworks: List[framework.StirlingMediaFramework]
-    encoder_libraries: List[str]
-
+from stirling import encoders, frameworks
 
 @dataclass(kw_only=True)
-class StirlingVideoEncoderAV1(StirlingEncoder):
+class StirlingVideoEncoderAV1(encoders.StirlingEncoder):
     """A class for handling the AV1 Video Coding Format.
 
     A StirlingVideoEncoderAV1 contains the necessary options for creating
@@ -92,44 +70,27 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
 
     """
 
-    name: str = "av1"
-    frameworks: list = field(default_factory=lambda: ["ffmpeg"])
-    encoders: list = field(default_factory=lambda: ["aom", "svt"])
-    formats: list = field(default_factory=lambda: ["av1"]) # TODO: WHAT ARE WE TRYING TO ACCOMPLISH HERE?
-    options: dict = field(default_factory=dict)
-    encoder_default: str = "aom"
-    encoder_keyframe_interval: float = 10
+    container_formats: List[str]
+    options: List[dict]
+
+    encoder_library_default: str
     encoder_fps: int = 0
+    encoder_keyframe_interval: float
+
+    name = "av1"
+    supported_frameworks = [frameworks.StirlingMediaFrameworkFFMpeg]
+    encoder_libraries = ["aom", "svt"]
+    encoder_library_default = "aom"
+
     encoder_mode: str = "vbr"
     encoder_quality_level: int = 12
-    encoder_quality_profile: str = "0"
+    encoder_quality_profile: str
     encoder_bitrate_target: int = 0
     encoder_bitrate_min: int = 0
     encoder_bitrate_max: int = 0
     encoder_subjective: bool = True
-    encoder_keyframe_interval: float
-    encoder_fps: int
-    encoder_mode: str
-    encoder_quality_level: int
-    encoder_quality_profile: str
-    encoder_bitrate_target: int
-    encoder_bitrate_min: int
-    encoder_bitrate_max: int
-    encoder_subjective: bool
-
-    def __post_init__(self):
-        self.name = "av1"
-        self.frameworks = [framework.StirlingMediaFrameworkFFmpeg]
-        self.encoder_libraries = ["aom", "svt"]
-        self.encoder_library_default = "aom"
-        self.encoder_mode = "vbr"
-        self.encoder_quality_level = 12
-        self.encoder_quality_profile = "0"
-        self.encoder_bitrate_target = 0
-        self.encoder_bitrate_min = 0
-        self.encoder_bitrate_max = 0
-        self.encoder_subjective = True
-        self.encoder_keyframe_interval = 10.0
+    encoder_film_grain: int = 0
+    encoder_passes: int = 1
 
     def get(self, encoder_library: str, options: dict = None):
         if encoder_library is None:
@@ -159,6 +120,7 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
                     case "cbr":
                         cbr_options = {
                             "b:v": self.encoder_bitrate_target + "k",
+                            "pass": 1,
                         }
                         if (
                             self.encoder_bitrate_min is not None
@@ -189,5 +151,78 @@ class StirlingVideoEncoderAV1(StirlingEncoder):
                         vbr_options = {
                             "crf": self.encoder_quality_level,
                             "preset": int(self.encoder_quality_profile),
-                            "svtav1-params": f"tune={0 if self.encoder_subjective else 1}",
+                            "svtav1-params": f"tune={0 if self.encoder_subjective else 1}"
+                            + {
+                                f"film-grain={self.encoder_film_grain}"
+                                if self.encoder_film_grain > 0
+                                else ""
+                            },
                         }
+
+@dataclass(kw_only=True)
+class StirlingVideoEncoderLibraryAV1SVT(StirlingVideoEncoderAV1):
+
+    options: dict
+    encoder_mode: str
+    
+
+    def __post_init__(self):
+        self.options = {
+            "c:v": "libsvtav1",
+            "g": self.encoder_keyframe_fps_interval * self.encoder_fps,
+        }
+        match self.encoder_mode:
+            case "vbr":
+                vbr_options = {
+                    "crf": self.encoder_quality_level,
+                    "preset": int(self.encoder_quality_profile),
+                    "svtav1-params": f"tune={0 if self.encoder_subjective else 1}"
+                    + {
+                        f"film-grain={self.encoder_film_grain}"
+                        if self.encoder_film_grain > 0
+                        else ""
+                    },
+                }
+
+@dataclass(kw_only=True)
+class StirlingVideoEncoderLibraryAV1AOM(StirlingVideoEncoderAV1):
+
+    options: dict
+    encoder_mode: str
+
+    def __post_init__(self):
+        self.options = {
+            "c:v": "libaom-av1",
+            "g": keyframe_fps_interval,
+            "keyint_min": keyframe_fps_interval,
+        }
+        match self.encoder_mode:
+            case "vbr":
+                vbr_options = {
+                    "crf": self.encoder_quality_level,
+                    "b:v": 0,  # Must be set to 0 for CRF.
+                }
+                self.options = {**self.options, **vbr_options}
+            case "cbr":
+                cbr_options = {
+                    "b:v": self.encoder_bitrate_target + "k",
+                    "pass": 1,
+                }
+                if (
+                    self.encoder_bitrate_min is not None
+                    and self.encoder_bitrate_max is not None
+                ):
+                    cbr_bitrate_options = {
+                        "minrate": self.encoder_bitrate_min + "k",
+                        "maxrate": self.encoder_bitrate_max + "k",
+                    }
+                else:
+                    cbr_bitrate_options = {
+                        "b:v": self.encoder_bitrate_target + "k",
+                        "crf": self.encoder_quality_level,
+                    }
+                self.options = {
+                    **self.options,
+                    **cbr_options,
+                    **cbr_bitrate_options,
+                }
