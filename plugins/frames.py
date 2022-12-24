@@ -3,7 +3,7 @@ from typing import List
 
 import simpleeval
 
-from core import core, job
+from stirling import core, job
 
 required_binaries = ["ffmpeg"]
 

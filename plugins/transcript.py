@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from core import core, job
+from stirling import core, job
 
 # Specify the required binaries in a list.
 required_binaries = ["autosub"]

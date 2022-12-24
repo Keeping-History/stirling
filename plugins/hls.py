@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 
-from core import core, job
+from stirling import core, job
 
+
+# TODO: Remove this and others like it, as this check is now down at the framework.
 required_binaries = ["ffmpeg"]
 
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from core import core, job
+from stirling import core, job
 
 required_binaries = ["ffmpeg"]
 

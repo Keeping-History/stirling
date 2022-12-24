@@ -1,3 +1,5 @@
+from stirling import core
+
 # define Python user-defined exceptions
 class StirlingError(Exception):
     """Base class for other exceptions"""
