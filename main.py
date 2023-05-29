@@ -1,28 +1,36 @@
-from core import audio, jobs, video
-from plugins import frames, hls, peaks, transcript
+import json
+import shutil
+from pathlib import Path
 
-# TODO: Add support for multiple audio tracks.
-# TODO: Add support for multiple transcripts/languages
-# TODO: We need to create a separate ffmpeg call with the lowest quality settings
-# at the source files resolution for previewing and fast editor preview.
+from stirling.encodings import StirlingJSONEncoder
+from stirling.job import StirlingJob
 
 if __name__ == "__main__":
+    # Remove the output directory every time, for testing.
+    output_path = Path("./output")
+    if output_path.exists() and output_path.is_dir():
+        shutil.rmtree(output_path)
 
-    # Create a new job
-    my_job = jobs.StirlingJob(source="source.mp4", debug=True)
+    # Create a new job from a file.
+    input_file = Path("./source.mp4")
+    my_job = StirlingJob(source=input_file)
 
-    # Add plugins to the job
-    my_job.add_plugins(
-        video.StirlingPluginVideo(),
-        audio.StirlingPluginAudio(),
-        peaks.StirlingPluginPeaks(),
-        frames.StirlingPluginFrames(),
-        transcript.StirlingPluginTranscript(),
-        hls.StirlingPluginHLS(),
-    )
+    # # Add plugins to the job
+    # my_job.add_plugins(
+    #     video.StirlingPluginVideo(),
+    #     audio.StirlingPluginAudio(),
+    #     peaks.StirlingPluginPeaks(),
+    #     frames.StirlingPluginFrames(),
+    #     transcript.StirlingPluginTranscript(),
+    #     hls.StirlingPluginHLS(),
+    # )
 
-    # Run the job
-    my_job.run()
+    # # Run the job
+    # my_job.run()
 
-    # Close out the job
-    my_job.close()
+    # # Close out the job
+    # my_job.close()
+    # a = av1.StirlingVideoEncoderAV1()
+
+    a = json.dumps(my_job, cls=StirlingJSONEncoder, indent=4)
+    print(a)

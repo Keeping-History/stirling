@@ -1,0 +1,52 @@
+{
+  "dependencies": [
+    {
+      "name": "ffmpeg",
+      "binary": "ffmpeg",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "arm64"
+      ],
+      "url": "https://www.osxexperts.net/ffmpeg6arm.zip",
+      "post_process": "unzip",
+      "force_download": false
+    },
+    {
+      "name": "ffmpeg",
+      "binary": "ffmpeg",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "amd64"
+      ],
+      "url": "https://www.osxexperts.net/ffmpeg6intel.zip",
+      "post_process": "unzip",
+      "force_download": false
+    },
+    {
+      "name": "ffprobe",
+      "binary": "ffprobe",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "arm64"
+      ],
+      "url": "https://www.osxexperts.net/ffprobe6arm.zip",
+      "post_process": "unzip",
+      "force_download": false
+    },
+    {
+      "name": "ffprobe",
+      "binary": "ffprobe",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "amd64"
+      ],
+      "url": "https://www.osxexperts.net/ffprobe6intel.zip",
+      "post_process": "unzip",
+      "force_download": false
+    }
+  ]
+}

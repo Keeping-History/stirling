@@ -1,3 +1,19 @@
-# Autoformatter friendly flake8 config (all formatting rules disabled)
 [flake8]
-extend-ignore = D1, D2, E1, E2, E3, E501, W1, W2, W3, W5
+ignore = E501 W503
+max-line-length = 120
+exclude =
+    __pycache__
+    .mypy_cache
+    .pytest_cache
+    .run
+    .trunk
+    .venv
+    .vscode
+    output
+    venv
+    configs
+    bin
+    docker
+    .github
+    .venv
+    wip
