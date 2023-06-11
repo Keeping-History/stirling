@@ -10,7 +10,8 @@ from stirling.frameworks.ffmpeg.parser import get_probe_unparser
 
 @dataclass(kw_only=True)
 class StirlingMediaFrameworkFFMpegCommand(StirlingClass):
-    """StirlingMediaFrameworkFFMpegCommand is a class that is used to create a command for the FFMpeg CLI."""
+    """StirlingMediaFrameworkFFMpegCommand is a class that is used to create
+    a command for the FFMpeg CLI."""
 
     binary_dependency: StirlingDependency
     arguments: dict | str | List | None = None
