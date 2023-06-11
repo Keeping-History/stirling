@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 from stirling.encodings import StirlingJSONEncoder
+from stirling.frameworks.ffmpeg import StirlingMediaFrameworkFFMpeg
 from stirling.job import StirlingJob
 
 if __name__ == "__main__":
@@ -12,8 +13,8 @@ if __name__ == "__main__":
         shutil.rmtree(output_path)
 
     # Create a new job from a file.
-    input_file = Path("./source.mp4")
-    my_job = StirlingJob(source=input_file)
+    input_file = Path("./examples/source.mp4")
+    my_job = StirlingJob(source=input_file, framework=StirlingMediaFrameworkFFMpeg())
 
     # # Add plugins to the job
     # my_job.add_plugins(

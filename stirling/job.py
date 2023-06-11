@@ -87,6 +87,8 @@ class StirlingJob(StirlingClass):
             Note: A job will not fail if there are missing or extra files generated,
             but it should be noted to the user that a plugin or command may have
             failed.
+        framework (core.StirlingMediaFramework): The framework to use to process media
+            files. Defaults to FFMpeg.
 
 
     Raises:
@@ -112,7 +114,7 @@ class StirlingJob(StirlingClass):
     simulate: bool = False
     debug: bool = True
 
-    framework: StirlingMediaFramework | None = field(init=False, default=None)
+    framework: StirlingMediaFramework | None = field(default_factory = (lambda a = StirlingMediaFrameworkFFMpeg(): a))
     media_info: StirlingMediaInfo | None = field(init=False, default=None)
 
     outputs: List | None = field(default_factory=list)
@@ -135,7 +137,7 @@ class StirlingJob(StirlingClass):
         # Currently, we are setting the Job File as a default Path. We should
         # instead default this field to None, and check here if it is set
         # otherwise (and then load the job file).
-        self.load()
+        # self.load()
 
         # Convert our source to a Path
         if not isinstance(self.source, Path):
@@ -159,9 +161,12 @@ class StirlingJob(StirlingClass):
 
         # Validate our incoming source file
         self._get_source(self.source)
+
+        # Set the media framework to use.
+        if not self.framework:
+            self.framework = StirlingMediaFrameworkFFMpeg()
+
         # Probe the source file
-        # TODO: Remove this and make the framework more generic
-        self.framework = StirlingMediaFrameworkFFMpeg()
         self.media_info = self.framework.probe(source=str(self.source))
 
         self._logger.log(f"Media file {self.source} probed:", self.media_info)
