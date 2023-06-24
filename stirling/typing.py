@@ -5,7 +5,7 @@ from uuid import UUID
 
 class StirlingPydanticValidators:
     @staticmethod
-    def validate_pure_posix_path(path_to_check: Any) -> Path:
+    def validate_pure_posix_path(path_to_check) -> Path:
         """Attempt to validate if an object is a valid Path."""
         return Path(path_to_check)
 
@@ -17,3 +17,4 @@ class StirlingPydanticValidators:
             return True
         except ValueError:
             return False
+

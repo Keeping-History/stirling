@@ -10,7 +10,8 @@ from pydantic.dataclasses import dataclass
 from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency
 from stirling.frameworks.base import StirlingMediaInfo
-from stirling.frameworks.ffmpeg import StirlingMediaFrameworkFFMpegCommand
+from stirling.frameworks.ffmpeg.command import \
+    StirlingMediaFrameworkFFMpegCommand
 from stirling.frameworks.media_info import (
     StirlingStreamAudio,
     StirlingStreamText,

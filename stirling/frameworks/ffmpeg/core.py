@@ -1,5 +1,5 @@
 """
-ffmpeg.py
+core.py
 
 This file contains the StirlingMediaFrameworkFFMpeg class, which is a class
 for using the `ffmpeg` Media Framework.
@@ -24,13 +24,6 @@ from stirling.frameworks.base import (
     StirlingMediaFrameworkOptions,
 )
 from stirling.frameworks.ffmpeg.codecs import StirlingMediaInfoCodecParser
-from stirling.frameworks.ffmpeg.command import (
-    StirlingMediaFrameworkFFMpegCommand,
-)
-from stirling.frameworks.ffmpeg.constants import (
-    FFMpegCommandFlags as CmdFlags,
-    FFMpegCommandValueDimensions as CmdDims,
-)
 from stirling.frameworks.ffmpeg.containers import (
     StirlingMediaInfoContainerParser,
 )

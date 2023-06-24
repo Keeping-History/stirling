@@ -15,21 +15,21 @@ torch = ">=1.12.1"
 opencv-python = ">=4.6.0.66"
 simpleeval = ">=0.9.12"
 networkx = ">=2.8.7"
-pydantic = ">=1.10.2"
+pydantic = ">=1.10.9"
 strenum = "^0.4.9"
 multipledispatch = "^0.6.0"
 flake8 = "^6.0.0"
 jupyter = "^1.0.0"
-dataclasses-json = "^0.5.7"
+dataclasses-json = "^0.5.8"
 pylint = "^2.17.4"
 langcodes = "^3.3.0"
+colored = "^1.4.4"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.0.0"
 isort = "^5.12.0"
 pytest = ">=7.2.1"
 pydocstyle = "^6.3.0"
-
 
 [build-system]
 requires = ["poetry-core"]

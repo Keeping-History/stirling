@@ -4,6 +4,8 @@ from json import JSONEncoder
 from pathlib import Path
 from uuid import UUID
 
+from pydantic.validators import _VALIDATORS
+
 
 class StirlingJSONEncoder(JSONEncoder):
     """StirlingJSONEncoder is a custom JSON encoder for objects that inherit the StirlingClass as a parent."""
@@ -18,3 +20,13 @@ class StirlingJSONEncoder(JSONEncoder):
         elif isinstance(o, Path):
             return str(o)
         return super().default(o)
+
+
+from stirling.typing import StirlingPydanticValidators
+
+_VALIDATORS.extend(
+    [
+        (Path, [StirlingPydanticValidators.validate_pure_posix_path]),
+        (UUID, [StirlingPydanticValidators.validate_uuid]),
+    ]
+)

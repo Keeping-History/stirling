@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from stirling.dependencies import StirlingDependency
-from stirling.frameworks.ffmpeg import StirlingMediaFrameworkFFMpeg
+from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
 from stirling.frameworks.media_info import (
     StirlingMediaInfoCodec,

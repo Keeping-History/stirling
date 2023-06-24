@@ -19,12 +19,13 @@ from requests.exceptions import HTTPError, RequestException
 from validators import url as url_validator
 
 from stirling.command.base import StirlingCommand, StirlingCommandStatus
+from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
 from stirling.encodings import StirlingJSONEncoder
 from stirling.errors import CommandError
 from stirling.frameworks.base import StirlingMediaFramework, StirlingMediaInfo
-from stirling.frameworks.ffmpeg import StirlingMediaFrameworkFFMpeg
-from stirling.logger import StirlingLogger
+from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
+from stirling.logger import StirlingJobLogger, StirlingLoggerLevel
 from wip.plugins import StirlingPlugin, StirlingPluginAssets
 
 
@@ -71,7 +72,7 @@ class StirlingJob(StirlingClass):
             job without actually doing any of the external
             transcoding/extraction or running and plugins. This is poorly
             supported and will be removed in a future version.
-        debug (bool): Enable additional debugging output
+        log_level (StirlingLoggerLevel): set the log level for the job. Defaults to INFO.
         media_info (core.StirlingMediaInfo): Contains metadata about the
             source media file, after it is probed.
         plugins (list): A list of plugins to run on the source file. To attach
@@ -99,6 +100,9 @@ class StirlingJob(StirlingClass):
     # Required fields
     source: Union[Path, str]
 
+    # Application config
+    config: dict = field(default_factory = (lambda a = StirlingConfig(): a.get()))
+
     # Optional fields
     id: UUID = uuid4()
     time_start: datetime = datetime.now()
@@ -112,14 +116,22 @@ class StirlingJob(StirlingClass):
     output_annotations_directory: str = "annotations"
     source_copy_disable: bool = False
     simulate: bool = False
-    debug: bool = True
+    log_level: StirlingLoggerLevel | None = StirlingLoggerLevel.DEBUG
 
+    # Framework and media info
     framework: StirlingMediaFramework | None = field(default_factory = (lambda a = StirlingMediaFrameworkFFMpeg(): a))
     media_info: StirlingMediaInfo | None = field(init=False, default=None)
 
-    outputs: List | None = field(default_factory=list)
-    commands: List[StirlingCommand] | None = field(default_factory=list)
+    # Plugins to load
     plugins: List[StirlingPlugin] | None = field(default_factory=list)
+
+    # Commands to run
+    commands: List[StirlingCommand] | None = field(default_factory=list)
+
+    # Expected Outputs
+    outputs: List | None = field(default_factory=list)
+
+
 
     def __post_init__(self):
         """Set up the job after it is created.
@@ -147,12 +159,14 @@ class StirlingJob(StirlingClass):
         self._get_output_directory()
 
         # Logging
-        self._logger = StirlingLogger(
+        self._logger = StirlingJobLogger(
             job_id=self.id,
             log_file=self.log_file,
             time_start=self.time_start,
-            debug=self.debug,
+            log_level=self.log_level,
         )
+
+        self._logger.log("Stirling Framework loaded, options: ", self.config)
 
         self._logger.log("Starting job with definition: ", self)
         self._logger.log(
