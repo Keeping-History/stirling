@@ -17,7 +17,7 @@ from multipledispatch import dispatch
 from pydantic.dataclasses import dataclass
 
 from stirling.core import StirlingClass
-from stirling.dependencies import StirlingDependencies, StirlingDependency
+from stirling.dependencies import StirlingDependency, StirlingDependencies
 from stirling.frameworks.base import (
     StirlingMediaFramework,
     StirlingMediaFrameworkCapabilities,

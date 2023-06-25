@@ -38,7 +38,7 @@ class StirlingLoggerLevel(int, Enum):
 @dataclass
 class StirlingLogger(StirlingClass):
     log_file: Path
-    log_level: StirlingLoggerLevel | None = StirlingLoggerLevel.ERROR
+    log_level: StirlingLoggerLevel | int | None = StirlingLoggerLevel.ERROR
     time_start: datetime = datetime.now()
     header_separator: str = "|"
     line_continuation_prefix: str = "+"

@@ -1,3 +1,4 @@
+from argparse import Namespace
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from json import JSONEncoder
@@ -19,6 +20,8 @@ class StirlingJSONEncoder(JSONEncoder):
             return str(o)
         elif isinstance(o, Path):
             return str(o)
+        elif isinstance(o, Namespace):
+            return vars(o)
         return super().default(o)
 
 
