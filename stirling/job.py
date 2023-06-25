@@ -1,5 +1,6 @@
 import os
 import re
+from argparse import Namespace
 from dataclasses import field
 from datetime import datetime
 from json import dumps
@@ -97,7 +98,7 @@ class StirlingJob(StirlingClass):
     source: Union[Path, str]
 
     # Application config
-    config: dict = field(default_factory = (lambda a = StirlingConfig(): a.get()))
+    config: dict = field(default_factory = (lambda a = StirlingConfig(): a))
 
     # Optional fields
     id: UUID = uuid4()
