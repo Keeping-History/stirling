@@ -26,7 +26,7 @@ from stirling.errors import CommandError
 from stirling.frameworks.base import StirlingMediaFramework, StirlingMediaInfo
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 from stirling.logger import StirlingJobLogger, StirlingLoggerLevel
-from wip.plugins import StirlingPlugin, StirlingPluginAssets
+from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets
 
 
 @dataclass_json
