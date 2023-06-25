@@ -1,0 +1,10 @@
+{
+  "job_file": "./job.json",
+  "log_file": "./job.log",
+  "input_directory": "./",
+  "source_delete": "false",
+  "output_directory": "./output",
+  "output_annotations_directory": "annotations",
+  "source_copy": "true",
+  "log_level": 5
+}

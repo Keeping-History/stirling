@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 
-DEFAULT_CONFIG_DIRECTORY = Path('../stirling/configs')
+DEFAULT_CONFIG_DIRECTORY = Path('../stirling/config')
 DEFAULT_CONFIG_FILE_FORMAT = 'json'
 DEFAULT_PATH_SEPARATOR = '/'
 

@@ -87,7 +87,7 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
         self._default_cmd_options: dict = {}
 
         with open(
-            f"{os.getcwd()}/configs/frameworks/{self.name.lower()}.json", "r"
+            f"{os.getcwd()}/config/frameworks/{self.name.lower()}.json", "r"
         ) as f:
             self.dependencies = StirlingDependencies.from_json(f.read())
 

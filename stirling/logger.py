@@ -4,7 +4,7 @@ from json import dumps
 from pathlib import Path
 from uuid import UUID
 
-from colored import attr, bg, fg, style
+from colored import attr, bg, fg
 from pydantic.dataclasses import dataclass
 
 from stirling.core import StirlingClass
@@ -38,10 +38,10 @@ class StirlingLoggerLevel(int, Enum):
 @dataclass
 class StirlingLogger(StirlingClass):
     log_file: Path
-    log_level: StirlingLoggerLevel | None = StirlingLoggerLevel.INFO
+    log_level: StirlingLoggerLevel | None = StirlingLoggerLevel.ERROR
     time_start: datetime = datetime.now()
     header_separator: str = "|"
-
+    line_continuation_prefix: str = "+"
 
     def _headers(self):
         return [self._date_line_header, self._duration_line_header]
@@ -69,7 +69,7 @@ class StirlingLogger(StirlingClass):
         return f"{fg(8)}+{str(datetime.now() - self.time_start)}{attr(0)}"
     @staticmethod
     def _log_string(
-        msg: str, line_identifier: str = "+", indent: int = 4
+        msg: str, line_identifier: str = line_continuation_prefix, indent: int = 4
     ) -> str:
         """Log a string."""
 
@@ -77,7 +77,7 @@ class StirlingLogger(StirlingClass):
         return new_line_string + new_line_string.join(msg.splitlines())
 
     def _log_object(
-        self, obj, prefix: str = "+", header: str = "", indent: int = 4
+        self, obj, prefix: str | None = None, header: str = "", indent: int = 4
     ) -> str:
         """Log an object.
 
@@ -92,7 +92,7 @@ class StirlingLogger(StirlingClass):
         """
         return self._log_string(
             header + dumps(obj, indent=indent, cls=StirlingJSONEncoder),
-            prefix,
+            prefix or self.line_continuation_prefix,
             indent,
         )
 
@@ -105,18 +105,14 @@ class StirlingLogger(StirlingClass):
             *args (object): Any additional objects to log to the file (as JSON).
         """
 
-        for object_to_log in args:
-            print(object_to_log)
-
-        if self.log_level <= self.log_level:
+        if self.log_level >= level:
 
             obj_log = "".join(
                 self._log_string(object_to_log)
                 if isinstance(object_to_log, str)
-                else "" # self._log_object(object_to_log)
+                else self._log_object(object_to_log)
                 for object_to_log in args
             )
-            print(f"OBJ LOG: {obj_log}")
 
             lines = [header() for header in self._headers()] + [level.name, f"{message}{obj_log}"]
 

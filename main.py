@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # Create a new job from a file.
     input_file = Path("./examples/source.mp4")
-    my_job = StirlingJob(source=input_file, framework=StirlingMediaFrameworkFFMpeg(), log_level=StirlingLoggerLevel.DEBUG)
+    my_job = StirlingJob(source=input_file, framework=StirlingMediaFrameworkFFMpeg(), log_level=StirlingLoggerLevel.INFO)
 
     # # Add plugins to the job
     # my_job.add_plugins(
