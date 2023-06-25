@@ -1,7 +1,6 @@
 import json
 import os
 from pathlib import Path
-from argparse import Namespace
 
 DEFAULT_CONFIG_DIRECTORY = Path('../stirling/config')
 DEFAULT_CONFIG_FILE_FORMAT = 'json'
@@ -26,7 +25,7 @@ class StirlingConfig:
         self._config_dict = self._path_to_nested_dict()
 
     def get(self, key: str | None = None):
-        return Namespace(**self._get_object_by_path(key)) if key else Namespace(**self._config_dict)
+        return self._get_object_by_path(key) if key else self._config_dict
 
     # Convenience methods
     def get_json(self, key: str | None = None) -> str:
