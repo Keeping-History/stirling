@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import copyfile
 from subprocess import getstatusoutput
 from textwrap import shorten
-from typing import List, Union, Any
+from typing import List, Union
 from urllib.parse import urlsplit
 from uuid import UUID, uuid4
 
@@ -25,7 +25,7 @@ from stirling.encodings import StirlingJSONEncoder
 from stirling.errors import CommandError
 from stirling.frameworks.base import StirlingMediaFramework, StirlingMediaInfo
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
-from stirling.logger import StirlingJobLogger
+from stirling.logger import StirlingJobLogger, StirlingLoggerLevel
 from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets
 
 
@@ -67,7 +67,7 @@ class StirlingJobOptions(StirlingClass):
     output_directory: Path = field(default=None)
     output_annotations_directory: Path = field(default=None)
     source_copy: bool = field(default=True)
-    log_level: int = field(default=0)
+    log_level: StirlingLoggerLevel | int = field(default=StirlingLoggerLevel.DEBUG)
 
 @dataclass_json
 @dataclass
@@ -105,33 +105,9 @@ class StirlingJob(StirlingClass):
             failed.
         framework (core.StirlingMediaFramework): The framework to use to process media
             files. Defaults to FFMpeg.
-
-        config (Namespace): A Namespace object containing the configuration for the
+        options (StirlingJobOptions): An object containing the configuration for the
             job. This is created from the StirlingConfig object, and is passed to
             the framework when the job is created. Variables include:
-
-            job_file (pathlib.Path | str): A JSON document describing the job. This
-                file is created when the job is created, and updated as the job
-                progresses. Alternately, a job can be created from a JSON file
-                passed in as this argument. Strings will be interpreted into a
-                Path; if no root path is given then the current The default is None, which will cause
-                a file named 'job.json' to be created in the output directory.
-            log_file (pathlib.Path | str): The filename to output logs from the job.
-            input_directory (pathlib.Path): The folder prefix where incoming files
-                are located. Defaults to the current working directory
-            source_delete (bool): Delete the temporary incoming source file
-                when finished. By default, the temporary incoming source file is not
-                deleted.
-            output_directory (pathlib.Path | str): The directory to output the package.
-                Defaults to a folder named with the job's ID (a random UUID) in the
-                current working folder.
-            output_annotations_directory (pathlib.Path | str): The directory prefix to use when
-                storing annotations. Defaults to `annotations`.
-            source_copy (bool): When a job is completed, a copy of the
-                media file as it was uploaded is created in the output directory
-                as "source". This can be disabled.
-            log_level (StirlingLoggerLevel): set the log level for the job. Defaults to INFO.
-
 
     Raises:
         FileNotFoundError: _description_
@@ -142,7 +118,7 @@ class StirlingJob(StirlingClass):
     source: Union[Path, str]
 
     # Job config
-    config: Any = None
+    options: StirlingJobOptions = None
 
     # Optional fields
     id: UUID = uuid4()
@@ -151,7 +127,7 @@ class StirlingJob(StirlingClass):
     duration: float = 0.0
 
     # Framework and media info
-    framework: StirlingMediaFramework | None = field(default_factory = (lambda a = StirlingMediaFrameworkFFMpeg(): a))
+    framework: StirlingMediaFramework | None = field(init=True, default=None)
     media_info: StirlingMediaInfo | None = field(init=False, default=None)
 
     # Plugins to load
@@ -173,27 +149,24 @@ class StirlingJob(StirlingClass):
         folder, attempt to get the source file (either from a local or remote
         store, based on the Path scheme), and then probe the source file to
         determine its metadata (like dimensions, bitrate, duration, etc).
-
-        As well, if we provide a JSON job file, we attempt to load that in and
-        set the job up based on that.
         """
-        # If the job file has been passed in, then load it.
-        # Currently, we are setting the Job File as a default Path. We should
-        # instead default this field to None, and check here if it is set
-        # otherwise (and then load the job file).
-        # self.load()
 
-        self.config = self.config or StirlingConfig().get("job")
+        self._config = StirlingConfig()
 
-
-        print(self.config)
-        print(self.config['job_file'])
-        print(StirlingJobOptions(**self.config))
+        print(self._config.get())
         exit()
+
+        # Set our job options here
+        default_job_options = StirlingConfig().get_json("job")
+        self.options = self.options or StirlingJobOptions().from_json(default_job_options)
 
         # Convert our source to a Path
         if not isinstance(self.source, Path):
             raise ValueError("Source must be a valid Path object or string.")
+        self._framework_options = self._config.get("frameworks/ffmpeg")
+
+        print(self._framework_options)
+        exit()
 
         # Setup our output directory
         self._get_output_directory()
@@ -201,21 +174,35 @@ class StirlingJob(StirlingClass):
         # Logging
         self._logger = StirlingJobLogger(
             job_id=self.id,
-            log_file=self.config.log_file,
+            log_file=self.options.log_file,
             time_start=self.time_start,
-            log_level=self.config.log_level,
+            log_level=self.options.log_level,
         )
-
         self._logger.info("Starting job.")
-        self._logger.debug("Stirling Framework loaded, options: ", vars(self.config))
-        self._logger.debug(f"Output Directory will be: {str(self.config.output_directory)}")
+        self._logger.debug("Job options loaded: ", self.options)
 
         # Validate our incoming source file
+        self._logger.info(f"Validating requested source file: {str(self.source)}")
         self._get_source(self.source)
 
         # Set the media framework to use.
-        if not self.framework:
-            self.framework = StirlingMediaFrameworkFFMpeg()
+        if self.framework:
+            self._logger.info(f"Requested framework is: {str(self.framework.name)}")
+            self._logger.error("Only the FFMpeg Media Framework is supported at this time, defaulting to that framework.")
+
+        # TODO: Set the default framework in the default job options., and fetch it using the framework get method.
+        self._logger.info("Using default framework: FFMpeg.")
+        print(StirlingConfig().get())
+        default_ffmpeg_options = StirlingConfig().get_json("frameworks/ffmpeg")
+        print(default_ffmpeg_options)
+        exit()
+        self.options = self.options or StirlingJobOptions().from_json(default_job_options)
+
+        self.framework = StirlingMediaFrameworkFFMpeg()
+
+        self._logger.info(f"Output Directory will be: {str(self.options.output_directory)}")
+
+
 
         # Probe the source file
         self.media_info = self.framework.probe(source=str(self.source))
@@ -337,7 +324,7 @@ class StirlingJob(StirlingClass):
     def write(self) -> None:
         """Log an object (in JSON format) to the job log file."""
 
-        with open(self.config.job_file, "w", encoding="utf-8") as output_file:
+        with open(self.options.job_file, "w", encoding="utf-8") as output_file:
             output_file.write(dumps(self, indent=4, cls=StirlingJSONEncoder))
 
     def _get_source(self, source: Path | None) -> None:
@@ -355,20 +342,20 @@ class StirlingJob(StirlingClass):
             self._get_source_from_url(source)
         self._logger.log(f"File to processed will be: {str(self.source)}")
 
-        if self.config.source_copy:
+        if self.options.source_copy:
             # Get a full path to name our source file when we move it. We'll use this
             # value later on as an input filename for specific commands.
-            source_output_directory = self.config.output_directory / "source"
+            source_output_directory = self.options.output_directory / "source"
 
             # Unless explicitly disabled, copy the source
             # file to the output directory as 'source'
             source_output_directory.mkdir(parents=True, exist_ok=True)
             incoming_filename = (
-                self.config.output_directory / "source" / self.source.name
+                self.options.output_directory / "source" / self.source.name
             )
             copyfile(Path(self.source).absolute(), incoming_filename)
 
-            self.config.source = incoming_filename
+            self.options.source = incoming_filename
 
     def _get_source_from_url(self, source):
         # TODO: We need to really fix the way we handle failures here.
@@ -402,41 +389,41 @@ class StirlingJob(StirlingClass):
 
         # Make the output directory, if it doesn't exist.
 
-        if not hasattr(self.config, "output_directory") or self.config.output_directory is None:
-            self.config.output_directory = (
+        if not hasattr(self.options, "output_directory") or self.options.output_directory is None:
+            self.options.output_directory = (
                 Path(self.source).parent / "output" / str(self.id)
             )
 
-        self.config.output_directory = Path(self.config.output_directory)
+        self.options.output_directory = Path(self.options.output_directory)
 
-        if not self.config.output_directory.is_dir():
-            self.config.output_directory.mkdir(parents=True, exist_ok=True)
+        if not self.options.output_directory.is_dir():
+            self.options.output_directory.mkdir(parents=True, exist_ok=True)
             annotations_output_directory = (
-                self.config.output_directory / self.config.output_annotations_directory
+                self.options.output_directory / self.options.output_annotations_directory
             )
             annotations_output_directory.mkdir(parents=True, exist_ok=True)
 
-        self.config.log_file = self.config.output_directory / self.config.log_file
-        self.config.job_file = self.config.output_directory / self.config.job_file
+        self.options.log_file = self.options.output_directory / self.options.log_file
+        self.options.job_file = self.options.output_directory / self.options.job_file
 
         # Make sure we have a directory for the output files
-        assert self.config.output_directory.is_dir(), AssertionError(
+        assert self.options.output_directory.is_dir(), AssertionError(
             f"could not find the path {str(self.output_directory)} \
                 for output files for job {str(self.id)}"
         )
 
         # Make sure we can write to the directory for the output files
-        assert os.access(self.config.output_directory, os.W_OK), AssertionError(
+        assert os.access(self.options.output_directory, os.W_OK), AssertionError(
             f"could not write to path {str(self.output_directory)} \
                 for output files for job {str(self.id)}"
         )
 
         # Make sure we can write to the directory for the output files by
         # testing out log file
-        with open(str(self.config.log_file), "a", encoding="utf-8") as test_file:
+        with open(str(self.options.log_file), "a", encoding="utf-8") as test_file:
             assert test_file.writable(), AssertionError(
                 f"could not write to the log file the path \
-                    {str(self.config.log_file)} for job {str(self.id)}"
+                    {str(self.options.log_file)} for job {str(self.id)}"
             )
 
     def _parse(self):

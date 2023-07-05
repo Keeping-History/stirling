@@ -2,6 +2,7 @@
   "job_file": "./job.json",
   "log_file": "./job.log",
   "input_directory": "./",
+  "output_directory": "./output",
   "source_delete": "false",
   "output_annotations_directory": "annotations",
   "source_copy": "true",

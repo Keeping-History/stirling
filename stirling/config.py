@@ -2,12 +2,14 @@ import json
 import os
 from pathlib import Path
 
+from stirling.core import StirlingClass
+
 DEFAULT_CONFIG_DIRECTORY = Path('../stirling/config')
 DEFAULT_CONFIG_FILE_FORMAT = 'json'
 DEFAULT_PATH_SEPARATOR = '/'
 
 
-class StirlingConfig:
+class StirlingConfig(StirlingClass):
     def __init__(self, directory: Path | str | None = None):
         self._config_dict = {}
         self._config_file_format = DEFAULT_CONFIG_FILE_FORMAT
@@ -44,7 +46,6 @@ class StirlingConfig:
         for file_path in self._get_paths_for_config_files():
             object_path_array = self._get_object_path_as_array(file_path)
             accumulated_dict = {**self._merge_config_dicts(object_path_array, file_path), **accumulated_dict}
-
         return accumulated_dict
 
     def _merge_config_dicts(self, object_path_array, file_path):

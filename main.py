@@ -4,7 +4,6 @@ from pathlib import Path
 from stirling.config import StirlingConfig
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 from stirling.job import StirlingJob
-from stirling.logger import StirlingLoggerLevel
 
 config = StirlingConfig()
 
@@ -17,7 +16,7 @@ if __name__ == "__main__":
 
     # Create a new job from a file.
     input_file = Path("./examples/source.mp4")
-    my_job = StirlingJob(source=input_file, framework=StirlingMediaFrameworkFFMpeg(), log_level=StirlingLoggerLevel.INFO)
+    my_job = StirlingJob(source=input_file, framework=StirlingMediaFrameworkFFMpeg())
 
     # # Add plugins to the job
     # my_job.add_plugins(
