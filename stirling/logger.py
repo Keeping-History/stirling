@@ -24,6 +24,7 @@ class StirlingLoggerColors:
     DEBUG = fg(11)
     RESET = attr(0)
 
+
 class StirlingLoggerLevel(int, Enum):
     """StirlingLoggerLevel is a class that contains all of the levels that can be used by the StirlingLogger."""
 
@@ -67,9 +68,12 @@ class StirlingLogger(StirlingClass):
 
     def _duration_line_header(self):
         return f"{fg(8)}+{str(datetime.now() - self.time_start)}{attr(0)}"
+
     @staticmethod
     def _log_string(
-        msg: str, line_identifier: str = line_continuation_prefix, indent: int = 4
+        msg: str,
+        line_identifier: str = line_continuation_prefix,
+        indent: int = 4,
     ) -> str:
         """Log a string."""
 
@@ -96,7 +100,9 @@ class StirlingLogger(StirlingClass):
             indent,
         )
 
-    def _logger(self, message: str, level = StirlingLoggerLevel.INFO, *args) -> None:
+    def _logger(
+        self, message: str, level=StirlingLoggerLevel.INFO, *args
+    ) -> None:
         """Write a message to the log file.
 
         Args:
@@ -106,7 +112,6 @@ class StirlingLogger(StirlingClass):
         """
 
         if self.log_level >= level:
-
             obj_log = "".join(
                 self._log_string(object_to_log)
                 if isinstance(object_to_log, str)
@@ -114,7 +119,10 @@ class StirlingLogger(StirlingClass):
                 for object_to_log in args
             )
 
-            lines = [header() for header in self._headers()] + [level.name, f"{message}{obj_log}"]
+            lines = [header() for header in self._headers()] + [
+                level.name,
+                f"{message}{obj_log}",
+            ]
 
             log_line = f" {self.header_separator} ".join(lines)
 
@@ -144,8 +152,11 @@ class StirlingJobLogger(StirlingLogger):
     job_id: UUID | None = None
 
     def _headers(self):
-        return [self._date_line_header, self._duration_line_header, self._job_id_header]
+        return [
+            self._date_line_header,
+            self._duration_line_header,
+            self._job_id_header,
+        ]
 
     def _job_id_header(self):
         return f"{StirlingLoggerColors.HEADER}{self.job_id}{StirlingLoggerColors.RESET}"
-

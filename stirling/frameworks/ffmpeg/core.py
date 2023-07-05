@@ -1,5 +1,5 @@
 """
-core.py
+base.py
 
 This file contains the StirlingMediaFrameworkFFMpeg class, which is a class
 for using the `ffmpeg` Media Framework.
@@ -8,14 +8,15 @@ The StirlingMediaFrameworkFFMpeg class inherits from the
 StirlingMediaFramework class.
 
 """
-import os
+
 from dataclasses import field
 from pathlib import Path
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, List
 
 from multipledispatch import dispatch
 from pydantic.dataclasses import dataclass
 
+from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency, StirlingDependencies
 from stirling.frameworks.base import (
@@ -23,9 +24,9 @@ from stirling.frameworks.base import (
     StirlingMediaFrameworkCapabilities,
     StirlingMediaFrameworkOptions,
 )
-from stirling.frameworks.ffmpeg.codecs import StirlingMediaInfoCodecParser
-from stirling.frameworks.ffmpeg.containers import (
-    StirlingMediaInfoContainerParser,
+from stirling.frameworks.ffmpeg.codecs.base import StirlingFFMpegCodecParser
+from stirling.frameworks.ffmpeg.containers.base import (
+    StirlingFFMpegContainerParser,
 )
 from stirling.frameworks.ffmpeg.helpers import get_video_letterbox_detect
 from stirling.frameworks.ffmpeg.operations.crop import (
@@ -40,7 +41,7 @@ from stirling.frameworks.ffmpeg.operations.resize import (
 from stirling.frameworks.ffmpeg.operations.trim import trim_start_end
 from stirling.frameworks.ffmpeg.probe import StirlingMediaFrameworkFFMpegProbe
 from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
-from stirling.frameworks.media_info import (
+from stirling.frameworks.base import (
     StirlingMediaInfo,
     StirlingStreamAudio,
     StirlingStreamText,
@@ -57,6 +58,7 @@ class StirlingMediaFrameworkFFMpegOptions(StirlingMediaFrameworkOptions):
     version: str = ">=6.0.0"
     binary_transcoder: str = "ffmpeg"
     binary_probe: str = "ffprobe"
+    dependencies: List[StirlingDependency] = None
 
 
 @dataclass(kw_only=True)
@@ -83,24 +85,21 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
 
         self._binary_transcoder: StirlingDependency
         self._binary_probe: StirlingDependency
+        self._config = StirlingConfig().get("frameworks/ffmpeg")
 
         self._default_cmd_options: dict = {}
+        self._dependencies = StirlingDependencies.from_dict(self._config)
 
-        with open(
-            f"{os.getcwd()}/config/frameworks/{self.name.lower()}.json", "r"
-        ) as f:
-            self.dependencies = StirlingDependencies.from_json(f.read())
-
-        self._binary_transcoder = self.dependencies.get(
+        self._binary_transcoder = self._dependencies.get(
             self.options.binary_transcoder
         )
-        self._binary_probe = self.dependencies.get(self.options.binary_probe)
+        self._binary_probe = self._dependencies.get(self.options.binary_probe)
 
         check_ffmpeg_version(self._binary_transcoder, self.options.version)
 
         self.capabilities = StirlingMediaFrameworkCapabilities(
-            codecs=StirlingMediaInfoCodecParser(self._binary_transcoder).get(),
-            containers=StirlingMediaInfoContainerParser(
+            codecs=StirlingFFMpegCodecParser(self._binary_transcoder).get(),
+            containers=StirlingFFMpegContainerParser(
                 self._binary_transcoder
             ).get(),
         )

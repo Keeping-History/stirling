@@ -2,34 +2,36 @@ import itertools
 import re
 from typing import List, Tuple
 
-from pydantic.dataclasses import dataclass
-
 from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency
 from stirling.frameworks.ffmpeg.command import (
     StirlingMediaFrameworkFFMpegCommand,
 )
-from stirling.frameworks.media_info import (
+from stirling.frameworks.base import (
     StirlingMediaInfoCodec,
     StirlingMediaInfoCodecLibrary,
 )
 
 
-@dataclass
-class StirlingMediaInfoCodecParser(StirlingClass):
+class StirlingFFMpegCodecParser(StirlingClass):
     def __init__(self, binary_transcoder: StirlingDependency):
         self._binary_transcoder = binary_transcoder
 
     @staticmethod
     def _get_codec_type(row: str) -> str:
-        row = row.strip()
-        if "V" in row[:3]:
-            return "video"
-        if "A" in row[:3]:
-            return "audio"
-        if "S" in row[:3]:
-            return "subtitle"
-        return "data" if "D" in row[:3] else "unknown"
+        codec_type_deliminator = row.strip()[:3]
+
+        match codec_type_deliminator:
+            case "V:":
+                return "video"
+            case "A:":
+                return "audio"
+            case "S:":
+                return "subtitle"
+            case "D:":
+                return "data"
+            case _:
+                return "unknown"
 
     @staticmethod
     def _get_codec_name(row: str) -> str:

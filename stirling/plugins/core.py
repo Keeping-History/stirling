@@ -1,6 +1,6 @@
 import pathlib
 from typing import List
-
+from abc import ABC, abstractmethod
 from pydantic.dataclasses import dataclass
 
 from stirling.core import StirlingClass
@@ -25,7 +25,7 @@ class StirlingPluginAssets(StirlingClass):
 
 
 @dataclass(kw_only=True)
-class StirlingPlugin(StirlingClass):
+class StirlingPlugin(StirlingClass, ABC):
     """StirlingPlugin is the base class for all plugins.
 
     Any plugin class definition should use this as its parent class.
@@ -38,4 +38,24 @@ class StirlingPlugin(StirlingClass):
     """
 
     name: str
-    assets: List[StirlingPluginAssets] | None
+    depends_on: List["StirlingPlugin"] | None = None
+    assets: List[StirlingPluginAssets] | None = None
+    priority: int = 0
+
+    @abstractmethod
+    def cmds(self):
+        """Returns a list of commands to be run by the plugin.
+
+        Commands should be sorted so that, if one command requires the output of another,
+        it should (obviously) be run after.
+
+        Returns:
+            list: A list of commands to be run by the plugin.
+        """
+
+        ...
+
+    @abstractmethod
+    def outputs(self):
+        """Returns a list of the expected outputs of the plugin."""
+        ...

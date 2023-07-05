@@ -6,12 +6,12 @@ from stirling.frameworks.ffmpeg.constants import (
 
 
 def trim_start_end(
-    time_start: str | int | float,
-    time_end: str | int | float,
+    start: str | int | float,
+    end: str | int | float,
 ) -> Dict[str, str]:
     """Trim the media file to a specific start and end time."""
     return {
-        CmdFlags.StartTime: f"{time_start}",
-        CmdFlags.EndTime: f"{time_end}",
+        CmdFlags.StartTime: f"{start}",
+        CmdFlags.EndTime: f"{end}",
         CmdFlags.AccurateSeek: True,
     }

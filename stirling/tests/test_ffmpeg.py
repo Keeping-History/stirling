@@ -6,7 +6,7 @@ import pytest
 from stirling.dependencies import StirlingDependency
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
-from stirling.frameworks.media_info import (
+from stirling.frameworks.base import (
     StirlingMediaInfoCodec,
     StirlingMediaInfoCodecLibrary,
     StirlingMediaInfoContainer,
@@ -29,7 +29,6 @@ ffmpeg_probe_dependency: StirlingDependency = _get_framework().dependencies.get(
 ffmpeg_transcoder_dependency: StirlingDependency = (
     _get_framework().dependencies.get("ffmpeg")
 )
-
 
 video_file_media_info = _get_framework().probe(source=test_video_file)
 audio_file_media_info = _get_framework().probe(source=test_audio_file)

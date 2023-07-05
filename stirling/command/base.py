@@ -1,12 +1,11 @@
-from abc import abstractmethod
 from enum import auto
 from typing import Dict, List
 
 from pydantic.dataclasses import dataclass
 from strenum import StrEnum
 
-from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency
+from stirling.core import StirlingClass
 
 
 class StirlingCommandStatus(StrEnum):
@@ -65,59 +64,44 @@ class StirlingCommand(StirlingClass):
     status: StirlingCommandStatus = StirlingCommandStatus.RECEIVED
     priority: int = 0
 
-    @abstractmethod
     def receive(self) -> StirlingCommandStatus:
         """
         Receive a command.
         """
-        ...
+        self.status = StirlingCommandStatus.RECEIVED
+        return self.status
 
-    @abstractmethod
     def queue(self) -> StirlingCommandStatus:
         """
         Queue a command.
         """
-        # self.status = StirlingCommandStatus.QUEUED
-        # return self.status
+        self.status = StirlingCommandStatus.QUEUED
+        return self.status
 
-        ...
-
-    @abstractmethod
     def run(self) -> StirlingCommandStatus:
         """
         Run the command.
         """
-        # self.status = StirlingCommandStatus.RUNNING
-        # return self.status
+        self.status = StirlingCommandStatus.RUNNING
+        return self.status
 
-        ...
-
-    @abstractmethod
     def cancel(self) -> StirlingCommandStatus:
         """
         Run the command.
         """
-        # self.status = StirlingCommandStatus.CANCELLED
-        # return self.status
+        self.status = StirlingCommandStatus.CANCELLED
+        return self.status
 
-        ...
-
-    @abstractmethod
     def fail(self) -> StirlingCommandStatus:
         """
         Run the command.
         """
-        # self.status = StirlingCommandStatus.FAILED
-        # return self.status
+        self.status = StirlingCommandStatus.FAILED
+        return self.status
 
-        ...
-
-    @abstractmethod
     def succeed(self) -> StirlingCommandStatus:
         """
         Run the command.
         """
-        # self.status = StirlingCommandStatus.SUCCEEDED
-        # return self.status
-
-        ...
+        self.status = StirlingCommandStatus.SUCCEEDED
+        return self.status

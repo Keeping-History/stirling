@@ -6,9 +6,10 @@ from stirling.frameworks.ffmpeg.constants import (
     FFMpegCommandValueDimensions as CmdDims,
 )
 from stirling.frameworks.ffmpeg.helpers import get_video_letterbox_detect
-from stirling.frameworks.media_info import (
+from stirling.frameworks.base import (
     StirlingStreamVideo,
 )
+from stirling.utilities import ratio_string_to_ints
 
 
 def crop_w_h_x_y(
@@ -24,9 +25,16 @@ def crop_w_h_x_y(
     }
 
 
-def crop_ratio(ratio: Tuple[int, int]) -> Dict[str, str]:
+def crop_ratio(ratio: Tuple[int, int] | str) -> Dict[str, str]:
     """Crop the video to a specific ratio/scale."""
-    width, height = f"ih/{ratio[0] * ratio[1]}", "ih"
+
+    if type(ratio) == str:
+        width, height = ratio_string_to_ints(ratio)
+    elif type(ratio) == tuple:
+        width, height = f"ih/{ratio[0] * ratio[1]}", "ih"
+    else:
+        raise TypeError("Invalid ratio type.")
+
     return {f"{CmdFlags.VideoFilter}": f"crop={CmdDims(width, height).get()}"}
 
 

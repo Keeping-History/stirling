@@ -1,14 +1,10 @@
 import shutil
 from pathlib import Path
 
-from stirling.config import StirlingConfig
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
-from stirling.job import StirlingJob
-
-config = StirlingConfig()
+from stirling.job import StirlingJob, StirlingJobOptions
 
 if __name__ == "__main__":
-
     # Remove the output directory every time, for testing.
     output_path = Path("./output")
     if output_path.is_dir():
@@ -16,7 +12,12 @@ if __name__ == "__main__":
 
     # Create a new job from a file.
     input_file = Path("./examples/source.mp4")
-    my_job = StirlingJob(source=input_file, framework=StirlingMediaFrameworkFFMpeg())
+    job_options = StirlingJobOptions()
+    my_job = StirlingJob(
+        source=input_file,
+        framework=StirlingMediaFrameworkFFMpeg(),
+        options=job_options,
+    )
 
     # # Add plugins to the job
     # my_job.add_plugins(
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     # my_job.run()
 
     # # Close out the job
-    # my_job.close()
+    my_job.close()
     # a = av1.StirlingVideoEncoderAV1()
 
     # a = json.dumps(my_job, cls=StirlingJSONEncoder, indent=4)

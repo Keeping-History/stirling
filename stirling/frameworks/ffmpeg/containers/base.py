@@ -7,13 +7,13 @@ from stirling.dependencies import StirlingDependency
 from stirling.frameworks.ffmpeg.command import (
     StirlingMediaFrameworkFFMpegCommand,
 )
-from stirling.frameworks.media_info import (
+from stirling.frameworks.base import (
     StirlingMediaInfoContainer,
 )
 
 
 @dataclass
-class StirlingMediaInfoContainerParser(StirlingClass):
+class StirlingFFMpegContainerParser(StirlingClass):
     def __init__(self, binary_transcoder: StirlingDependency):
         self._binary_transcoder = binary_transcoder
 

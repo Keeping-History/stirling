@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic.validators import _VALIDATORS
 
+from stirling.typing import StirlingPydanticValidators
+
 
 class StirlingJSONEncoder(JSONEncoder):
     """StirlingJSONEncoder is a custom JSON encoder for objects that inherit the StirlingClass as a parent."""
@@ -19,13 +21,11 @@ class StirlingJSONEncoder(JSONEncoder):
         elif isinstance(o, datetime):
             return str(o)
         elif isinstance(o, Path):
-            return str(o)
+            return str(o.resolve())
         elif isinstance(o, Namespace):
             return vars(o)
         return super().default(o)
 
-
-from stirling.typing import StirlingPydanticValidators
 
 _VALIDATORS.extend(
     [

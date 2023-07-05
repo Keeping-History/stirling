@@ -4,9 +4,9 @@ from pathlib import Path
 
 from stirling.core import StirlingClass
 
-DEFAULT_CONFIG_DIRECTORY = Path('../stirling/config')
-DEFAULT_CONFIG_FILE_FORMAT = 'json'
-DEFAULT_PATH_SEPARATOR = '/'
+DEFAULT_CONFIG_DIRECTORY = Path("./config")
+DEFAULT_CONFIG_FILE_FORMAT = "json"
+DEFAULT_PATH_SEPARATOR = "/"
 
 
 class StirlingConfig(StirlingClass):
@@ -45,33 +45,38 @@ class StirlingConfig(StirlingClass):
 
         for file_path in self._get_paths_for_config_files():
             object_path_array = self._get_object_path_as_array(file_path)
-            accumulated_dict = {**self._merge_config_dicts(object_path_array, file_path), **accumulated_dict}
+            accumulated_dict = {
+                **self._merge_config_dicts(object_path_array, file_path),
+                **accumulated_dict,
+            }
         return accumulated_dict
 
     def _merge_config_dicts(self, object_path_array, file_path):
         path_converted_dict = tmp_dict = {}
-
         for i, name in enumerate(object_path_array):
             if i == len(object_path_array) - 1:
                 config_object = self._load_json_file(file_path)
-                tmp_dict[name] = config_object
-                tmp_dict = tmp_dict[name]
-
+                tmp_dict[name] = config_object or {}
+            else:
+                tmp_dict[name] = {}
+            tmp_dict = tmp_dict[name]
         return path_converted_dict
 
-
     def _get_paths_for_config_files(self):
-        return list(Path(self._directory).rglob(f"*.{self._config_file_format}"))
+        return list(
+            Path(self._directory).rglob(f"*.{self._config_file_format}")
+        )
 
     def _get_object_path_as_array(self, file_path):
-        relative_parent_directory = os.path.relpath(file_path.parent, self._directory)
+        relative_parent_directory = os.path.relpath(
+            file_path.parent, self._directory
+        )
 
-        if relative_parent_directory.startswith(('/', '.')):
-            object_path = [file_path.stem]
-        else:
-            object_path = f"{relative_parent_directory}/{file_path.stem}".split('/')
-
-        return object_path
+        return (
+            [file_path.stem]
+            if relative_parent_directory.startswith(("/", "."))
+            else f"{relative_parent_directory}/{file_path.stem}".split("/")
+        )
 
     def _get_object_by_path(self, object_path):
         if not object_path:
@@ -92,6 +97,7 @@ class StirlingConfig(StirlingClass):
 
         except Exception as exc:
             raise IOError(
-                f"Could not load config file for {file_path}.") from exc
+                f"Could not load config file for {file_path}."
+            ) from exc
 
         return loaded_json
