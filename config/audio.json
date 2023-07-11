@@ -1,0 +1,364 @@
+{
+  "_description": "This file contains Audio processing definitions for the Stirling engine. These include default and allowed settings for processing Audio streams.",
+  "defaults": {
+    "bitrate": 192000,
+    "sample_rate": "level4",
+    "channel_layout": "stereo",
+    "sample_format": "s16",
+    "sample_bit_depth": "16"
+  },
+  "bitrates": [
+    8000,
+    16000,
+    18000,
+    20000,
+    24000,
+    32000,
+    40000,
+    48000,
+    56000,
+    64000,
+    80000,
+    96000,
+    112000,
+    128000,
+    160000,
+    192000,
+    224000,
+    256000,
+    320000
+  ],
+  "sample_rates": {
+    "level0": 8000,
+    "level1": 11025,
+    "level2": 16000,
+    "level3": 44100,
+    "level4": 48000,
+    "level5": 88200,
+    "level6": 96000,
+    "level7": 176400,
+    "level8": 192000,
+    "level9": 352800
+  },
+  "channels": {
+    "FL": "Front Left",
+    "FR": "Front Right",
+    "FC": "Front Center",
+    "LFE": "Low Frequency",
+    "BL": "Back Left",
+    "BR": "Back Right",
+    "FLC": "Front Left-of-Center",
+    "FRC": "Front Right-of-Center",
+    "BC": "Back Center",
+    "SL": "Side Left",
+    "SR": "Side Right",
+    "TC": "Top Center",
+    "TFL": "Top Front Left",
+    "TFC": "Top Front Center",
+    "TFR": "Top Front Right",
+    "TBL": "Top Back Left",
+    "TBC": "Top Back Center",
+    "TBR": "Top Back Right",
+    "DL": "Downmix Left",
+    "DR": "Downmix Right",
+    "WL": "Wide Left",
+    "WR": "Wide Right",
+    "SDL": "Surround Direct Left",
+    "SDR": "Surround Direct Right",
+    "LFE2": "Low Frequency 2",
+    "TSL": "Top Side Left",
+    "TSR": "Top Side Right",
+    "BFC": "Bottom Front Center",
+    "BFL": "Bottom Front Left",
+    "BFR": "Bottom Front Right"
+  },
+  "channel_layouts": {
+    "mono": [
+      "FC"
+    ],
+    "stereo": [
+      "FL",
+      "FR"
+    ],
+    "two_one": [
+      "FL",
+      "FR",
+      "LFE"
+    ],
+    "three": [
+      "FL",
+      "FR",
+      "FC"
+    ],
+    "three_back": [
+      "FL",
+      "FR",
+      "BC"
+    ],
+    "four": [
+      "FL",
+      "FR",
+      "FC",
+      "BC"
+    ],
+    "quad": [
+      "FL",
+      "FR",
+      "BL",
+      "BR"
+    ],
+    "quad_side": [
+      "FL",
+      "FR",
+      "SL",
+      "SR"
+    ],
+    "three_one": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE"
+    ],
+    "five": [
+      "FL",
+      "FR",
+      "FC",
+      "BL",
+      "BR"
+    ],
+    "five_side": [
+      "FL",
+      "FR",
+      "FC",
+      "SL",
+      "SR"
+    ],
+    "four_one": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "BC"
+    ],
+    "five_one": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "BL",
+      "BR"
+    ],
+    "five_one_side": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "SL",
+      "SR"
+    ],
+    "six": [
+      "FL",
+      "FR",
+      "FC",
+      "BC",
+      "SL",
+      "SR"
+    ],
+    "six_front": [
+      "FL",
+      "FR",
+      "FLC",
+      "FRC",
+      "SL",
+      "SR"
+    ],
+    "hexagonal": [
+      "FL",
+      "FR",
+      "FC",
+      "BL",
+      "BR",
+      "BC"
+    ],
+    "six_one": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "BC",
+      "SL",
+      "SR"
+    ],
+    "six_one_back": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "BL",
+      "BR",
+      "BC"
+    ],
+    "six_one_front": [
+      "FL",
+      "FR",
+      "LFE",
+      "FLC",
+      "FRC",
+      "SL",
+      "SR"
+    ],
+    "seven": [
+      "FL",
+      "FR",
+      "FC",
+      "BL",
+      "BR",
+      "SL",
+      "SR"
+    ],
+    "seven_front": [
+      "FL",
+      "FR",
+      "FC",
+      "FLC",
+      "FRC",
+      "SL",
+      "SR"
+    ],
+    "seven_one": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "BL",
+      "BR",
+      "SL",
+      "SR"
+    ],
+    "seven_one_wide_side": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "FLC",
+      "FRC",
+      "SL",
+      "SR"
+    ],
+    "seven_one_top": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "BL",
+      "BR",
+      "TFL",
+      "TFR"
+    ],
+    "octagonal": [
+      "FL",
+      "FR",
+      "FC",
+      "BL",
+      "BR",
+      "BC",
+      "SL",
+      "SR"
+    ],
+    "cube": [
+      "FL",
+      "FR",
+      "BL",
+      "BR",
+      "TFL",
+      "TFR",
+      "TBL",
+      "TBR"
+    ],
+    "hexadecagonal": [
+      "FL",
+      "FR",
+      "FC",
+      "BL",
+      "BR",
+      "BC",
+      "SL",
+      "SR",
+      "TFL",
+      "TFC",
+      "TFR",
+      "TBL",
+      "TBC",
+      "TBR",
+      "WL",
+      "WR"
+    ],
+    "downmix": [
+      "DL",
+      "DR"
+    ],
+    "hamasaki": [
+      "FL",
+      "FR",
+      "FC",
+      "LFE",
+      "BL",
+      "BR",
+      "FLC",
+      "FRC",
+      "BC",
+      "SL",
+      "SR",
+      "TC",
+      "TFL",
+      "TFC",
+      "TFR",
+      "TBL",
+      "TBC",
+      "TBR",
+      "LFE2",
+      "TSL",
+      "TSR",
+      "BFC",
+      "BFL",
+      "BFR"
+    ]
+  },
+  "codecs": {
+    "pcm": {
+      "defaults": {
+        "encoder": "pcm_s16le"
+      },
+      "encoders": [
+        "pcm_s8",
+        "pcm_u8",
+        "pcm_alaw",
+        "pcm_mulaw",
+        "pcm_f32be",
+        "pcm_f32le",
+        "pcm_f64be",
+        "pcm_f64le",
+        "pcm_s16be",
+        "pcm_s16le",
+        "pcm_s24be",
+        "pcm_s24le",
+        "pcm_s32be",
+        "pcm_s32le",
+        "pcm_u16be",
+        "pcm_u16le",
+        "pcm_u24be",
+        "pcm_u24le",
+        "pcm_u32be",
+        "pcm_u32le"
+      ]
+    },
+    "mp3": {
+      "defaults": {
+        "encoder": "libmp3lame"
+      },
+      "encoders": [
+        "libmp3lame"
+      ]
+    }
+  }
+}

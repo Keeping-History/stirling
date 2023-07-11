@@ -49,10 +49,6 @@ from stirling.frameworks.base import (
 )
 
 
-class StirlingMediaFrameworkFFMpegClass(StirlingClass):
-    pass
-
-
 @dataclass
 class StirlingMediaFrameworkFFMpegOptions(StirlingMediaFrameworkOptions):
     version: str = ">=6.0.0"

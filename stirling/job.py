@@ -120,6 +120,9 @@ class StirlingJob(StirlingClass):
     # Required fields
     source: Union[Path, str]
 
+    # Stirling Engine Configuration
+    config: dict = field(default_factory=dict)
+
     # Job config
     options: StirlingJobOptions = None
 
@@ -152,7 +155,9 @@ class StirlingJob(StirlingClass):
         determine its metadata (like dimensions, bitrate, duration, etc).
         """
 
-        self._config = StirlingConfig()
+        self._config_client = StirlingConfig()
+        if not self.config:
+            self.config = self._config_client.get()
 
         # Set our job options here
         default_job_options = StirlingConfig().get_json("job")
@@ -163,7 +168,7 @@ class StirlingJob(StirlingClass):
         # Convert our source to a Path
         if not isinstance(self.source, Path):
             raise ValueError("Source must be a valid Path object or string.")
-        self._framework_options = self._config.get("frameworks/ffmpeg")
+        self._framework_options = self._config_client.get("frameworks/ffmpeg")
 
         # Setup our output directory
         self._get_output_directory()
@@ -189,7 +194,7 @@ class StirlingJob(StirlingClass):
             self._logger.info(
                 f"Requested framework is: {str(self.framework.name)}"
             )
-            self._logger.error(
+            self._logger.warn(
                 "Only the FFMpeg Media Framework is supported at this time, defaulting to that framework."
             )
 
@@ -267,7 +272,6 @@ class StirlingJob(StirlingClass):
 
     def write(self) -> None:
         """Make a snapshot of the job (in JSON format) to the job log file."""
-
         with open(self.options.job_file, "w", encoding="utf-8") as output_file:
             output_file.write(dumps(self, indent=4, cls=StirlingJSONEncoder))
 

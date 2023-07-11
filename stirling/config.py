@@ -4,7 +4,7 @@ from pathlib import Path
 
 from stirling.core import StirlingClass
 
-DEFAULT_CONFIG_DIRECTORY = Path("./config")
+DEFAULT_CONFIG_DIRECTORY = Path("../../../config")
 DEFAULT_CONFIG_FILE_FORMAT = "json"
 DEFAULT_PATH_SEPARATOR = "/"
 
@@ -18,9 +18,13 @@ class StirlingConfig(StirlingClass):
         if type(directory) is str:
             directory = Path(directory)
 
-        if directory.is_dir():
-            self._directory = directory or DEFAULT_CONFIG_DIRECTORY
-            self._config_dict = self._path_to_nested_dict()
+        if not directory.is_dir():
+            raise IOError(
+                f"Config directory {directory} does not exist. Cannot continue."
+            )
+
+        self._directory = directory or DEFAULT_CONFIG_DIRECTORY
+        self._config_dict = self._path_to_nested_dict()
 
     # Public methods
     def reload(self):
@@ -49,7 +53,15 @@ class StirlingConfig(StirlingClass):
                 **self._merge_config_dicts(object_path_array, file_path),
                 **accumulated_dict,
             }
-        return accumulated_dict
+
+        return self._remove_comment_keys(accumulated_dict)
+
+    def _remove_comment_keys(self, config_dict):
+        return {
+            a: self._remove_comment_keys(b) if isinstance(b, dict) else b
+            for a, b in config_dict.items()
+            if b and not a.startswith("_")
+        }
 
     def _merge_config_dicts(self, object_path_array, file_path):
         path_converted_dict = tmp_dict = {}

@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from stirling.dependencies import StirlingDependencies
 
 from dataclasses import field
@@ -232,6 +234,7 @@ class StirlingMediaFramework(StirlingClass):
         default_factory=StirlingMediaFrameworkCapabilities
     )
 
+    @abstractmethod
     def probe(self, source: str | Path) -> StirlingMediaInfo:
         """Probe the source file and return a StirlingMediaInfo object."""
         ...

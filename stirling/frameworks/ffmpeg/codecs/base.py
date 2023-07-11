@@ -13,6 +13,39 @@ from stirling.frameworks.base import (
 )
 
 
+class StirlingFFMpegFAudioFormatParser(StirlingClass):
+    """TODO: This class is currently not implemented.
+
+    Author's Note: I am not really sure where I should put this...
+    """
+
+    def __init__(self, binary_transcoder: StirlingDependency):
+        self._binary_transcoder = binary_transcoder
+
+    def get(self):
+        options = {
+            "hide_banner": True,
+        }
+
+        cmd_output = StirlingMediaFrameworkFFMpegCommand(
+            binary_dependency=self._binary_transcoder,
+            options=options,
+            keyword_arguments={
+                "sample_fmts": True,
+            },
+        ).run()
+
+        if cmd_output == "":
+            raise ValueError(
+                "Unable to get supported audio sample formats from FFMpeg."
+            )
+
+        return [
+            re.sub(" +", " ", line).split(" ")
+            for line in cmd_output[cmd_output.find("depth\n") + 6 :].split("\n")
+        ]
+
+
 class StirlingFFMpegCodecParser(StirlingClass):
     def __init__(self, binary_transcoder: StirlingDependency):
         self._binary_transcoder = binary_transcoder

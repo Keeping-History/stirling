@@ -1,6 +1,7 @@
 {
-  "job_file": "./job.json",
-  "log_file": "./job.log",
+  "_description": "This file contains settings for Jobs.",
+  "job_file": "job.json",
+  "log_file": "job.log",
   "input_directory": "./",
   "output_directory": "./output",
   "source_delete": "false",
