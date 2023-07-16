@@ -4,9 +4,11 @@ from pathlib import Path
 
 from stirling.core import StirlingClass
 
-DEFAULT_CONFIG_DIRECTORY = Path("../../../config")
+DEFAULT_CONFIG_DIRECTORY = Path("./config")
 DEFAULT_CONFIG_FILE_FORMAT = "json"
 DEFAULT_PATH_SEPARATOR = "/"
+
+stirling_config = None
 
 
 class StirlingConfig(StirlingClass):

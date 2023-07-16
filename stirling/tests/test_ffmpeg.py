@@ -33,7 +33,6 @@ ffmpeg_transcoder_dependency: StirlingDependency = (
 video_file_media_info = _get_framework().probe(source=test_video_file)
 audio_file_media_info = _get_framework().probe(source=test_audio_file)
 
-print(video_file_media_info, audio_file_media_info)
 video_file_video_stream = video_file_media_info.get_streams("video")[0]
 video_file_audio_stream = video_file_media_info.get_streams("audio")[0]
 audio_file_audio_stream = audio_file_media_info.get_streams("audio")[0]

@@ -124,7 +124,7 @@ class StirlingJob(StirlingClass):
     config: dict = field(default_factory=dict)
 
     # Job config
-    options: StirlingJobOptions = None
+    options: StirlingJobOptions | None = None
 
     # Optional fields
     id: UUID = uuid4()

@@ -11,7 +11,6 @@ class StirlingMediaCodec(StirlingClass):
     name: str
     description: str | None = None
     stream: int | None = None
-    encoder: str | None = None
     encoders: List | None = None
 
 

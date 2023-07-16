@@ -2,10 +2,9 @@
   "_description": "This file contains Audio processing definitions for the Stirling engine. These include default and allowed settings for processing Audio streams.",
   "defaults": {
     "bitrate": 192000,
-    "sample_rate": "level4",
-    "channel_layout": "stereo",
-    "sample_format": "s16",
-    "sample_bit_depth": "16"
+    "sample_rate": 96000,
+    "sample_bit_depth": "16",
+    "channel_layout": "stereo"
   },
   "bitrates": [
     8000,
@@ -28,18 +27,6 @@
     256000,
     320000
   ],
-  "sample_rates": {
-    "level0": 8000,
-    "level1": 11025,
-    "level2": 16000,
-    "level3": 44100,
-    "level4": 48000,
-    "level5": 88200,
-    "level6": 96000,
-    "level7": 176400,
-    "level8": 192000,
-    "level9": 352800
-  },
   "channels": {
     "FL": "Front Left",
     "FR": "Front Right",
@@ -325,40 +312,5 @@
     ]
   },
   "codecs": {
-    "pcm": {
-      "defaults": {
-        "encoder": "pcm_s16le"
-      },
-      "encoders": [
-        "pcm_s8",
-        "pcm_u8",
-        "pcm_alaw",
-        "pcm_mulaw",
-        "pcm_f32be",
-        "pcm_f32le",
-        "pcm_f64be",
-        "pcm_f64le",
-        "pcm_s16be",
-        "pcm_s16le",
-        "pcm_s24be",
-        "pcm_s24le",
-        "pcm_s32be",
-        "pcm_s32le",
-        "pcm_u16be",
-        "pcm_u16le",
-        "pcm_u24be",
-        "pcm_u24le",
-        "pcm_u32be",
-        "pcm_u32le"
-      ]
-    },
-    "mp3": {
-      "defaults": {
-        "encoder": "libmp3lame"
-      },
-      "encoders": [
-        "libmp3lame"
-      ]
-    }
   }
 }

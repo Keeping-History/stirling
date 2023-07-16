@@ -17,7 +17,6 @@ from multipledispatch import dispatch
 from pydantic.dataclasses import dataclass
 
 from stirling.config import StirlingConfig
-from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency, StirlingDependencies
 from stirling.frameworks.base import (
     StirlingMediaFramework,
@@ -81,7 +80,11 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
 
         self._binary_transcoder: StirlingDependency
         self._binary_probe: StirlingDependency
-        self._config = StirlingConfig().get("frameworks/ffmpeg")
+        self._config = {
+            "dependencies": StirlingConfig().get(
+                "frameworks/ffmpeg/dependencies"
+            )
+        }
 
         self._default_cmd_options: dict = {}
         self._dependencies = StirlingDependencies.from_dict(self._config)

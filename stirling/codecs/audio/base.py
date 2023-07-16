@@ -12,19 +12,14 @@ class StirlingMediaCodecAudioBase(StirlingMediaCodec):
     channel_layout: List | None = None
     bitrate: int | None = None
     output_name: str | None = None
+    encoder: str | None = None
 
     def __post_init__(self):
         config = StirlingConfig().get("audio")
         defaults = config.get("defaults")
 
         if self.sample_rate is None:
-            self.sample_rate = config.get("sample_rates").get(
-                defaults["sample_rate"]
-            )
-        if self.channel_layout is None:
-            self.channel_layout = config.get("channel_layouts").get(
-                defaults["channel_layout"]
-            )
+            self.sample_rate = config.get("sample_rate") or None
 
         if self.bitrate is None:
             self.bitrate = defaults.get("bitrate")

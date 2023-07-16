@@ -52,16 +52,16 @@ class StirlingFFMpegCodecParser(StirlingClass):
 
     @staticmethod
     def _get_codec_type(row: str) -> str:
-        codec_type_deliminator = row.strip()[:3]
+        codec_type_deliminator = row.strip().split(" ")[0]
 
         match codec_type_deliminator:
-            case "V:":
+            case codec_type_deliminator if "V" in codec_type_deliminator:
                 return "video"
-            case "A:":
+            case codec_type_deliminator if "A" in codec_type_deliminator:
                 return "audio"
-            case "S:":
+            case codec_type_deliminator if "S" in codec_type_deliminator:
                 return "subtitle"
-            case "D:":
+            case codec_type_deliminator if "D" in codec_type_deliminator:
                 return "data"
             case _:
                 return "unknown"
