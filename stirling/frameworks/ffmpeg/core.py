@@ -23,6 +23,12 @@ from stirling.frameworks.base import (
     StirlingMediaFrameworkCapabilities,
     StirlingMediaFrameworkOptions,
 )
+from stirling.frameworks.base import (
+    StirlingMediaInfo,
+    StirlingStreamAudio,
+    StirlingStreamText,
+    StirlingStreamVideo,
+)
 from stirling.frameworks.ffmpeg.codecs.base import StirlingFFMpegCodecParser
 from stirling.frameworks.ffmpeg.containers.base import (
     StirlingFFMpegContainerParser,
@@ -40,12 +46,6 @@ from stirling.frameworks.ffmpeg.operations.resize import (
 from stirling.frameworks.ffmpeg.operations.trim import trim_start_end
 from stirling.frameworks.ffmpeg.probe import StirlingMediaFrameworkFFMpegProbe
 from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
-from stirling.frameworks.base import (
-    StirlingMediaInfo,
-    StirlingStreamAudio,
-    StirlingStreamText,
-    StirlingStreamVideo,
-)
 
 
 @dataclass
