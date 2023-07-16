@@ -1,11 +1,12 @@
 from typing import Union
+from strenum import StrEnum
 
 from pydantic.dataclasses import dataclass
 
 from stirling.core import StirlingClass
 
 
-class FFMpegDither(StirlingClass):
+class FFMpegDither(StrEnum):
     """Dithering algorithms for FFMpeg.
 
     Note: not all dithering types work for all
@@ -14,21 +15,26 @@ class FFMpegDither(StirlingClass):
 
     """
 
-    Off = "none"
-    Auto = "auto"
-    Bayer = "bayer"
-    ErrorDiffusion = "ed"
-    Additive = "a_dither"
-    Xor = "x_dither"
-    FloydSteinberg = "fs"
+    OFF = "none"
+    AUTO = "auto"
+    BAYER = "bayer"
+    ERROR_DIFFUSION = "ed"
+    ADDITIVE = "a_dither"
+    XOR = "x_dither"
+    FLOYD_STEINBERG = "fs"
 
 
 class FFMpegCommandFlags(StirlingClass):
-    VideoFilter = "-vf"
-    StartTime = "-ss"
-    EndTime = "-to"
-    Duration = "-t"
-    AccurateSeek = "-accurate_seek"
+    VIDEO_FILTER = "-vf"
+    START_TIME = "-ss"
+    END_TIME = "-to"
+    DURATION = "-t"
+    ACCURATE_SEEK = "-accurate_seek"
+    AUDIO_STREAM_MAP = "-c:a"
+    VIDEO_STREAM_MAP = "-c:v"
+    AUDIO_BITRATE = "-b:a"
+    AUDIO_SAMPLE_RATE = "-ar"
+    AUDIO_CHANNEL_LAYOUT = "-ar"
 
 
 @dataclass

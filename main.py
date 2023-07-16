@@ -1,6 +1,12 @@
 import shutil
 from pathlib import Path
 
+from stirling.frameworks.ffmpeg.codecs.mp3 import (
+    StirlingFFMpegMediaCodecAudioMP3,
+)
+from stirling.frameworks.ffmpeg.codecs.pcm import (
+    StirlingFFMpegMediaCodecAudioPCM,
+)
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 from stirling.job import StirlingJob, StirlingJobOptions
 from stirling.logger import StirlingLoggerLevel
@@ -13,14 +19,16 @@ if __name__ == "__main__":
 
     # Create a new job from a file.
     input_file = Path("./examples/source.mp4")
-    job_options = StirlingJobOptions(
-        log_level=StirlingLoggerLevel.ERROR,
-    )
     my_job = StirlingJob(
         source=input_file,
-        framework=StirlingMediaFrameworkFFMpeg(),
-        options=job_options,
     )
+
+    # codecs = [
+    #     StirlingFFMpegMediaCodecAudioMP3(stream=1),
+    #     StirlingFFMpegMediaCodecAudioPCM(stream=2),
+    # ]
+    #
+    # print([codec.get() for codec in codecs])
 
     # # Add plugins to the job
     # my_job.add_plugins(

@@ -193,6 +193,7 @@ class StirlingMediaInfoContainer(StirlingClass):
 
     description: str
     file_extensions: List[str] = field(default_factory=list)
+    file_mime_types: List[str] = field(default_factory=list)
     encode: bool = False
     decode: bool = False
 

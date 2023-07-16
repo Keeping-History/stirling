@@ -1,64 +1,84 @@
 {
   "dependencies": [
-    [
-      {
-        "name": "ffmpeg",
-        "binary": "ffmpeg",
-        "version": "6.0.0",
-        "platform": [
-          "Darwin",
-          "arm64"
-        ],
-        "url": "https://www.osxexperts.net/ffmpeg6arm.zip",
-        "post_process": "unzip",
-        "force_download": false
-      },
-      {
-        "name": "ffmpeg",
-        "binary": "ffmpeg",
-        "version": "6.0.0",
-        "platform": [
-          "Darwin",
-          "amd64"
-        ],
-        "url": "https://www.osxexperts.net/ffmpeg6intel.zip",
-        "post_process": "unzip",
-        "force_download": false
-      },
-      {
-        "name": "ffprobe",
-        "binary": "ffprobe",
-        "version": "6.0.0",
-        "platform": [
-          "Darwin",
-          "arm64"
-        ],
-        "url": "https://www.osxexperts.net/ffprobe6arm.zip",
-        "post_process": "unzip",
-        "force_download": false
-      },
-      {
-        "name": "ffprobe",
-        "binary": "ffprobe",
-        "version": "6.0.0",
-        "platform": [
-          "Darwin",
-          "amd64"
-        ],
-        "url": "https://www.osxexperts.net/ffprobe6intel.zip",
-        "post_process": "unzip",
-        "force_download": false
-      }
-    ]
-  ],
-  "encoders": {
-    "mp3": {
-      "encoders": [
-        "libmp3lame"
+    {
+      "name": "ffmpeg",
+      "binary": "ffmpeg",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "arm64"
       ],
-      "defaults": {
-        "encoder": "libmp3lame"
-      }
+      "url": "https://www.osxexperts.net/ffmpeg6arm.zip",
+      "post_process": "unzip",
+      "force_download": false
+    },
+    {
+      "name": "ffmpeg",
+      "binary": "ffmpeg",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "amd64"
+      ],
+      "url": "https://www.osxexperts.net/ffmpeg6intel.zip",
+      "post_process": "unzip",
+      "force_download": false
+    },
+    {
+      "name": "ffprobe",
+      "binary": "ffprobe",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "arm64"
+      ],
+      "url": "https://www.osxexperts.net/ffprobe6arm.zip",
+      "post_process": "unzip",
+      "force_download": false
+    },
+    {
+      "name": "ffprobe",
+      "binary": "ffprobe",
+      "version": "6.0.0",
+      "platform": [
+        "Darwin",
+        "amd64"
+      ],
+      "url": "https://www.osxexperts.net/ffprobe6intel.zip",
+      "post_process": "unzip",
+      "force_download": false
     }
+  ],
+  "audio": {
+    "encoders": {
+      "defaults": {
+        "mp3": "libmp3lame",
+        "pcm": "pcm_s16le"
+      },
+      "pcm": {
+        "defaults": {
+          "sample_bit_depth": 16
+        },
+        "sample_bit_depths": [
+          0,
+          8,
+          16,
+          24,
+          32
+        ]
+      }
+    },
+    "sample_rates": [
+      8000,
+      11025,
+      16000,
+      44100,
+      48000,
+      88200,
+      96000,
+      176400,
+      192000,
+      352800
+    ]
   }
 }
