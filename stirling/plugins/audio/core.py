@@ -1,12 +1,13 @@
 from abc import ABC
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List
+
+from dataclasses_json import dataclass_json
 
 from stirling.codecs.base import StirlingMediaCodec
 from stirling.containers.base import StirlingMediaContainer
 from stirling.plugins.core import StirlingPlugin
-from dataclasses_json import dataclass_json
-from pathlib import Path
 
 
 @dataclass
@@ -29,10 +30,11 @@ class StirlingPluginAudio(StirlingPlugin, ABC):
 
     name: str = "audio"
     depends_on = None
-    options: List[StirlingPluginAudioOptions] | None = None
+    options: List[StirlingPluginAudioOptions] = None
 
     def __post_init__(self):
-        ...
+        if self.options is None:
+            raise ValueError("options must be set")
 
     def cmds(self):
         """Extract audio from a media file."""

@@ -1,14 +1,14 @@
 from pathlib import Path
 from typing import Dict, Tuple
 
+from stirling.frameworks.base import (
+    StirlingStreamVideo,
+)
 from stirling.frameworks.ffmpeg.constants import (
     FFMpegCommandFlags as CmdFlags,
     FFMpegCommandValueDimensions as CmdDims,
 )
 from stirling.frameworks.ffmpeg.helpers import get_video_letterbox_detect
-from stirling.frameworks.base import (
-    StirlingStreamVideo,
-)
 from stirling.utilities import ratio_string_to_ints
 
 

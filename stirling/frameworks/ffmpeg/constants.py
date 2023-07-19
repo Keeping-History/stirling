@@ -1,7 +1,7 @@
 from typing import Union
-from strenum import StrEnum
 
 from pydantic.dataclasses import dataclass
+from strenum import StrEnum
 
 from stirling.core import StirlingClass
 
@@ -30,8 +30,9 @@ class FFMpegCommandFlags(StirlingClass):
     END_TIME = "-to"
     DURATION = "-t"
     ACCURATE_SEEK = "-accurate_seek"
-    AUDIO_STREAM_MAP = "-c:a"
-    VIDEO_STREAM_MAP = "-c:v"
+    CHANNEL_MAP = "map"
+    AUDIO_CODEC = "-c:a"
+    VIDEO_CODEC = "-c:v"
     AUDIO_BITRATE = "-b:a"
     AUDIO_SAMPLE_RATE = "-ar"
     AUDIO_CHANNEL_LAYOUT = "-ar"

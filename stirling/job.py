@@ -22,11 +22,17 @@ from stirling.command.base import StirlingCommand, StirlingCommandStatus
 from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
 from stirling.encodings import StirlingJSONEncoder
-from stirling.errors import CommandError
+from stirling.errors import CommandError, MissingFrameworkError
 from stirling.frameworks.base import StirlingMediaFramework, StirlingMediaInfo
-from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
-from stirling.logger import StirlingJobLogger, StirlingLoggerLevel
+from stirling.frameworks.get import available_frameworks, get_framework
+from stirling.logger import (
+    StirlingLoggerLevel,
+    get_job_logger,
+)
 from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets
+from stirling.logger import StirlingLoggerColors as LC
+
+abc = "1234"
 
 
 @dataclass_json
@@ -60,16 +66,15 @@ class StirlingJobOptions(StirlingClass):
 
     """
 
-    job_file: Path = field(default="job.json")
-    log_file: Path = field(default="job.log")
-    input_directory: Path = field(default=Path("./"))
-    source_delete: bool = field(default=False)
-    output_directory: Path = field(default=Path("./output"))
-    output_annotations_directory: Path = field(default=Path("./annotations"))
-    source_copy: bool = field(default=True)
-    log_level: StirlingLoggerLevel | int = field(
-        default=StirlingLoggerLevel.DEBUG
-    )
+    job_file: Path | None = None
+    log_file: Path | None = None
+    input_directory: Path | None = None
+    source_delete: bool | None = None
+    output_directory: Path | None = None
+    output_annotations_directory: Path | None = None
+    source_copy: bool | None = None
+    log_level: StirlingLoggerLevel | int | None = None
+    framework: str | None = None
 
 
 @dataclass_json
@@ -133,7 +138,7 @@ class StirlingJob(StirlingClass):
     duration: float = 0.0
 
     # Framework and media info
-    framework: StirlingMediaFramework | None = field(init=True, default=None)
+    framework: StirlingMediaFramework | None = field(init=False, default=None)
     media_info: StirlingMediaInfo | None = field(init=False, default=None)
 
     # Plugins to load
@@ -155,6 +160,9 @@ class StirlingJob(StirlingClass):
         determine its metadata (like dimensions, bitrate, duration, etc).
         """
 
+        super().__post_init__()
+
+        # Load the config client to get Job setting defaults
         self._config_client = StirlingConfig()
         if not self.config:
             self.config = self._config_client.get()
@@ -165,58 +173,54 @@ class StirlingJob(StirlingClass):
             default_job_options
         )
 
-        # Convert our source to a Path
-        if not isinstance(self.source, Path):
-            raise ValueError("Source must be a valid Path object or string.")
-        self._framework_options = self._config_client.get("frameworks/ffmpeg")
-
         # Setup our output directory
         self._get_output_directory()
 
         # Logging
-        self._logger = StirlingJobLogger(
-            job_id=self.id,
+        self._logger = get_job_logger(
             log_file=self.options.log_file,
-            time_start=self.time_start,
             log_level=self.options.log_level,
+            time_start=self.time_start,
+            job_id=self.id,
         )
+
         self._logger.info("Starting job.")
-        self._logger.debug("Job options loaded: ", self.options)
+        self._logger.info("Job options loaded: ", self.options)
+        self._logger.info(
+            f"Output Directory will be: {str(self.options.output_directory.resolve())}"
+        )
 
         # Validate our incoming source file
         self._logger.info(
             f"Validating requested source file: {str(self.source)}"
         )
-        self._get_source(self.source)
+        self.source = self._get_source(self.source)
 
-        # Set the media framework to use.
-        if self.framework:
-            self._logger.info(
-                f"Requested framework is: {str(self.framework.name)}"
-            )
-            self._logger.warn(
-                "Only the FFMpeg Media Framework is supported at this time, defaulting to that framework."
-            )
+        self._logger.info(f"File to processed will be: {str(self.source)}")
 
-        # TODO: Set the default framework in the default job options., and fetch it using the framework get method.
-        self._logger.info("Using default framework: FFMpeg.")
-
-        self.options = self.options or StirlingJobOptions().from_json(
-            default_job_options
-        )
-
-        self.framework = StirlingMediaFrameworkFFMpeg()
-
+        # Check if the framework requested for the job is available.
         self._logger.info(
-            f"Output Directory will be: {str(self.options.output_directory)}"
+            f"Requested framework is: {LC.highlight(self.options.framework)}"
         )
+        if self.options.framework not in available_frameworks():
+            self._logger.error(
+                f"The requested framework {str(self.options.framework)} was not found. This is an unrecoverable error."
+            )
+            raise MissingFrameworkError
+
+        # Get and initialize the framework.
+        framework_class = get_framework(self.options.framework)
+        self.framework = framework_class(source=self.source)
 
         # Probe the source file
         self.media_info = self.framework.probe(source=str(self.source))
-
         self._logger.info(f"Media file {self.source} probed.")
-        self._logger.debug("Probe results:", self.media_info)
-        self._logger.info(f"Source file {self.source} is ready for processing.")
+        self._logger.info("Probe results: ", self.media_info)
+
+        # The source file is now ready for processing, and the job has finished loading.
+        self._logger.info(
+            f"Job has successfully started up; source file {self.source} is ready for processing."
+        )
 
         self.write()
 
@@ -228,10 +232,12 @@ class StirlingJob(StirlingClass):
 
         self.time_end = datetime.now()
         self.duration = (self.time_end - self.time_start).total_seconds()
-        self._logger.log(
-            f"Ending job {self.id} at {self.time_end}, total duration: {self.duration}"
+        self._logger.info(
+            f"Ending job {self.id} at {self.time_end},"
+            f"total duration: {self.duration}"
         )
-        self.write()
+        if self.options.log_level == StirlingLoggerLevel.DEBUG:
+            self._logger.debug("Job Definition:", self)
 
     def run(self) -> None:
         """Run all the commands in the job."""
@@ -241,7 +247,7 @@ class StirlingJob(StirlingClass):
             # Check if we can probe the input file.
             cmd.status = StirlingCommandStatus.RUNNING
             short_cmd = shorten(cmd.command, width=20)
-            self._logger.log(
+            self._logger.info(
                 f"Starting command {short_cmd} for plugin {cmd.name}"
             )
             cmd_output = getstatusoutput(cmd.command)
@@ -249,18 +255,20 @@ class StirlingJob(StirlingClass):
             short_output = shorten(cmd.command, width=20)
             if cmd_output[0] != 0:
                 cmd.status = StirlingCommandStatus.FAILED
-                self._logger.log(
-                    f"Command {short_output} for plugin {cmd.name} failed."
+                self._logger.error(
+                    f"Command {short_cmd} for plugin {cmd.name} failed."
                 )
-                self._logger.log(f"Command for plugin {cmd.name}:", cmd.command)
-                self._logger.log("Output:", cmd.log)
+                self._logger.debug(
+                    f"Command for plugin {cmd.name}:", cmd.command
+                )
+                self._logger.debug("Output:", cmd.log)
                 raise CommandError(
                     f"Command {short_cmd} for plugin {cmd.name} failed."
                 )
 
             cmd.status = StirlingCommandStatus.SUCCEEDED
 
-            self._logger.log(
+            self._logger.info(
                 f"Command {shorten(cmd.command, width=20)} for plugin {cmd.name} succeeded. Output: ",
                 cmd.log,
             )
@@ -330,11 +338,11 @@ class StirlingJob(StirlingClass):
 
         for plugin in args:
             self.plugins.append(plugin)
-            self._logger.log(f"Added plugin '{plugin.name}'.")
+            self._logger.info(f"Added plugin '{plugin.name}'.")
         self._parse()
         self.write()
 
-    def _get_source(self, source: Path | None) -> None:
+    def _get_source(self, source: Path | None) -> Path:
         """Get the source file for the job.
 
         The source file is the only required field for a Stirling Job. If
@@ -347,7 +355,6 @@ class StirlingJob(StirlingClass):
         # If the incoming source is a URL, then let's download it.
         if url_validator(str(self.source), public=False):
             self._get_source_from_url(source)
-        self._logger.log(f"File to processed will be: {str(self.source)}")
 
         if self.options.source_copy:
             # Get a full path to name our source file when we move it. We'll use this
@@ -361,8 +368,7 @@ class StirlingJob(StirlingClass):
                 self.options.output_directory / "source" / self.source.name
             )
             copyfile(Path(self.source).absolute(), incoming_filename)
-
-            self.options.source = incoming_filename
+            return incoming_filename.resolve()
 
     def _get_source_from_url(self, source):
         # TODO: We need to really fix the way we handle failures here.
@@ -404,7 +410,9 @@ class StirlingJob(StirlingClass):
                 Path(self.source).parent / "output" / str(self.id)
             )
 
-        self.options.output_directory = Path(self.options.output_directory)
+        self.options.output_directory = Path(
+            self.options.output_directory
+        ).resolve()
 
         if not self.options.output_directory.is_dir():
             self.options.output_directory.mkdir(parents=True, exist_ok=True)
@@ -456,7 +464,7 @@ class StirlingJob(StirlingClass):
         cmd_output_holder = []
 
         for plugin in self.plugins:
-            self._logger.log(f"Parsing plugin '{plugin.name}' commands.")
+            self._logger.info(f"Parsing plugin '{plugin.name}' commands.")
             plugin.cmd(self)
 
             # Sort each command in the plugin by its priority
@@ -468,7 +476,7 @@ class StirlingJob(StirlingClass):
                     cmd_sort_holder[cmd.name] = cmd.depends_on
 
             if cmd_sort_holder:
-                self._logger.log(
+                self._logger.info(
                     f"Parsing plugin '{plugin.name}' dependencies {plugin.depends_on}."
                 )
 
@@ -481,7 +489,7 @@ class StirlingJob(StirlingClass):
             for v in cmd_sort_list:
                 for cmd in self.commands:
                     if cmd.name == v:
-                        self._logger.log(
+                        self._logger.info(
                             f'Appending command for plugin "{cmd.name}": {cmd.command}.'
                         )
                         cmd_output_holder.append(cmd)
@@ -494,4 +502,4 @@ class StirlingJob(StirlingClass):
             output_dir.mkdir(parents=True, exist_ok=True)
 
         # Set the commands to the sorted list
-        self._logger.log(f"Plugins added {len(self.commands)} commands.")
+        self._logger.info(f"Plugins added {len(self.commands)} commands.")

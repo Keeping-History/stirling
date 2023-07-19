@@ -4,14 +4,14 @@ from pathlib import Path
 import pytest
 
 from stirling.dependencies import StirlingDependency
-from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
-from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
 from stirling.frameworks.base import (
     StirlingMediaInfoCodec,
     StirlingMediaInfoCodecLibrary,
     StirlingMediaInfoContainer,
     StirlingStreamText,
 )
+from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
+from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
 
 test_video_file = Path(Path(os.getcwd()) / "examples/test_cspan.mp4")
 test_audio_file = Path(Path(os.getcwd()) / "examples/test_cspan.mp3")

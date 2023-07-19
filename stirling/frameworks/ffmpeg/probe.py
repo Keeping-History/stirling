@@ -1,5 +1,6 @@
 import json
 from collections import Counter
+from dataclasses import field
 from pathlib import Path
 from typing import List
 
@@ -10,13 +11,13 @@ from pydantic.dataclasses import dataclass
 from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency
 from stirling.frameworks.base import StirlingMediaInfo
-from stirling.frameworks.ffmpeg.command import (
-    StirlingMediaFrameworkFFMpegCommand,
-)
 from stirling.frameworks.base import (
     StirlingStreamAudio,
     StirlingStreamText,
     StirlingStreamVideo,
+)
+from stirling.frameworks.ffmpeg.command import (
+    StirlingMediaFrameworkFFMpegCommand,
 )
 
 
@@ -25,9 +26,9 @@ class StirlingMediaFrameworkFFMpegProbe(StirlingClass):
     """StirlingMediaFrameworkFFMpegProbe is a class that is used to probe media files using FFMpeg."""
 
     source: Path
-    default_cmd_options: dict
     transcoder_binary_dependency: StirlingDependency
     probe_binary_dependency: StirlingDependency
+    default_cmd_options: dict | None = field(default_factory=dict)
 
     @staticmethod
     def create_text_stream(raw_stream: dict):

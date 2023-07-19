@@ -1,6 +1,11 @@
-# define Python user-defined exceptions
 class StirlingError(Exception):
     """Base class for other exceptions"""
+
+    pass
+
+
+class MissingFrameworkError(StirlingError):
+    """Raised when the framework requested for the job is not available."""
 
     pass
 
@@ -63,3 +68,57 @@ class DependencyMissingPostProcessError(StirlingError):
     """Raised when the package containing the binary file could not be processed."""
 
     pass
+
+
+# Python standard exceptions:
+# BaseException
+#  +-- SystemExit
+#  +-- KeyboardInterrupt
+#  +-- GeneratorExit
+#  +-- Exception
+#       +-- StopIteration
+#       +-- StandardError
+#       |    +-- BufferError
+#       |    +-- ArithmeticError
+#       |    |    +-- FloatingPointError
+#       |    |    +-- OverflowError
+#       |    |    +-- ZeroDivisionError
+#       |    +-- AssertionError
+#       |    +-- AttributeError
+#       |    +-- EnvironmentError
+#       |    |    +-- IOError
+#       |    |    +-- OSError
+#       |    |         +-- WindowsError (Windows)
+#       |    |         +-- VMSError (VMS)
+#       |    +-- EOFError
+#       |    +-- ImportError
+#       |    +-- LookupError
+#       |    |    +-- IndexError
+#       |    |    +-- KeyError
+#       |    +-- MemoryError
+#       |    +-- NameError
+#       |    |    +-- UnboundLocalError
+#       |    +-- ReferenceError
+#       |    +-- RuntimeError
+#       |    |    +-- NotImplementedError
+#       |    +-- SyntaxError
+#       |    |    +-- IndentationError
+#       |    |         +-- TabError
+#       |    +-- SystemError
+#       |    +-- TypeError
+#       |    +-- ValueError
+#       |         +-- UnicodeError
+#       |              +-- UnicodeDecodeError
+#       |              +-- UnicodeEncodeError
+#       |              +-- UnicodeTranslateError
+#       +-- Warning
+#            +-- DeprecationWarning
+#            +-- PendingDeprecationWarning
+#            +-- RuntimeWarning
+#            +-- SyntaxWarning
+#            +-- UserWarning
+#            +-- FutureWarning
+#   +-- ImportWarning
+#   +-- UnicodeWarning
+#   +-- BytesWarning
+#

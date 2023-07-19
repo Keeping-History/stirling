@@ -7,5 +7,6 @@
   "source_delete": "false",
   "output_annotations_directory": "annotations",
   "source_copy": "true",
-  "log_level": 5
+  "log_level": 4,
+  "framework": "ffmpeg"
 }

@@ -1,6 +1,8 @@
 from pydantic.dataclasses import dataclass
+
 from stirling.codecs.audio.pcm import StirlingMediaCodecAudioPCM
 from stirling.config import StirlingConfig
+from stirling.frameworks.ffmpeg.constants import FFMpegCommandFlags as FC
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 
 
@@ -15,6 +17,7 @@ class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
             self._framework = StirlingMediaFrameworkFFMpeg()
         else:
             self._framework = self.framework
+
         self.framework = self._framework.__class__.__name__
 
         config_client = StirlingConfig()
@@ -23,10 +26,8 @@ class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
         )
 
         default_encoder = config_client.get(
-            "frameworks/ffmpeg/audio/encoders/defaults/pcm"
+            "frameworks/ffmpeg/audio/encoders/pcm/defaults/encoder_library"
         )
-
-        self.encoder = self.encoder or default_encoder
 
         sample_bit_depths = config_client.get(
             "frameworks/ffmpeg/audio/encoders/pcm/sample_bit_depths"
@@ -38,7 +39,7 @@ class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
         ):
             self.sample_bit_depth = defaults.get("sample_bit_depth")
 
-        self.encoders = self._get_encoders()
+        self._get_encoders()
 
         if self.encoder not in [encoder.name for encoder in self.encoders]:
             self.encoder = default_encoder
@@ -60,17 +61,17 @@ class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
                 if not library_v.encode:
                     available_codecs[codec_i].libraries.remove(library_v)
 
-        return available_codecs
+        self.encoders = available_codecs
 
     def get(self):
         args = {
-            "c:a": f"{self.encoder}",
-            "ar": self.sample_rate,
-            "ac": "+".join(self.channel_layout)
+            FC.AUDIO_CODEC: f"{self.encoder}",
+            FC.AUDIO_SAMPLE_RATE: self.sample_rate,
+            FC.AUDIO_CHANNEL_LAYOUT: "+".join(self.channel_layout)
             if self.channel_layout
             else None,
-            "b:a": self.bitrate,
-            "map": f"0:a:{self.stream}" if self.stream is not None else None,
+            FC.AUDIO_BITRATE: self.bitrate,
+            FC.CHANNEL_MAP: f"0:a:{self.stream}" if self.stream else None,
         }
 
         return {k: v for k, v in args.items() if v is not None}

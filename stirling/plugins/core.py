@@ -1,6 +1,7 @@
 import pathlib
-from typing import List
 from abc import ABC, abstractmethod
+from typing import List
+
 from pydantic.dataclasses import dataclass
 
 from stirling.core import StirlingClass

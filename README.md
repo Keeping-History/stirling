@@ -45,7 +45,7 @@ do not change. We recommend Docker for this purpose.
 
 - [Python 3.10 or higher](https://www.python.org/downloads/)
 - [`pip`](https://pypi.org/project/pip/) (Python package manager)
-- [`ffmpeg`](https://www.ffmpeg.org) (for media processing) and `ffprobe` (for media analysis)
+- [`fFFMpeg`](https://www.fFFMpeg.org) (for media processing) and `ffprobe` (for media analysis)
 
 Additionally, to use the built-in plugins, you will need the following:
 
@@ -68,7 +68,7 @@ run some setup commands. After that, you can start processing media!
     - Install `pip` (could be `pip3` or `pip3.10`)
     - Install `poetry` using `pip`
         - `pip install poetry`
-    - Install `ffmpeg` and `ffprobe`
+    - Install `fFFMpeg` and `ffprobe`
     - Install `audiowaveform` (if you want to use the `peaks` plugin)
     - Install `autosub` (if you want to use the `transcript` plugin)
 2. Clone the repository to your environment
@@ -296,7 +296,7 @@ An example JSON job (as of v0.0.2) from a job is below:
   "commands": [
     {
       "name": "video",
-      "command": "ffmpeg -hide_banner -loglevel quiet -y -i source.mp4 -f image2 -map 0:v:1 -vf fps=1 -vsync 0 -frame_pts 1 source.mp4 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/video/frames%d.jpg",
+      "command": "fFFMpeg -hide_banner -loglevel quiet -y -i source.mp4 -f image2 -map 0:v:1 -vf fps=1 -vsync 0 -frame_pts 1 source.mp4 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/video/frames%d.jpg",
       "priority": 0,
       "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/video/frames",
       "depends_on": [],
@@ -305,7 +305,7 @@ An example JSON job (as of v0.0.2) from a job is below:
     },
     {
       "name": "audio",
-      "command": "ffmpeg -hide_banner -y -loglevel quiet -i source.mp4 -f wav -map 0:a:0 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/audio/source.wav",
+      "command": "fFFMpeg -hide_banner -y -loglevel quiet -i source.mp4 -f wav -map 0:a:0 /Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/audio/source.wav",
       "priority": 0,
       "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/audio/source.wav",
       "depends_on": [],
@@ -314,7 +314,7 @@ An example JSON job (as of v0.0.2) from a job is below:
     },
     {
       "name": "hls",
-      "command": "ffmpeg -hide_banner -loglevel quiet -y -i source.mp4 -map 0:v:1 -vcodec h264 -profile:v main -crf 20 -sc_threshold 40 -g 12 -keyint_min 25 -hls_time 2 -hls_playlist_type vod -movflags +faststart -map 0:a:0 -acodec aac -ar 48000 -vf scale=w=160:h=120:force_original_aspect_ratio=decrease -b:v 128k -maxrate 136.96k -bufsize 192.0k -b:a 32k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p.m3u8\"-vf scale=w=320:h=240:force_original_aspect_ratio=decrease -b:v 300k -maxrate 321.0k -bufsize 450.0k -b:a 64k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p.m3u8\"-vf scale=w=640:h=480:force_original_aspect_ratio=decrease -b:v 800k -maxrate 856.0k -bufsize 1200.0k -b:a 96k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p.m3u8\"",
+      "command": "fFFMpeg -hide_banner -loglevel quiet -y -i source.mp4 -map 0:v:1 -vcodec h264 -profile:v main -crf 20 -sc_threshold 40 -g 12 -keyint_min 25 -hls_time 2 -hls_playlist_type vod -movflags +faststart -map 0:a:0 -acodec aac -ar 48000 -vf scale=w=160:h=120:force_original_aspect_ratio=decrease -b:v 128k -maxrate 136.96k -bufsize 192.0k -b:a 32k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/120p.m3u8\"-vf scale=w=320:h=240:force_original_aspect_ratio=decrease -b:v 300k -maxrate 321.0k -bufsize 450.0k -b:a 64k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/240p.m3u8\"-vf scale=w=640:h=480:force_original_aspect_ratio=decrease -b:v 800k -maxrate 856.0k -bufsize 1200.0k -b:a 96k -hls_segment_filename \"/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p_%09d.ts' '/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls/480p.m3u8\"",
       "priority": 50,
       "expected_output": "/Users/robbiebyrd/Projects/stirling/output/9db89deb-aa09-44e1-a055-c98bc7ecdcff/hls",
       "depends_on": [
@@ -390,8 +390,8 @@ executed in the order defined by the job. Commands with no outstanding dependenc
 ### Frameworks
 
 Frameworks provide access to the underlying functions of a particular media frameworks functions. Provided with the
-Stirling Engine is a generic framework definition, as well as a feature-complete implementation for FFmpeg. The FFmpeg
-Framework provides access to the FFmpeg CLI. Other frameworks can be added to the Stirling Engine, and will be available
+Stirling Engine is a generic framework definition, as well as a feature-complete implementation for FFFMpeg. The FFFMpeg
+Framework provides access to the FFFMpeg CLI. Other frameworks can be added to the Stirling Engine, and will be available
 to all jobs.
 
 #### `StirlingMediaFramework`
@@ -460,6 +460,6 @@ Derived from the StirlingStream class are the following stream types:
 Only these three stream types currently supported out-of-the-box by the Stirling Engine. It is very easy to enable a
 new stream type.
 
-##### FFmpeg
+##### FFFMpeg
 
 

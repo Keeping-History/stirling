@@ -9,9 +9,8 @@ StirlingMediaFramework class.
 
 """
 
-from dataclasses import field
 from pathlib import Path
-from typing import Dict, Tuple, Union, List
+from typing import Dict, Tuple, Union
 
 from multipledispatch import dispatch
 from pydantic.dataclasses import dataclass
@@ -46,14 +45,36 @@ from stirling.frameworks.ffmpeg.operations.resize import (
 from stirling.frameworks.ffmpeg.operations.trim import trim_start_end
 from stirling.frameworks.ffmpeg.probe import StirlingMediaFrameworkFFMpegProbe
 from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
+from stirling.logger import get_job_logger
 
 
 @dataclass
 class StirlingMediaFrameworkFFMpegOptions(StirlingMediaFrameworkOptions):
-    version: str = ">=6.0.0"
-    binary_transcoder: str = "ffmpeg"
-    binary_probe: str = "ffprobe"
-    dependencies: List[StirlingDependency] = None
+    version: str = None
+    binary_transcoder: str = None
+    binary_probe: str = None
+    dependencies: StirlingDependencies | None = None
+    default_cmd_options: dict | None = None
+
+    def __post_init__(self):
+        default_options = StirlingConfig().get("frameworks/ffmpeg/options")
+        self.version = self.version or default_options.get("version")
+        self.binary_transcoder = self.binary_transcoder or default_options.get(
+            "binary_transcoder"
+        )
+        self.binary_probe = self.binary_probe or default_options.get(
+            "binary_probe"
+        )
+        self.default_cmd_options = (
+            self.default_cmd_options
+            or default_options.get("default_cmd_options")
+        )
+        if self.dependencies is None:
+            self.dependencies = StirlingDependencies()
+            for dependency in default_options.get("dependencies"):
+                self.dependencies.add_dep(
+                    dep=StirlingDependency.from_dict(dependency)
+                )
 
 
 @dataclass(kw_only=True)
@@ -71,28 +92,30 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
     """
 
     name: str = "FFMpeg"
-    options: StirlingMediaFrameworkFFMpegOptions = field(
-        default_factory=StirlingMediaFrameworkFFMpegOptions
-    )
+    options: StirlingMediaFrameworkFFMpegOptions | None = None
 
     def __post_init__(self):
-        # Check to make sure the appropriate binary files we need are installed.
+        self.logger = get_job_logger()
 
-        self._binary_transcoder: StirlingDependency
-        self._binary_probe: StirlingDependency
+        self.logger.info("FFMpeg Framework loading.")
+
+        self.options = self.options or StirlingMediaFrameworkFFMpegOptions()
+
+        # Check to make sure the appropriate binary files we need are installed.
         self._config = {
             "dependencies": StirlingConfig().get(
                 "frameworks/ffmpeg/dependencies"
             )
         }
 
-        self._default_cmd_options: dict = {}
-        self._dependencies = StirlingDependencies.from_dict(self._config)
+        self.logger.debug("Configuration for FFMpeg Framework:", self._config)
 
-        self._binary_transcoder = self._dependencies.get(
+        self._binary_transcoder = self.options.dependencies.get(
             self.options.binary_transcoder
         )
-        self._binary_probe = self._dependencies.get(self.options.binary_probe)
+        self._binary_probe = self.options.dependencies.get(
+            self.options.binary_probe
+        )
 
         check_ffmpeg_version(self._binary_transcoder, self.options.version)
 
@@ -103,12 +126,14 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
             ).get(),
         )
 
+        self.logger.info("FFMpeg Framework loaded.")
+
     def probe(self, source: str | Path) -> StirlingMediaInfo:
         return StirlingMediaFrameworkFFMpegProbe(
             source,
-            self._default_cmd_options,
             self._binary_transcoder,
             self._binary_probe,
+            self.options.default_cmd_options,
         ).probe()
 
     @dispatch(int, int, StirlingStreamVideo)
@@ -178,7 +203,7 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
             self._binary_probe,
             source,
             stream.stream_id,
-            self._default_cmd_options,
+            self.options.default_cmd_options,
         )
 
         return crop_w_h_x_y(*box)

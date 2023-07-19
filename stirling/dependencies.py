@@ -269,3 +269,6 @@ class StirlingDependencies(StirlingClass):
         ]
 
         return next(iter(dependency), None)
+
+    def add_dep(self, dep: StirlingDependency):
+        self.dependencies.append(dep)

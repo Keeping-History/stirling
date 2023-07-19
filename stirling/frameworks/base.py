@@ -1,7 +1,4 @@
-from abc import abstractmethod
-
-from stirling.dependencies import StirlingDependencies
-
+from abc import abstractmethod, ABC
 from dataclasses import field
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
@@ -9,6 +6,7 @@ from typing import Dict, List, Tuple, Union
 from pydantic.dataclasses import dataclass
 
 from stirling.core import StirlingClass
+from stirling.dependencies import StirlingDependencies
 
 
 @dataclass(kw_only=True)
@@ -217,7 +215,7 @@ class StirlingMediaFrameworkOptions(StirlingClass):
 
 
 @dataclass
-class StirlingMediaFramework(StirlingClass):
+class StirlingMediaFramework(StirlingClass, ABC):
     """StirlingMediaFramework is a class for handling the underlying system
     media framework used to interact with media files.
 

@@ -1,16 +1,16 @@
-from typing import List, Tuple
 from mimetypes import MimeTypes
+from typing import List, Tuple
 
 from pydantic.dataclasses import dataclass
 
 from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency
-from stirling.frameworks.ffmpeg.command import (
-    StirlingMediaFrameworkFFMpegCommand,
-)
 from stirling.frameworks.base import (
     StirlingMediaInfoContainer,
+)
+from stirling.frameworks.ffmpeg.command import (
+    StirlingMediaFrameworkFFMpegCommand,
 )
 
 

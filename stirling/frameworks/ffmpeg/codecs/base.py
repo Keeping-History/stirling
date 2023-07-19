@@ -4,12 +4,12 @@ from typing import List, Tuple
 
 from stirling.core import StirlingClass
 from stirling.dependencies import StirlingDependency
-from stirling.frameworks.ffmpeg.command import (
-    StirlingMediaFrameworkFFMpegCommand,
-)
 from stirling.frameworks.base import (
     StirlingMediaInfoCodec,
     StirlingMediaInfoCodecLibrary,
+)
+from stirling.frameworks.ffmpeg.command import (
+    StirlingMediaFrameworkFFMpegCommand,
 )
 
 

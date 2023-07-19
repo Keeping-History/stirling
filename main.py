@@ -7,9 +7,7 @@ from stirling.frameworks.ffmpeg.codecs.mp3 import (
 from stirling.frameworks.ffmpeg.codecs.pcm import (
     StirlingFFMpegMediaCodecAudioPCM,
 )
-from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
-from stirling.job import StirlingJob, StirlingJobOptions
-from stirling.logger import StirlingLoggerLevel
+from stirling.job import StirlingJob
 
 if __name__ == "__main__":
     # Remove the output directory every time, for testing.
@@ -23,12 +21,10 @@ if __name__ == "__main__":
         source=input_file,
     )
 
-    # codecs = [
-    #     StirlingFFMpegMediaCodecAudioMP3(stream=1),
-    #     StirlingFFMpegMediaCodecAudioPCM(stream=2),
-    # ]
-    #
-    # print([codec.get() for codec in codecs])
+    codecs = [
+        StirlingFFMpegMediaCodecAudioMP3(stream=1, framework=my_job.framework),
+        StirlingFFMpegMediaCodecAudioPCM(stream=2, framework=my_job.framework),
+    ]
 
     # # Add plugins to the job
     # my_job.add_plugins(

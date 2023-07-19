@@ -4,8 +4,8 @@ from typing import Dict, List
 from pydantic.dataclasses import dataclass
 from strenum import StrEnum
 
-from stirling.dependencies import StirlingDependency
 from stirling.core import StirlingClass
+from stirling.dependencies import StirlingDependency
 
 
 class StirlingCommandStatus(StrEnum):
