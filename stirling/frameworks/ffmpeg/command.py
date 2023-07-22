@@ -13,7 +13,7 @@ class StirlingMediaFrameworkFFMpegCommand(StirlingClass):
     """StirlingMediaFrameworkFFMpegCommand is a class that is used to create
     a command for the FFMpeg CLI."""
 
-    binary_dependency: StirlingDependency
+    dependency: StirlingDependency
     arguments: dict | str | List | None = None
     keyword_arguments: dict | None = None
     options: dict | None = None
@@ -35,7 +35,7 @@ class StirlingMediaFrameworkFFMpegCommand(StirlingClass):
         if self.arguments is None:
             return " ".join(
                 [
-                    str(self.binary_dependency.binary),
+                    str(self.dependency.binary),
                     get_probe_unparser().unparse(
                         **self.keyword_arguments, **self.options
                     ),
@@ -44,7 +44,7 @@ class StirlingMediaFrameworkFFMpegCommand(StirlingClass):
 
         return " ".join(
             [
-                str(self.binary_dependency.binary),
+                str(self.dependency.binary),
                 get_probe_unparser().unparse(
                     *self.arguments, **self.keyword_arguments, **self.options
                 ),

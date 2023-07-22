@@ -203,6 +203,18 @@ class StirlingMediaFrameworkCapabilities(StirlingClass):
     codecs: List[StirlingMediaInfoCodec] = None
     containers: List[StirlingMediaInfoContainer] = None
 
+    def get_codec_by_name(self, codec_name: str):
+        for codec in self.codecs:
+            if codec_name == codec.name:
+                return codec
+        return
+
+    def get_container_by_extension(self, file_extension: str):
+        for container in self.containers:
+            for ext in container.file_extensions:
+                if file_extension in self.file_extensions:
+                    return ext
+
 
 @dataclass
 class StirlingMediaFrameworkOptions(StirlingClass):
@@ -236,4 +248,9 @@ class StirlingMediaFramework(StirlingClass, ABC):
     @abstractmethod
     def probe(self, source: str | Path) -> StirlingMediaInfo:
         """Probe the source file and return a StirlingMediaInfo object."""
+        ...
+
+    @abstractmethod
+    def codec_container_supported(self, codec: str, container: str) -> bool:
+        """Check if the codec and container are supported."""
         ...

@@ -58,9 +58,9 @@ class StirlingCommand(StirlingClass):
     name: str | None
     dependency: StirlingDependency
     arguments: Dict[str, str]
-    expected_output: str | None
-    depends_on: List[str] | None
-    log: str | None
+    expected_outputs: List | None
+    depends_on: List[str] | None = None
+    log: str | None = None
     status: StirlingCommandStatus = StirlingCommandStatus.RECEIVED
     priority: int = 0
 

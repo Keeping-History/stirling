@@ -91,7 +91,7 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
     capabilities property.
     """
 
-    name: str = "FFMpeg"
+    name: str = "ffmpeg"
     options: StirlingMediaFrameworkFFMpegOptions | None = None
 
     def __post_init__(self):
@@ -100,15 +100,6 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
         self.logger.info("FFMpeg Framework loading.")
 
         self.options = self.options or StirlingMediaFrameworkFFMpegOptions()
-
-        # Check to make sure the appropriate binary files we need are installed.
-        self._config = {
-            "dependencies": StirlingConfig().get(
-                "frameworks/ffmpeg/dependencies"
-            )
-        }
-
-        self.logger.debug("Configuration for FFMpeg Framework:", self._config)
 
         self._binary_transcoder = self.options.dependencies.get(
             self.options.binary_transcoder
@@ -135,6 +126,19 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
             self._binary_probe,
             self.options.default_cmd_options,
         ).probe()
+
+    def codec_container_supported(
+        self, codec_name: str, container_extension: str
+    ) -> bool:
+        """Check if the codec and container are supported."""
+        codec_to_check = self.capabilities.get_codec_by_name(codec_name)
+        container_to_check = self.capabilities.get_container_by_extension(
+            container_extension
+        )
+
+        # TODO: Currently, we don't have a table of supported codecs to containers.
+        # For now, just return True.
+        return True
 
     @dispatch(int, int, StirlingStreamVideo)
     def resize(

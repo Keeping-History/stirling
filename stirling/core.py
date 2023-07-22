@@ -27,6 +27,7 @@ class StirlingClass(ABC):
     def _catch_errors(self):
         def catch_function_error(f):
             """Handles all errors for a function in a centralized place."""
+
             def catcher(*args, **kwargs):
                 try:
                     return f(*args, **kwargs)

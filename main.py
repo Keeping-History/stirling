@@ -8,6 +8,7 @@ from stirling.frameworks.ffmpeg.codecs.pcm import (
     StirlingFFMpegMediaCodecAudioPCM,
 )
 from stirling.job import StirlingJob
+from stirling.plugins.audio.core import StirlingPluginAudio
 
 if __name__ == "__main__":
     # Remove the output directory every time, for testing.
@@ -25,6 +26,22 @@ if __name__ == "__main__":
         StirlingFFMpegMediaCodecAudioMP3(stream=1, framework=my_job.framework),
         StirlingFFMpegMediaCodecAudioPCM(stream=2, framework=my_job.framework),
     ]
+
+    my_job.add_plugins(
+        [
+            StirlingPluginAudio(
+                options={
+                    "source": input_file,
+                    "source_stream": 0,
+                    "codec": "pcm",
+                    "container": "wav",
+                    "output_directory": str(output_path),
+                    "filename": "audio",
+                    "start_time": 0,
+                }
+            )
+        ]
+    )
 
     # # Add plugins to the job
     # my_job.add_plugins(

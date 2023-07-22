@@ -14,7 +14,7 @@ class StirlingMediaContainer(StirlingClass):
         name (str): The name, or description, of the container.
         file_extension (str): The file extension of the container.
         file_mime_type (str): The MIME type of the container.
-        supported_codecs (list[StirlingMediaCodec] | None): A list of
+        supported_codecs (list[[StirlingMediaCodec] | None): A list of
             codecs that are supported by the container.
     """
 

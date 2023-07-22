@@ -25,6 +25,14 @@ class StirlingPluginAssets(StirlingClass):
     path: pathlib.Path | None
 
 
+from pydantic import BaseModel
+
+
+@dataclass
+class StirlingPluginOptions(StirlingClass):
+    ...
+
+
 @dataclass(kw_only=True)
 class StirlingPlugin(StirlingClass, ABC):
     """StirlingPlugin is the base class for all plugins.
@@ -44,7 +52,7 @@ class StirlingPlugin(StirlingClass, ABC):
     priority: int = 0
 
     @abstractmethod
-    def cmds(self):
+    def cmds(self, job):
         """Returns a list of commands to be run by the plugin.
 
         Commands should be sorted so that, if one command requires the output of another,
@@ -57,6 +65,6 @@ class StirlingPlugin(StirlingClass, ABC):
         ...
 
     @abstractmethod
-    def outputs(self):
+    def outputs(self, job):
         """Returns a list of the expected outputs of the plugin."""
         ...

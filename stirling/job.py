@@ -326,7 +326,7 @@ class StirlingJob(StirlingClass):
 
         return return_asset_path
 
-    def add_plugins(self, *args) -> None:
+    def add_plugins(self, plugins: List) -> None:
         """Add new plugins to the job.
 
         Call this It is not currently possible to remove plugins from a job once they
@@ -336,7 +336,7 @@ class StirlingJob(StirlingClass):
             *args: A single plugin, or list of plugins to add to the job.
         """
 
-        for plugin in args:
+        for plugin in plugins:
             self.plugins.append(plugin)
             self._logger.info(f"Added plugin '{plugin.name}'.")
         self._parse()
@@ -456,25 +456,32 @@ class StirlingJob(StirlingClass):
     def _parse(self):
         """Parse the job and plugins to generate a list of commands to run."""
 
-        # Clear the previous expected outputs
-        self.outputs = None
+        # Clear the previous expected outputs and commands
+        self.outputs, self.commands = [], []
 
         # Create some holder variables
         cmd_sort_holder = {}
         cmd_output_holder = []
 
+        # Parse the plugins one by one
         for plugin in self.plugins:
             self._logger.info(f"Parsing plugin '{plugin.name}' commands.")
-            plugin.cmd(self)
+
+            # Get the plugin's expected outputs
+            self.outputs.extend(plugin.outputs(self))
+
+            # Get the plugin's commands
+            commands = plugin.cmds(self)
 
             # Sort each command in the plugin by its priority
             self.commands.sort(key=lambda x: x.priority, reverse=True)
 
             # Create a holder, so we can run a topographical sort on the commands
-            for cmd in self.commands:
-                if len(cmd.depends_on) > 0:
+            for cmd in commands:
+                if cmd.depends_on is not None:
                     cmd_sort_holder[cmd.name] = cmd.depends_on
-
+                else:
+                    cmd_output_holder.append(cmd)
             if cmd_sort_holder:
                 self._logger.info(
                     f"Parsing plugin '{plugin.name}' dependencies {plugin.depends_on}."
@@ -487,13 +494,14 @@ class StirlingJob(StirlingClass):
 
             # Reorder the commands based on the topographical sort
             for v in cmd_sort_list:
-                for cmd in self.commands:
+                for cmd in commands:
                     if cmd.name == v:
                         self._logger.info(
                             f'Appending command for plugin "{cmd.name}": {cmd.command}.'
                         )
                         cmd_output_holder.append(cmd)
                         self.outputs.append(str(cmd.expected_output))
+
             self.commands = cmd_output_holder
 
         # Create the necessary folders for the plugin outputs
@@ -503,3 +511,4 @@ class StirlingJob(StirlingClass):
 
         # Set the commands to the sorted list
         self._logger.info(f"Plugins added {len(self.commands)} commands.")
+        self._logger.debug("Commands: ", self.commands)
