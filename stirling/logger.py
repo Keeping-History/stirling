@@ -14,7 +14,8 @@ from stirling.encodings import StirlingJSONEncoder
 
 
 class StirlingLoggerLevel(int, Enum):
-    """StirlingLoggerLevel is a class that contains all levels that can be used by the StirlingLogger."""
+    """StirlingLoggerLevel is a class that contains all levels that can be used
+    by the StirlingLogger."""
 
     QUIET = 0
     CRITICAL = 1
@@ -25,9 +26,10 @@ class StirlingLoggerLevel(int, Enum):
 
 
 class StirlingLoggerColors:
-    """StirlingLoggerColors is a class that contains the colors that can be used by the StirlingLogger.
+    """StirlingLoggerColors is a class that contains the colors that can be
+    used by the StirlingLogger.
 
-    A table of colors is available by running the following command in a terminal window:
+    A table of colors is available by running the following curl command:
     curl -s https://gist.githubusercontent.com/HaleTom/89ffe32783f89f403bba96bd7bcd1263/raw/e50a28ec54188d2413518788de6c6367ffcea4f7/print256colours.sh | bash
 
     """
@@ -103,9 +105,7 @@ class StirlingLogger(StirlingClass):
     time_start: datetime = datetime.now()
     header_separator: str = " | "
     line_continuation_prefix: str = "+"
-    headers: List[str] = field(
-        default_factory=lambda: ["timestamp", "duration"]
-    )
+    headers: List[str] = field(default_factory=lambda: ["timestamp", "duration"])
 
     def __post_init__(self):
         self._available_headers = {
@@ -145,9 +145,7 @@ class StirlingLogger(StirlingClass):
         )
 
     def _duration_line_header(self):
-        return "".join(
-            [fg(8), "+", str(datetime.now() - self.time_start), attr(0)]
-        )
+        return "".join([fg(8), "+", str(datetime.now() - self.time_start), attr(0)])
 
     @staticmethod
     def _line_formatter(line: str, level: StirlingLoggerLevel | None) -> str:
@@ -218,9 +216,7 @@ class StirlingLogger(StirlingClass):
         obj_string = dumps(obj, indent=indent, cls=StirlingJSONEncoder)
 
         results = re.sub(r"\"(.*?)\":", self._colorize_json_keys, obj_string)
-        results = re.sub(
-            r": \"?(.*?)(,\n)", self._colorize_json_values, results
-        )
+        results = re.sub(r": \"?(.*?)(,\n)", self._colorize_json_values, results)
         results = re.sub(r": ?(.*?)\n", self._colorize_json_values, results)
 
         return self._log_string(
@@ -231,9 +227,7 @@ class StirlingLogger(StirlingClass):
             indent,
         )
 
-    def _logger(
-        self, message: str, level=StirlingLoggerLevel.INFO, *args
-    ) -> None:
+    def _logger(self, message: str, level=StirlingLoggerLevel.INFO, *args) -> None:
         """Write a message to the log file.
 
         Args:

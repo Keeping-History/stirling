@@ -1,10 +1,13 @@
 import pathlib
 from abc import ABC, abstractmethod
+from dataclasses import field, asdict
 from typing import List
 
 from pydantic.dataclasses import dataclass
 
+from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
+from stirling.logger import get_job_logger, StirlingJobLogger
 
 
 @dataclass
@@ -25,12 +28,32 @@ class StirlingPluginAssets(StirlingClass):
     path: pathlib.Path | None
 
 
-from pydantic import BaseModel
-
-
 @dataclass
 class StirlingPluginOptions(StirlingClass):
-    ...
+    """The options for a plugin."""
+
+    plugin_name: str
+
+    def merge_default_options(self, options: dict):
+        updated_options = self.default_options("audio")
+        updated_options.update(options)
+        return updated_options
+
+    @staticmethod
+    def defaults(plugin_name: str):
+        config_path = f"plugins/{plugin_name}/defaults"
+        return StirlingConfig().get(config_path) or {}
+
+    def get_attribute_names(self):
+        return list(self._to_dict().keys())
+
+    def _to_dict(self):
+        return {k: str(v) for k, v in asdict(self).items()}
+
+    @classmethod
+    def _from_str(cls, options_dict: dict):
+        mytype = type(cls)
+        print(mytype)
 
 
 @dataclass(kw_only=True)
@@ -50,6 +73,7 @@ class StirlingPlugin(StirlingClass, ABC):
     depends_on: List["StirlingPlugin"] | None = None
     assets: List[StirlingPluginAssets] | None = None
     priority: int = 0
+    logger: StirlingJobLogger = field(default_factory=get_job_logger)
 
     @abstractmethod
     def cmds(self, job):
@@ -64,7 +88,7 @@ class StirlingPlugin(StirlingClass, ABC):
 
         ...
 
-    @abstractmethod
-    def outputs(self, job):
-        """Returns a list of the expected outputs of the plugin."""
-        ...
+    # @abstractmethod
+    # def outputs(self, job):
+    #     """Returns a list of the expected outputs of the plugin."""
+    #     ...

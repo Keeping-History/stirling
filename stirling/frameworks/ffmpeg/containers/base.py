@@ -69,7 +69,7 @@ class StirlingFFMpegContainerParser(StirlingClass):
         }
 
         cmd_output = StirlingMediaFrameworkFFMpegCommand(
-            binary_dependency=self._binary_transcoder,
+            dependency=self._binary_transcoder,
             options=options,
             keyword_arguments={
                 "formats": True,

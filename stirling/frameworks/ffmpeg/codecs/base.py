@@ -28,7 +28,7 @@ class StirlingFFMpegFAudioFormatParser(StirlingClass):
         }
 
         cmd_output = StirlingMediaFrameworkFFMpegCommand(
-            binary_dependency=self._binary_transcoder,
+            dependency=self._binary_transcoder,
             options=options,
             keyword_arguments={
                 "sample_fmts": True,
@@ -164,7 +164,7 @@ class StirlingFFMpegCodecParser(StirlingClass):
             "hide_banner": True,
         }
         cmd_output = StirlingMediaFrameworkFFMpegCommand(
-            binary_dependency=self._binary_transcoder,
+            dependency=self._binary_transcoder,
             options=options,
             keyword_arguments={
                 "codecs": True,

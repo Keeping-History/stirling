@@ -17,7 +17,7 @@ def check_ffmpeg_version(transcoder: StirlingDependency, version: str):
         "version": True,
     }
     cmd_output = StirlingMediaFrameworkFFMpegCommand(
-        binary_dependency=transcoder,
+        dependency=transcoder,
         arguments=None,
         options=options,
     ).run()

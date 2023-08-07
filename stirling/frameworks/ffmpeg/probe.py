@@ -128,7 +128,7 @@ class StirlingMediaFrameworkFFMpegProbe(StirlingClass):
         }
 
         cmd_output = StirlingMediaFrameworkFFMpegCommand(
-            binary_dependency=self.probe_binary_dependency,
+            dependency=self.probe_binary_dependency,
             options=options,
         ).run()
 

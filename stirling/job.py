@@ -32,8 +32,6 @@ from stirling.logger import (
 from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets
 from stirling.logger import StirlingLoggerColors as LC
 
-abc = "1234"
-
 
 @dataclass_json
 @dataclass
@@ -191,9 +189,7 @@ class StirlingJob(StirlingClass):
         )
 
         # Validate our incoming source file
-        self._logger.info(
-            f"Validating requested source file: {str(self.source)}"
-        )
+        self._logger.info(f"Validating requested source file: {str(self.source)}")
         self.source = self._get_source(self.source)
 
         self._logger.info(f"File to processed will be: {str(self.source)}")
@@ -204,7 +200,8 @@ class StirlingJob(StirlingClass):
         )
         if self.options.framework not in available_frameworks():
             self._logger.error(
-                f"The requested framework {str(self.options.framework)} was not found. This is an unrecoverable error."
+                f"The requested framework {str(self.options.framework)} \
+                was not found. This is an unrecoverable error."
             )
             raise MissingFrameworkError
 
@@ -236,8 +233,8 @@ class StirlingJob(StirlingClass):
             f"Ending job {self.id} at {self.time_end},"
             f"total duration: {self.duration}"
         )
-        if self.options.log_level == StirlingLoggerLevel.DEBUG:
-            self._logger.debug("Job Definition:", self)
+        # if self.options.log_level == StirlingLoggerLevel.DEBUG:
+        #     self._logger.debug("Job Definition:", self)
 
     def run(self) -> None:
         """Run all the commands in the job."""
@@ -247,24 +244,16 @@ class StirlingJob(StirlingClass):
             # Check if we can probe the input file.
             cmd.status = StirlingCommandStatus.RUNNING
             short_cmd = shorten(cmd.command, width=20)
-            self._logger.info(
-                f"Starting command {short_cmd} for plugin {cmd.name}"
-            )
+            self._logger.info(f"Starting command {short_cmd} for plugin {cmd.name}")
             cmd_output = getstatusoutput(cmd.command)
             cmd.log = cmd_output[1]
             short_output = shorten(cmd.command, width=20)
             if cmd_output[0] != 0:
                 cmd.status = StirlingCommandStatus.FAILED
-                self._logger.error(
-                    f"Command {short_cmd} for plugin {cmd.name} failed."
-                )
-                self._logger.debug(
-                    f"Command for plugin {cmd.name}:", cmd.command
-                )
+                self._logger.error(f"Command {short_cmd} for plugin {cmd.name} failed.")
+                self._logger.debug(f"Command for plugin {cmd.name}:", cmd.command)
                 self._logger.debug("Output:", cmd.log)
-                raise CommandError(
-                    f"Command {short_cmd} for plugin {cmd.name} failed."
-                )
+                raise CommandError(f"Command {short_cmd} for plugin {cmd.name} failed.")
 
             cmd.status = StirlingCommandStatus.SUCCEEDED
 
@@ -295,9 +284,7 @@ class StirlingJob(StirlingClass):
                 return_plugin = plugin
         return return_plugin
 
-    def get_plugin_assets(
-        self, plugin_name: str
-    ) -> List[StirlingPluginAssets] | None:
+    def get_plugin_assets(self, plugin_name: str) -> List[StirlingPluginAssets] | None:
         """Get all the assets of a plugin.
 
         Args:
@@ -378,9 +365,7 @@ class StirlingJob(StirlingClass):
             raise err
 
         if response.status_code != 200:
-            raise HTTPError(
-                f"Error downloading {self.source}: {response.status_code}"
-            )
+            raise HTTPError(f"Error downloading {self.source}: {response.status_code}")
 
         reported_filename = os.path.basename(urlsplit(source).path)
         incoming_filename = Path(
@@ -410,9 +395,7 @@ class StirlingJob(StirlingClass):
                 Path(self.source).parent / "output" / str(self.id)
             )
 
-        self.options.output_directory = Path(
-            self.options.output_directory
-        ).resolve()
+        self.options.output_directory = Path(self.options.output_directory).resolve()
 
         if not self.options.output_directory.is_dir():
             self.options.output_directory.mkdir(parents=True, exist_ok=True)
@@ -422,12 +405,8 @@ class StirlingJob(StirlingClass):
             )
             annotations_output_directory.mkdir(parents=True, exist_ok=True)
 
-        self.options.log_file = (
-            self.options.output_directory / self.options.log_file
-        )
-        self.options.job_file = (
-            self.options.output_directory / self.options.job_file
-        )
+        self.options.log_file = self.options.output_directory / self.options.log_file
+        self.options.job_file = self.options.output_directory / self.options.job_file
 
         # Make sure we have a directory for the output files
         assert self.options.output_directory.is_dir(), AssertionError(
@@ -436,18 +415,14 @@ class StirlingJob(StirlingClass):
         )
 
         # Make sure we can write to the directory for the output files
-        assert os.access(
-            self.options.output_directory, os.W_OK
-        ), AssertionError(
+        assert os.access(self.options.output_directory, os.W_OK), AssertionError(
             f"could not write to path {str(self.output_directory)} \
                 for output files for job {str(self.id)}"
         )
 
         # Make sure we can write to the directory for the output files by
         # testing out log file
-        with open(
-            str(self.options.log_file), "a", encoding="utf-8"
-        ) as test_file:
+        with open(str(self.options.log_file), "a", encoding="utf-8") as test_file:
             assert test_file.writable(), AssertionError(
                 f"could not write to the log file the path \
                     {str(self.options.log_file)} for job {str(self.id)}"
@@ -467,11 +442,13 @@ class StirlingJob(StirlingClass):
         for plugin in self.plugins:
             self._logger.info(f"Parsing plugin '{plugin.name}' commands.")
 
-            # Get the plugin's expected outputs
-            self.outputs.extend(plugin.outputs(self))
-
             # Get the plugin's commands
             commands = plugin.cmds(self)
+
+            # Get the plugin's expected outputs
+            for cmd in plugin.cmds(self):
+                if cmd.expected_outputs is not None:
+                    self.outputs.extend(cmd.expected_outputs)
 
             # Sort each command in the plugin by its priority
             self.commands.sort(key=lambda x: x.priority, reverse=True)

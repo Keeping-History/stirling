@@ -5,7 +5,6 @@ from dataclasses_json import dataclass_json
 from pydantic import BaseModel
 
 from stirling.command.base import StirlingCommand
-from stirling.config import StirlingConfig
 from stirling.job import StirlingJob
 from stirling.plugins.core import StirlingPlugin, StirlingPluginOptions
 
@@ -15,87 +14,68 @@ from stirling.plugins.core import StirlingPlugin, StirlingPluginOptions
 class StirlingPluginAudioOptions(BaseModel, StirlingPluginOptions):
     source: str | Path
     source_stream: int
-    codec: str
-    container: str
+    codec: str | None = None
+    container: str | None = None
     output_directory: Path | str | None = None
     filename: str | None = None
     start_time: float | None = None
     end_time: float | None = None
+    plugin_name: str = "audio"
 
 
-@dataclass
-@dataclass
+@dataclass(kw_only=True)
 class StirlingPluginAudio(StirlingPlugin):
     """StirlingPluginAudio extracts the audio from a source file."""
 
     name: str = "audio"
     depends_on = None
-    options: StirlingPluginAudioOptions | str | dict = None
+    options: StirlingPluginAudioOptions | str | dict
 
     def __post_init__(self):
-        self.output = []
-        self.commands = []
+        self._counter: int = 0
 
-        if type(self.options) is str:
-            try:
-                self.options = StirlingPluginAudioOptions.parse_raw(
-                    self.options
-                )
-            except Exception as e:
-                raise ValueError(
-                    "options must be a valid StirlingPluginAudioOptions"
-                ) from e
-        if type(self.options) is dict:
-            try:
-                self.options = StirlingPluginAudioOptions.parse_obj(
-                    self.options
-                )
-            except Exception as e:
-                raise ValueError(
-                    "options must be a valid StirlingPluginAudioOptions"
-                ) from e
-        if self.options is None:
-            raise ValueError(
-                "options must be a valid StirlingPluginAudioOptions"
-            )
+        self.logger.debug(f"Initializing {self.name}")
+        self.logger.debug(f"Pre-parse options: {type(self.options)} - {self.options}")
 
-        config_client = StirlingConfig()
-        default_options = config_client.get("plugins/audio/defaults")
-        if self.options.codec is None:
-            self.options.codec = default_options.get("codec")
-        if self.options.container is None:
-            self.options.container = default_options.get("container")
-        if self.options.output_directory is None:
-            self.output_directory = default_options.get("output_directory")
-        if self.options.filename is None:
-            self.options.filename = default_options.get("filename")
+        self.options: StirlingPluginAudioOptions = self._parse_options(self.options)
+
+        self.logger.debug(f"Parsed options: {self.options}")
+
+    def _parse_options(
+        self, options: StirlingPluginAudioOptions | str | dict
+    ) -> StirlingPluginAudioOptions | None:
+        match self.options:
+            case StirlingPluginAudioOptions():
+                return options
+            case str():
+                return StirlingPluginAudioOptions.parse_raw(options)
+            case dict():
+                b = StirlingPluginAudioOptions.defaults("audio")
+                b.update(options)
+                print(b)
+                exit()
+                a = StirlingPluginAudioOptions.parse_obj(options)
+                a.merge_default_options(options)
+                return StirlingPluginAudioOptions.parse_obj(options)
+        self.logger.error(f"Could not parse options for {self.name}")
+        raise ValueError(f"Could not parse options for {self.name}")
 
     def cmds(self, job: StirlingJob):
         """Extract audio from a media file."""
-        if not job.framework.options:
-            # TODO: Set a real error here
-            return ValueError("Framework options must be set.")
-        print(self.options.codec)
-        print(job.framework.capabilities.codecs)
-        self.outputs(job)
-        self.commands = [
+        self._counter += 1
+        return [
             StirlingCommand(
-                name="audio",
-                dependency=job.framework.options.dependencies.get(
-                    job.framework.name
-                ),
-                arguments={},
-                expected_outputs=self.output,
+                name=f"audio_{str(self._counter)}",
+                dependency=job.framework.options.dependencies.get(job.framework.name),
+                expected_outputs=[self._cmd_output(job)],
             )
         ]
 
-        return self.commands
-
-    def outputs(self, job: StirlingJob):
-        self.output = [
-            f"{self.options.output_directory.resolve()}.{self.options.container}"
-        ]
-        return self.output
+    def _cmd_output(self, job: StirlingJob):
+        return Path(
+            job.options.output_directory.resolve()
+            / f"audio_{str(self._counter)}.{self.options.container}"
+        )
 
     ## Extract Audio from file
     # def cmd(self):

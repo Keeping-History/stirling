@@ -1,4 +1,6 @@
+from dataclasses import field
 from enum import auto
+from pathlib import Path
 from typing import Dict, List
 
 from pydantic.dataclasses import dataclass
@@ -45,9 +47,9 @@ class StirlingCommand(StirlingClass):
             After commands are sorted based on their dependencies, they will
             be sorted by priority. The default is 0, which is the highest
             priority.
-        expected_output (str): The output (filename, directory or glob pattern) that we expect to
-            be created when this command is run. This is optional, and the default
-            is None.
+        expected_outputs (str): The output (filename, directory or glob pattern) that we
+         expect to be created when this command is run. This is optional, and the
+         default is None.
         depends_on (list): A list of plugins that this plugin depends on before
             it can run. This is optional, and the default is None.
         log (str): The raw, text log output from the command.
@@ -55,11 +57,11 @@ class StirlingCommand(StirlingClass):
             is QUEUED
     """
 
-    name: str | None
-    dependency: StirlingDependency
-    arguments: Dict[str, str]
-    expected_outputs: List | None
+    name: str
+    dependency: StirlingDependency | None = None
+    arguments: Dict[str, str] | None = None
     depends_on: List[str] | None = None
+    expected_outputs: List[str | Path] | None = None
     log: str | None = None
     status: StirlingCommandStatus = StirlingCommandStatus.RECEIVED
     priority: int = 0
