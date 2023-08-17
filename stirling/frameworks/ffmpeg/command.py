@@ -8,7 +8,7 @@ from stirling.dependencies import StirlingDependency
 from stirling.frameworks.ffmpeg.parser import get_probe_unparser
 
 
-@dataclass(kw_only=True)
+@dataclass
 class StirlingMediaFrameworkFFMpegCommand(StirlingClass):
     """StirlingMediaFrameworkFFMpegCommand is a class that is used to create
     a command for the FFMpeg CLI."""

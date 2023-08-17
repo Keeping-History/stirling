@@ -34,9 +34,7 @@ class StirlingMediaFrameworkFFMpegProbe(StirlingClass):
     def create_text_stream(raw_stream: dict):
         dispositions = []
         if "dispositions" in raw_stream:
-            dispositions.extend(
-                k for k, v in raw_stream["dispositions"] if v == 1
-            )
+            dispositions.extend(k for k, v in raw_stream["dispositions"] if v == 1)
         return StirlingStreamText(
             stream_id=raw_stream.get("index"),
             duration=float(raw_stream.get("duration")),
@@ -80,9 +78,7 @@ class StirlingMediaFrameworkFFMpegProbe(StirlingClass):
             codec=raw_stream.get("codec_name"),
             profile=raw_stream.get("profile"),
             bit_rate=raw_stream.get("bit_rate"),
-            frame_rate=float(
-                simpleeval.simple_eval(raw_stream.get("avg_frame_rate"))
-            ),
+            frame_rate=float(simpleeval.simple_eval(raw_stream.get("avg_frame_rate"))),
             aspect=raw_stream.get("display_aspect_ratio").split(":"),
             scan_type=raw_stream.get("field_order"),
             color_model=raw_stream.get("pix_fmt"),
@@ -141,21 +137,15 @@ class StirlingMediaFrameworkFFMpegProbe(StirlingClass):
             match stream["codec_type"]:
                 case "video":
                     output_streams.append(
-                        StirlingMediaFrameworkFFMpegProbe.create_video_stream(
-                            stream
-                        )
+                        StirlingMediaFrameworkFFMpegProbe.create_video_stream(stream)
                     )
                 case "audio":
                     output_streams.append(
-                        StirlingMediaFrameworkFFMpegProbe.create_audio_stream(
-                            stream
-                        )
+                        StirlingMediaFrameworkFFMpegProbe.create_audio_stream(stream)
                     )
                 case "subtitle":
                     output_streams.append(
-                        StirlingMediaFrameworkFFMpegProbe.create_text_stream(
-                            stream
-                        )
+                        StirlingMediaFrameworkFFMpegProbe.create_text_stream(stream)
                     )
 
         preferred = {
@@ -198,9 +188,7 @@ class StirlingMediaFrameworkFFMpegProbe(StirlingClass):
         for crop in cmd_output.splitlines():
             if crop.find("crop=") > 0:
                 width, height, x, y = crop[crop.find("crop=") + 5 :].split(":")
-                found_crop_positions.append(
-                    [int(width), int(height), int(x), int(y)]
-                )
+                found_crop_positions.append([int(width), int(height), int(x), int(y)])
         result_counter = Counter(tuple(item) for item in found_crop_positions)
 
         return list(max(result_counter))

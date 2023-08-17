@@ -2,11 +2,11 @@ from pydantic.dataclasses import dataclass
 
 from stirling.codecs.audio.mp3 import StirlingMediaCodecAudioMP3
 from stirling.config import StirlingConfig
-from stirling.frameworks.ffmpeg.constants import FFMpegCommandFlags as FC
+from stirling.frameworks.ffmpeg.constants import FFMpegCommandFlags as FCmd
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 
 
-@dataclass(kw_only=True)
+@dataclass
 class StirlingFFMpegMediaCodecAudioMP3(StirlingMediaCodecAudioMP3):
     framework: StirlingMediaFrameworkFFMpeg | None = None
 
@@ -14,11 +14,7 @@ class StirlingFFMpegMediaCodecAudioMP3(StirlingMediaCodecAudioMP3):
         super().__post_init__()
 
         if self.framework is None:
-            self._framework = StirlingMediaFrameworkFFMpeg()
-        else:
-            self._framework = self.framework
-
-        self.framework = self._framework.__class__.__name__
+            self.framework = StirlingMediaFrameworkFFMpeg()
 
         config_client = StirlingConfig()
         if (
@@ -38,7 +34,7 @@ class StirlingFFMpegMediaCodecAudioMP3(StirlingMediaCodecAudioMP3):
             self.encoder = default_encoder
 
     def _get_encoders(self, config_client):
-        all_encoders = self._framework.capabilities.codecs
+        all_encoders = self.framework.capabilities.codecs
 
         if self.encoders is None:
             self.encoders = []
@@ -51,13 +47,13 @@ class StirlingFFMpegMediaCodecAudioMP3(StirlingMediaCodecAudioMP3):
 
     def get(self):
         args = {
-            FC.AUDIO_CODEC: f"{self.encoder}",
-            FC.AUDIO_SAMPLE_RATE: self.sample_rate or None,
-            FC.AUDIO_CHANNEL_LAYOUT: "+".join(self.channel_layout)
+            FCmd.AUDIO_CODEC: f"{self.encoder}",
+            FCmd.AUDIO_SAMPLE_RATE: self.sample_rate or None,
+            FCmd.AUDIO_CHANNEL_LAYOUT: "+".join(self.channel_layout)
             if self.channel_layout
             else None,
-            FC.AUDIO_BITRATE: self.bitrate or None,
-            FC.CHANNEL_MAP: f"0:a:{self.stream}" if self.stream else None,
+            FCmd.AUDIO_BITRATE: self.bitrate or None,
+            FCmd.CHANNEL_MAP: f"0:a:{self.stream}" if self.stream else None,
         }
 
         return {k: v for k, v in args.items() if v is not None}

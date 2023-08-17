@@ -1,11 +1,14 @@
 from pydantic.dataclasses import dataclass
 
 from stirling.codecs.audio.base import StirlingMediaCodecAudioBase
-from stirling.codecs.base import StirlingMediaCodecEncodingMode as EncMode
+from stirling.codecs.base import (
+    StirlingMediaCodecEncodingMode as EncMode,
+    StirlingMediaCodec,
+)
 
 
 @dataclass
-class StirlingMediaCodecAudioMP3(StirlingMediaCodecAudioBase):
+class StirlingMediaCodecAudioMP3(StirlingMediaCodec, StirlingMediaCodecAudioBase):
     """MP3 audio codec."""
 
     name: str = "mp3"

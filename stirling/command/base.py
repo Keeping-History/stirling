@@ -1,4 +1,3 @@
-from dataclasses import field
 from enum import auto
 from pathlib import Path
 from typing import Dict, List
@@ -21,7 +20,7 @@ class StirlingCommandStatus(StrEnum):
     SUCCEEDED = auto()
 
 
-@dataclass(kw_only=True)
+@dataclass
 class StirlingCommand(StirlingClass):
     """StirlingCommand is the base class for command objects. These command
     objects will be converted into specific commands to run for

@@ -15,7 +15,9 @@ from typing import Dict, Tuple, Union
 from multipledispatch import dispatch
 from pydantic.dataclasses import dataclass
 
+from stirling.codecs.base import get_codec
 from stirling.config import StirlingConfig
+from stirling.containers.base import get_container
 from stirling.dependencies import StirlingDependency, StirlingDependencies
 from stirling.frameworks.base import (
     StirlingMediaFramework,
@@ -47,6 +49,26 @@ from stirling.frameworks.ffmpeg.probe import StirlingMediaFrameworkFFMpegProbe
 from stirling.frameworks.ffmpeg.version import check_ffmpeg_version
 from stirling.logger import get_job_logger
 
+ffmpeg_framework_global = None
+
+
+def get_ffmpeg_framework(
+    version: str | None = None,
+    binary_transcoder: str | None = None,
+    binary_probe: str | None = None,
+    dependencies: StirlingDependencies | None = None,
+    default_cmd_options: dict | None = None,
+    use_cached: bool = True,
+) -> "StirlingMediaFrameworkFFMpeg":
+    """Get the FFMpeg framework."""
+
+    global ffmpeg_framework_global
+    if ffmpeg_framework_global is None or use_cached is False:
+        ffmpeg_framework_global = StirlingMediaFrameworkFFMpeg(
+            version, binary_transcoder, binary_probe, dependencies, default_cmd_options
+        )
+    return ffmpeg_framework_global
+
 
 @dataclass
 class StirlingMediaFrameworkFFMpegOptions(StirlingMediaFrameworkOptions):
@@ -62,19 +84,14 @@ class StirlingMediaFrameworkFFMpegOptions(StirlingMediaFrameworkOptions):
         self.binary_transcoder = self.binary_transcoder or default_options.get(
             "binary_transcoder"
         )
-        self.binary_probe = self.binary_probe or default_options.get(
-            "binary_probe"
-        )
-        self.default_cmd_options = (
-            self.default_cmd_options
-            or default_options.get("default_cmd_options")
+        self.binary_probe = self.binary_probe or default_options.get("binary_probe")
+        self.default_cmd_options = self.default_cmd_options or default_options.get(
+            "default_cmd_options"
         )
         if self.dependencies is None:
             self.dependencies = StirlingDependencies()
             for dependency in default_options.get("dependencies"):
-                self.dependencies.add_dep(
-                    dep=StirlingDependency.from_dict(dependency)
-                )
+                self.dependencies.add_dep(dep=StirlingDependency.from_dict(dependency))
 
 
 @dataclass(kw_only=True)
@@ -104,17 +121,13 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
         self._binary_transcoder = self.options.dependencies.get(
             self.options.binary_transcoder
         )
-        self._binary_probe = self.options.dependencies.get(
-            self.options.binary_probe
-        )
+        self._binary_probe = self.options.dependencies.get(self.options.binary_probe)
 
         check_ffmpeg_version(self._binary_transcoder, self.options.version)
 
         self.capabilities = StirlingMediaFrameworkCapabilities(
             codecs=StirlingFFMpegCodecParser(self._binary_transcoder).get(),
-            containers=StirlingFFMpegContainerParser(
-                self._binary_transcoder
-            ).get(),
+            containers=StirlingFFMpegContainerParser(self._binary_transcoder).get(),
         )
 
         self.logger.info("FFMpeg Framework loaded.")
@@ -131,10 +144,9 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
         self, codec_name: str, container_extension: str
     ) -> bool:
         """Check if the codec and container are supported."""
-        codec_to_check = self.capabilities.get_codec_by_name(codec_name)
-        container_to_check = self.capabilities.get_container_by_extension(
-            container_extension
-        )
+
+        codec_to_check = get_codec(codec_name)
+        container_to_check = get_container(container_extension)
 
         # TODO: Currently, we don't have a table of supported codecs to containers.
         # For now, just return True.
@@ -233,6 +245,4 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
         time_start: str | int | float,
         time_end: str | int | float,
     ) -> Dict[str, str]:
-        raise NotImplementedError(
-            "Trimming is not supported for this stream type."
-        )
+        raise NotImplementedError("Trimming is not supported for this stream type.")

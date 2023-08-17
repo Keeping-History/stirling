@@ -4,11 +4,11 @@ The core Stirling module, holding all the standard class definitions,
 helper functions and variables we need.
 """
 
+import inspect
 from abc import ABC
+from dataclasses import asdict
 
 from pydantic.dataclasses import dataclass
-
-import inspect
 
 
 @dataclass
@@ -20,9 +20,6 @@ class StirlingClass(ABC):
     Author's Note: If I'm being completely honest, I really wanted all
     the classes to inherit from here so that I could diagram them more easily.
     """
-
-    def __post_init__(self):
-        self._catch_errors()
 
     def _catch_errors(self):
         def catch_function_error(f):
@@ -43,3 +40,6 @@ class StirlingClass(ABC):
             ) or inspect.isbuiltin(method):
                 continue
             setattr(self, name, catch_function_error(method))
+
+    def get_attribute_names(self):
+        return list(asdict(self).keys())

@@ -20,7 +20,7 @@ def crop_w_h_x_y(
 ) -> Dict[str, str]:
     """Crop the video to a specific width, height, and starting position."""
     return {
-        f"{CmdFlags.VideoFilter}": f"crop="
+        f"{CmdFlags.VIDEO_FILTER}": f"crop="
         f"{CmdDims(width, height, start_x, start_y).get()}"
     }
 
@@ -35,7 +35,7 @@ def crop_ratio(ratio: Tuple[int, int] | str) -> Dict[str, str]:
     else:
         raise TypeError("Invalid ratio type.")
 
-    return {f"{CmdFlags.VideoFilter}": f"crop={CmdDims(width, height).get()}"}
+    return {f"{CmdFlags.VIDEO_FILTER}": f"crop={CmdDims(width, height).get()}"}
 
 
 def crop_ratio_x_y(
@@ -45,7 +45,7 @@ def crop_ratio_x_y(
     """Crop the video to a specific ratio/scale, with a starting
     position."""
     return {
-        f"{CmdFlags.VideoFilter}": f"crop=ih/{ratio[0] * ratio[1]}:ih:"
+        f"{CmdFlags.VIDEO_FILTER}": f"crop=ih/{ratio[0] * ratio[1]}:ih:"
         f"{position[0]}:{position[1]}"
     }
 
@@ -63,4 +63,4 @@ def crop(self, source: Path, stream: StirlingStreamVideo) -> Dict[str, str]:
 
     if len(box) != 4:
         raise ValueError("Could not auto-detect crop area.")
-    return {f"{CmdFlags.VideoFilter}": f"crop={CmdDims(*box).get()}"}
+    return {f"{CmdFlags.VIDEO_FILTER}": f"crop={CmdDims(*box).get()}"}

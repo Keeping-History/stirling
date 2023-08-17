@@ -1,17 +1,17 @@
 from pydantic.dataclasses import dataclass
 
-from stirling.codecs.audio.base import StirlingMediaCodecAudioBase
 from stirling.codecs.base import (
     StirlingMediaCodecEncodingMode as EncMode,
     StirlingMediaCodec,
 )
+from stirling.codecs.video.base import StirlingMediaCodecVideoBase
 
 
 @dataclass
-class StirlingMediaCodecAudioPCM(StirlingMediaCodec, StirlingMediaCodecAudioBase):
+class StirlingMediaCodecVideoAV1(StirlingMediaCodec, StirlingMediaCodecVideoBase):
     """PCM audio codec."""
 
-    name: str = "pcm"
-    description: str = "PCM (Pulse-code modulation)"
+    name: str = "av1"
+    description: str = "AOMedia Video 1 "
     mode: EncMode = EncMode.CBR
     sample_bit_depth: int | None = None

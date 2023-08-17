@@ -104,9 +104,7 @@ class StirlingDependency(StirlingClass):
         if not bin_full_path and self.url:
             # We didn't find the binary as it was passed, it wasn't in the bin/ directory,
             # and we didn't find it in the PATH. Let's download it, if a URL was provided.
-            bin_full_path = self._process_binary_package(
-                self._download_binary()
-            )
+            bin_full_path = self._process_binary_package(self._download_binary())
 
         # Check to see if we were able to find an absolute path to the executable,
         # verify it exists and has the appropriate permissions to run. If any of
@@ -143,10 +141,7 @@ class StirlingDependency(StirlingClass):
         """Check if the binary is cached."""
         # Check to see if we have a ./bin directory
 
-        return (
-            os.path.exists(self.bin_directory / self.binary)
-            and self.force_download
-        )
+        return os.path.exists(self.bin_directory / self.binary) and self.force_download
 
     def _download_binary(self) -> BytesIO:
         """Download the binary from the URL provided."""
@@ -188,9 +183,7 @@ class StirlingDependency(StirlingClass):
         temp_directory = Path(os.getcwd()) / "tmp" / str(uuid4())
         temp_directory.mkdir(parents=True, exist_ok=True)
 
-        location = handler_func[self.post_process](
-            stream, temp_directory, self.binary
-        )
+        location = handler_func[self.post_process](stream, temp_directory, self.binary)
 
         try:
             if self.move_all:
@@ -227,9 +220,7 @@ class StirlingDependency(StirlingClass):
         return location / binary
 
     @staticmethod
-    def _save_binary_stream(
-        stream: BytesIO, location: Path, binary: str
-    ) -> Path:
+    def _save_binary_stream(stream: BytesIO, location: Path, binary: str) -> Path:
         """Save a bytes stream to a binary file."""
 
         location_output = Path(location / "output")

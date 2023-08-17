@@ -1,26 +1,60 @@
+import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
-from dataclasses_json import dataclass_json
 from pydantic import BaseModel
 
+from stirling.codecs.audio.base import StirlingMediaCodecAudioBase
+from stirling.codecs.base import get_codec
 from stirling.command.base import StirlingCommand
+from stirling.config import StirlingConfig
+from stirling.containers.base import StirlingMediaContainer, get_container
 from stirling.job import StirlingJob
 from stirling.plugins.core import StirlingPlugin, StirlingPluginOptions
 
 
-@dataclass
-@dataclass_json
 class StirlingPluginAudioOptions(BaseModel, StirlingPluginOptions):
     source: str | Path
     source_stream: int
-    codec: str | None = None
-    container: str | None = None
+    plugin_name: str = "audio"
+    codec: str | StirlingMediaCodecAudioBase = None
+    container: str | StirlingMediaContainer = None
     output_directory: Path | str | None = None
     filename: str | None = None
     start_time: float | None = None
     end_time: float | None = None
-    plugin_name: str = "audio"
+
+    @classmethod
+    def merge_default_options(cls, options: dict):
+        class_default_options = {k: v.default for k, v in cls.__fields__.items()}
+        updated_options = (
+            StirlingConfig().get(
+                f"plugins/{cls.__fields__.get('plugin_name').default}/defaults"
+            )
+            or {}
+        )
+        class_default_options |= updated_options
+        class_default_options.update(options)
+        return class_default_options
+
+    @classmethod
+    def parse_options(cls, options: Any):
+        try:
+            match options:
+                case cls():
+                    pass
+                case dict():
+                    updated_options = cls.merge_default_options(options)
+                    options = cls.parse_obj(updated_options)
+                case _:
+                    parsed_options = json.loads(options)
+                    updated_options = cls.merge_default_options(parsed_options)
+                    options = cls.parse_obj(updated_options)
+        except Exception as e:
+            raise ValueError("Could not parse options.") from e
+
+        return options
 
 
 @dataclass(kw_only=True)
@@ -34,38 +68,24 @@ class StirlingPluginAudio(StirlingPlugin):
     def __post_init__(self):
         self._counter: int = 0
 
-        self.logger.debug(f"Initializing {self.name}")
-        self.logger.debug(f"Pre-parse options: {type(self.options)} - {self.options}")
+        self.logger.debug(f"Initializing plugin {self.name}")
+        self.options: StirlingPluginAudioOptions = (
+            StirlingPluginAudioOptions.parse_options(self.options)
+        )
 
-        self.options: StirlingPluginAudioOptions = self._parse_options(self.options)
+        if type(self.options.codec) is str:
+            self.options.codec = get_codec(self.options.codec)
 
-        self.logger.debug(f"Parsed options: {self.options}")
-
-    def _parse_options(
-        self, options: StirlingPluginAudioOptions | str | dict
-    ) -> StirlingPluginAudioOptions | None:
-        match self.options:
-            case StirlingPluginAudioOptions():
-                return options
-            case str():
-                return StirlingPluginAudioOptions.parse_raw(options)
-            case dict():
-                b = StirlingPluginAudioOptions.defaults("audio")
-                b.update(options)
-                print(b)
-                exit()
-                a = StirlingPluginAudioOptions.parse_obj(options)
-                a.merge_default_options(options)
-                return StirlingPluginAudioOptions.parse_obj(options)
-        self.logger.error(f"Could not parse options for {self.name}")
-        raise ValueError(f"Could not parse options for {self.name}")
+        if type(self.options.container) is str:
+            self.options.container = get_container(self.options.container)
 
     def cmds(self, job: StirlingJob):
         """Extract audio from a media file."""
         self._counter += 1
+
         return [
             StirlingCommand(
-                name=f"audio_{str(self._counter)}",
+                name=f"audio_{self._counter}",
                 dependency=job.framework.options.dependencies.get(job.framework.name),
                 expected_outputs=[self._cmd_output(job)],
             )
@@ -74,7 +94,7 @@ class StirlingPluginAudio(StirlingPlugin):
     def _cmd_output(self, job: StirlingJob):
         return Path(
             job.options.output_directory.resolve()
-            / f"audio_{str(self._counter)}.{self.options.container}"
+            / f"audio_{str(self._counter)}-{self.options.codec.output_name}.{self.options.container.file_extension}"
         )
 
     ## Extract Audio from file

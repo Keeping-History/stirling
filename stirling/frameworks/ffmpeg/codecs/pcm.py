@@ -2,11 +2,11 @@ from pydantic.dataclasses import dataclass
 
 from stirling.codecs.audio.pcm import StirlingMediaCodecAudioPCM
 from stirling.config import StirlingConfig
-from stirling.frameworks.ffmpeg.constants import FFMpegCommandFlags as FC
+from stirling.frameworks.ffmpeg.constants import FFMpegCommandFlags as FCmd
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 
 
-@dataclass(kw_only=True)
+@dataclass
 class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
     framework: StirlingMediaFrameworkFFMpeg | None = None
 
@@ -21,9 +21,7 @@ class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
         self.framework = self._framework.__class__.__name__
 
         config_client = StirlingConfig()
-        defaults = config_client.get(
-            "frameworks/ffmpeg/audio/encoders/pcm/defaults"
-        )
+        defaults = config_client.get("frameworks/ffmpeg/audio/encoders/pcm/defaults")
 
         default_encoder = config_client.get(
             "frameworks/ffmpeg/audio/encoders/pcm/defaults/encoder_library"
@@ -65,13 +63,13 @@ class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
 
     def get(self):
         args = {
-            FC.AUDIO_CODEC: f"{self.encoder}",
-            FC.AUDIO_SAMPLE_RATE: self.sample_rate,
-            FC.AUDIO_CHANNEL_LAYOUT: "+".join(self.channel_layout)
+            FCmd.AUDIO_CODEC: f"{self.encoder}",
+            FCmd.AUDIO_SAMPLE_RATE: self.sample_rate,
+            FCmd.AUDIO_CHANNEL_LAYOUT: "+".join(self.channel_layout)
             if self.channel_layout
             else None,
-            FC.AUDIO_BITRATE: self.bitrate,
-            FC.CHANNEL_MAP: f"0:a:{self.stream}" if self.stream else None,
+            FCmd.AUDIO_BITRATE: self.bitrate,
+            FCmd.CHANNEL_MAP: f"0:a:{self.stream}" if self.stream else None,
         }
 
         return {k: v for k, v in args.items() if v is not None}

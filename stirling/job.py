@@ -25,12 +25,12 @@ from stirling.encodings import StirlingJSONEncoder
 from stirling.errors import CommandError, MissingFrameworkError
 from stirling.frameworks.base import StirlingMediaFramework, StirlingMediaInfo
 from stirling.frameworks.get import available_frameworks, get_framework
+from stirling.logger import StirlingLoggerColors as LC
 from stirling.logger import (
     StirlingLoggerLevel,
     get_job_logger,
 )
 from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets
-from stirling.logger import StirlingLoggerColors as LC
 
 
 @dataclass_json
@@ -155,10 +155,8 @@ class StirlingJob(StirlingClass):
         we attempt to set up the job by doing things like creating the output
         folder, attempt to get the source file (either from a local or remote
         store, based on the Path scheme), and then probe the source file to
-        determine its metadata (like dimensions, bitrate, duration, etc).
+        determine its metadata (like dimensions, bitrate, duration, etc.).
         """
-
-        super().__post_init__()
 
         # Load the config client to get Job setting defaults
         self._config_client = StirlingConfig()
@@ -216,7 +214,8 @@ class StirlingJob(StirlingClass):
 
         # The source file is now ready for processing, and the job has finished loading.
         self._logger.info(
-            f"Job has successfully started up; source file {self.source} is ready for processing."
+            f"Job has successfully started up; "
+            f"source file {self.source} is ready for processing."
         )
 
         self.write()
@@ -230,7 +229,7 @@ class StirlingJob(StirlingClass):
         self.time_end = datetime.now()
         self.duration = (self.time_end - self.time_start).total_seconds()
         self._logger.info(
-            f"Ending job {self.id} at {self.time_end},"
+            f"Ending job {self.id} at {self.time_end}, "
             f"total duration: {self.duration}"
         )
         # if self.options.log_level == StirlingLoggerLevel.DEBUG:

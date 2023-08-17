@@ -26,8 +26,8 @@ def _get_framework():
 ffmpeg_probe_dependency: StirlingDependency = _get_framework().dependencies.get(
     "ffprobe"
 )
-ffmpeg_transcoder_dependency: StirlingDependency = (
-    _get_framework().dependencies.get("ffmpeg")
+ffmpeg_transcoder_dependency: StirlingDependency = _get_framework().dependencies.get(
+    "ffmpeg"
 )
 
 video_file_media_info = _get_framework().probe(source=test_video_file)

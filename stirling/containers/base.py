@@ -4,6 +4,12 @@ from stirling.codecs.base import StirlingMediaCodec
 from stirling.core import StirlingClass
 
 
+def get_container(container_name: str):
+    for container in StirlingMediaContainer.__subclasses__():
+        if container.name == container_name:
+            return container
+
+
 @dataclass
 class StirlingMediaContainer(StirlingClass):
     """The base class for a container object. Containers are file formats
@@ -14,7 +20,7 @@ class StirlingMediaContainer(StirlingClass):
         name (str): The name, or description, of the container.
         file_extension (str): The file extension of the container.
         file_mime_type (str): The MIME type of the container.
-        supported_codecs (list[[StirlingMediaCodec] | None): A list of
+        supported_codecs (list[StirlingMediaCodec] | None): A list of
             codecs that are supported by the container.
     """
 

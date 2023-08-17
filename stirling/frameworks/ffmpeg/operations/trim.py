@@ -11,7 +11,7 @@ def trim_start_end(
 ) -> Dict[str, str]:
     """Trim the media file to a specific start and end time."""
     return {
-        CmdFlags.StartTime: f"{start}",
-        CmdFlags.EndTime: f"{end}",
-        CmdFlags.AccurateSeek: True,
+        CmdFlags.START_TIME: f"{start}",
+        CmdFlags.END_TIME: f"{end}",
+        CmdFlags.ACCURATE_SEEK: True,
     }

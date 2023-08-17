@@ -1,11 +1,10 @@
 import pathlib
 from abc import ABC, abstractmethod
-from dataclasses import field, asdict
+from dataclasses import field
 from typing import List
 
 from pydantic.dataclasses import dataclass
 
-from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
 from stirling.logger import get_job_logger, StirlingJobLogger
 
@@ -28,37 +27,16 @@ class StirlingPluginAssets(StirlingClass):
     path: pathlib.Path | None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class StirlingPluginOptions(StirlingClass):
     """The options for a plugin."""
 
     plugin_name: str
 
-    def merge_default_options(self, options: dict):
-        updated_options = self.default_options("audio")
-        updated_options.update(options)
-        return updated_options
-
-    @staticmethod
-    def defaults(plugin_name: str):
-        config_path = f"plugins/{plugin_name}/defaults"
-        return StirlingConfig().get(config_path) or {}
-
-    def get_attribute_names(self):
-        return list(self._to_dict().keys())
-
-    def _to_dict(self):
-        return {k: str(v) for k, v in asdict(self).items()}
-
-    @classmethod
-    def _from_str(cls, options_dict: dict):
-        mytype = type(cls)
-        print(mytype)
-
 
 @dataclass(kw_only=True)
 class StirlingPlugin(StirlingClass, ABC):
-    """StirlingPlugin is the base class for all plugins.
+    """StirlingPlugin is the base class fxor all plugins.
 
     Any plugin class definition should use this as its parent class.
 
@@ -79,15 +57,15 @@ class StirlingPlugin(StirlingClass, ABC):
     def cmds(self, job):
         """Returns a list of commands to be run by the plugin.
 
-        Commands should be sorted so that, if one command requires the output of another,
-        it should (obviously) be run after.
+        Commands should be sorted so that, if one command requires the output of
+        another, it should (obviously) be run after.
 
         Returns:
             list: A list of commands to be run by the plugin.
         """
-
         ...
 
+    # TODO: Do we need this still?
     # @abstractmethod
     # def outputs(self, job):
     #     """Returns a list of the expected outputs of the plugin."""

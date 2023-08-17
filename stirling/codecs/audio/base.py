@@ -6,8 +6,14 @@ from stirling.codecs.base import StirlingMediaCodec
 from stirling.config import StirlingConfig
 
 
+def get_audio_codec(codec_name: str):
+    for codec in StirlingMediaCodec.__subclasses__():
+        if codec.name == codec_name:
+            return codec
+
+
 @dataclass
-class StirlingMediaCodecAudioBase(StirlingMediaCodec):
+class StirlingMediaCodecAudioBase:
     sample_rate: int | None = None
     channel_layout: List | None = None
     bitrate: int | None = None
@@ -31,9 +37,7 @@ class StirlingMediaCodecAudioBase(StirlingMediaCodec):
                     (
                         f"co-{self.encoder}" if self.encoder else None,
                         f"br-{str(self.bitrate)}" if self.bitrate else None,
-                        f"sr-{str(self.sample_rate)}"
-                        if self.sample_rate
-                        else None,
+                        f"sr-{str(self.sample_rate)}" if self.sample_rate else None,
                         f"ch-{len(self.channel_layout)}"
                         if self.channel_layout
                         else None,

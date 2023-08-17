@@ -77,14 +77,10 @@ class StirlingConfig(StirlingClass):
         return path_converted_dict
 
     def _get_paths_for_config_files(self):
-        return list(
-            Path(self._directory).rglob(f"*.{self._config_file_format}")
-        )
+        return list(Path(self._directory).rglob(f"*.{self._config_file_format}"))
 
     def _get_object_path_as_array(self, file_path):
-        relative_parent_directory = os.path.relpath(
-            file_path.parent, self._directory
-        )
+        relative_parent_directory = os.path.relpath(file_path.parent, self._directory)
 
         return (
             [file_path.stem]
@@ -110,8 +106,6 @@ class StirlingConfig(StirlingClass):
             loaded_json = json.load(open(file_path))
 
         except Exception as exc:
-            raise IOError(
-                f"Could not load config file for {file_path}."
-            ) from exc
+            raise IOError(f"Could not load config file for {file_path}.") from exc
 
         return loaded_json

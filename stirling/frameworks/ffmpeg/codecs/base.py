@@ -122,9 +122,7 @@ class StirlingFFMpegCodecParser(StirlingClass):
             for lib in libraries
         ]
 
-    def _get_codec_libraries(
-        self, row: str
-    ) -> List[StirlingMediaInfoCodecLibrary]:
+    def _get_codec_libraries(self, row: str) -> List[StirlingMediaInfoCodecLibrary]:
         """Get the particular codec libraries, and their encode/decode status,
         for a given codec."""
 
@@ -175,9 +173,7 @@ class StirlingFFMpegCodecParser(StirlingClass):
             raise ValueError("Unable to get supported codecs from FFMpeg.")
 
         lines = list(
-            filter(
-                None, cmd_output[cmd_output.find("------\n") + 7 :].split("\n")
-            )
+            filter(None, cmd_output[cmd_output.find("------\n") + 7 :].split("\n"))
         )
         for row in lines:
             name, libraries, description = (

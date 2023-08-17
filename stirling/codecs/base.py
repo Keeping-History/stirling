@@ -6,6 +6,12 @@ from strenum import StrEnum
 from stirling.core import StirlingClass
 
 
+def get_codec(codec_name: str):
+    for codec in StirlingMediaCodec.__subclasses__():
+        if codec.name == codec_name:
+            return codec
+
+
 @dataclass
 class StirlingMediaCodec(StirlingClass):
     name: str
@@ -37,8 +43,3 @@ class StirlingMediaCodecQualityLevelName(StrEnum):
     low = StirlingMediaCodecQualityLevel.level0
     medium = StirlingMediaCodecQualityLevel.level5
     high = StirlingMediaCodecQualityLevel.level9
-
-
-@dataclass
-class StirlingMediaCodecVideoBase(StirlingClass):
-    name: str
