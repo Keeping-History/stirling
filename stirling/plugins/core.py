@@ -1,12 +1,63 @@
+import json
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import field
-from typing import List
+from typing import List, Any
+from pathlib import Path
+import os
 
 from pydantic.dataclasses import dataclass
 
+from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
 from stirling.logger import get_job_logger, StirlingJobLogger
+from pydantic import BaseModel
+
+
+def load_plugins(directory: str | Path | None = None):
+    """Load all plugins."""
+
+    if directory is None:
+        directory = os.path.dirname(Path(__file__).absolute())
+
+    if isinstance(directory, str):
+        directory = Path(directory)
+
+    # Get the list of directories in the plugins directory.
+    # We only want directories and ones that are properly named
+    # (i.e. don't start with an underscore). We also want to make
+    # sure there is a `core.py` file in the directory.
+    plugin_directories = [
+        item
+        for item in list(
+            filter(
+                lambda item: not item.startswith("_")
+                and not item.endswith(".py")
+                and Path(directory / item / "core.py").exists(),
+                os.listdir(directory),
+            )
+        )
+    ]
+
+    # Attempt to dynamically import the plugins and initialize them with their
+    # default options.
+    loaded_plugins = []
+
+    for plugin in plugin_directories:
+        a = __import__(
+            f"stirling.plugins.{plugin}.core", fromlist=["get_plugin"]
+        ).get_plugin()
+        print(dir(a), a.__abstractmethods__)
+
+    try:
+        return [
+            __import__(
+                f"stirling.plugins.{plugin}.core", fromlist=["get_plugin"]
+            ).get_plugin()
+            for plugin in plugin_directories
+        ]
+    except Exception as e:
+        raise ImportError("Could not load plugins.") from e
 
 
 @dataclass
@@ -27,11 +78,51 @@ class StirlingPluginAssets(StirlingClass):
     path: pathlib.Path | None
 
 
-@dataclass(kw_only=True)
-class StirlingPluginOptions(StirlingClass):
+class StirlingPluginOptions(BaseModel, StirlingClass):
     """The options for a plugin."""
 
     plugin_name: str
+    source: str | Path | None = None
+    source_stream: int | None = None
+
+    @classmethod
+    def get_default_options(cls):
+        class_default_options = {k: v.default for k, v in cls.__fields__.items()}
+        updated_options = (
+            StirlingConfig().get(
+                f"plugins/{cls.__fields__.get('plugin_name').default}/defaults"
+            )
+            or {}
+        )
+        class_default_options |= updated_options
+        return class_default_options
+
+    @classmethod
+    def merge_default_options(cls, options: dict):
+        merge_default_options = cls.get_default_options()
+        merge_default_options.update(options)
+        return merge_default_options
+
+    @classmethod
+    def parse_options(cls, options: Any):
+        print(cls.__fields__)
+        try:
+            match options:
+                case cls():
+                    pass
+                case dict():
+                    updated_options = cls.merge_default_options(options)
+                    options = cls.parse_obj(updated_options)
+                case None:
+                    options = cls.parse_obj(cls.get_default_options())
+                case _:
+                    parsed_options = json.loads(options)
+                    updated_options = cls.merge_default_options(parsed_options)
+                    options = cls.parse_obj(updated_options)
+        except Exception as e:
+            raise ValueError("Could not parse options.") from e
+
+        return options
 
 
 @dataclass(kw_only=True)

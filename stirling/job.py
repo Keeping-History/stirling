@@ -30,7 +30,7 @@ from stirling.logger import (
     StirlingLoggerLevel,
     get_job_logger,
 )
-from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets
+from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets, load_plugins
 
 
 @dataclass_json
@@ -220,6 +220,8 @@ class StirlingJob(StirlingClass):
 
         self.write()
 
+        self.plugins = load_plugins()
+
     def close(self) -> None:
         """Close out the job and update its metadata"""
 
@@ -232,8 +234,8 @@ class StirlingJob(StirlingClass):
             f"Ending job {self.id} at {self.time_end}, "
             f"total duration: {self.duration}"
         )
-        # if self.options.log_level == StirlingLoggerLevel.DEBUG:
-        #     self._logger.debug("Job Definition:", self)
+        if self.options.log_level == StirlingLoggerLevel.VERBOSE:
+            self._logger.debug("Job Definition:", self)
 
     def run(self) -> None:
         """Run all the commands in the job."""
@@ -278,10 +280,15 @@ class StirlingJob(StirlingClass):
             plugin_name (str): The name of the plugin to get
         """
         return_plugin = None
-        for plugin in self.get_plugins:
+        for plugin in self.get_plugins():
             if plugin.name == plugin_name:
                 return_plugin = plugin
         return return_plugin
+
+    def get_plugins(self) -> List[StirlingPlugin]:
+        """Get all the plugins for the job."""
+
+        return self.plugins
 
     def get_plugin_assets(self, plugin_name: str) -> List[StirlingPluginAssets] | None:
         """Get all the assets of a plugin.

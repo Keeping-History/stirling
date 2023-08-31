@@ -19,21 +19,22 @@ if __name__ == "__main__":
     my_job = StirlingJob(
         source=input_file,
     )
+    print(my_job.plugins)
 
-    codecs = [
-        StirlingFFMpegMediaCodecAudioMP3(stream=1, framework=my_job.framework),
-        StirlingFFMpegMediaCodecAudioPCM(stream=2, framework=my_job.framework),
-    ]
-
-    audio_plugin = StirlingPluginAudio(
-        options={
-            "source": input_file,
-            "source_stream": 0,
-        }
-    )
-
-    print(audio_plugin.options)
-
+    # codecs = [
+    #     StirlingFFMpegMediaCodecAudioMP3(stream=1, framework=my_job.framework),
+    #     StirlingFFMpegMediaCodecAudioPCM(stream=2, framework=my_job.framework),
+    # ]
+    #
+    # audio_plugin = StirlingPluginAudio(
+    #     options={
+    #         "source": input_file,
+    #         "source_stream": 0,
+    #     }
+    # )
+    #
+    # print(audio_plugin.options)
+    #
     # # Add plugins to the job
     # my_job.add_plugins(
     #     video.StirlingPluginVideo(),

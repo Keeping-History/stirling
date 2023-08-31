@@ -31,7 +31,7 @@ def overwrite(overwrite_value: bool) -> str:
     return "-y" if overwrite_value else "-n"
 
 
-class LogLevel(LowercaseStrEnum):
+class FFMpegLogLevel(LowercaseStrEnum):
     QUIET = auto()
     PANIC = auto()
     FATAL = auto()
@@ -44,7 +44,7 @@ class LogLevel(LowercaseStrEnum):
 
 
 def log_level(
-    level: LogLevel,
+    level: FFMpegLogLevel = FFMpegLogLevel.INFO,
     hide_repeated_messages: bool = False,
 ) -> str:
     options: str = ""

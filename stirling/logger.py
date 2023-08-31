@@ -23,6 +23,7 @@ class StirlingLoggerLevel(int, Enum):
     WARNING = 3
     INFO = 4
     DEBUG = 5
+    VERBOSE = 10
 
 
 class StirlingLoggerColors:

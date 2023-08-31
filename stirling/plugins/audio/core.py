@@ -14,9 +14,13 @@ from stirling.job import StirlingJob
 from stirling.plugins.core import StirlingPlugin, StirlingPluginOptions
 
 
-class StirlingPluginAudioOptions(BaseModel, StirlingPluginOptions):
-    source: str | Path
-    source_stream: int
+def get_plugin():
+    return StirlingPluginAudio
+
+
+class StirlingPluginAudioOptions(StirlingPluginOptions):
+    source: str | Path | None = None
+    source_stream: int | None = None
     plugin_name: str = "audio"
     codec: str | StirlingMediaCodecAudioBase = None
     container: str | StirlingMediaContainer = None
@@ -25,37 +29,6 @@ class StirlingPluginAudioOptions(BaseModel, StirlingPluginOptions):
     start_time: float | None = None
     end_time: float | None = None
 
-    @classmethod
-    def merge_default_options(cls, options: dict):
-        class_default_options = {k: v.default for k, v in cls.__fields__.items()}
-        updated_options = (
-            StirlingConfig().get(
-                f"plugins/{cls.__fields__.get('plugin_name').default}/defaults"
-            )
-            or {}
-        )
-        class_default_options |= updated_options
-        class_default_options.update(options)
-        return class_default_options
-
-    @classmethod
-    def parse_options(cls, options: Any):
-        try:
-            match options:
-                case cls():
-                    pass
-                case dict():
-                    updated_options = cls.merge_default_options(options)
-                    options = cls.parse_obj(updated_options)
-                case _:
-                    parsed_options = json.loads(options)
-                    updated_options = cls.merge_default_options(parsed_options)
-                    options = cls.parse_obj(updated_options)
-        except Exception as e:
-            raise ValueError("Could not parse options.") from e
-
-        return options
-
 
 @dataclass(kw_only=True)
 class StirlingPluginAudio(StirlingPlugin):
@@ -63,7 +36,7 @@ class StirlingPluginAudio(StirlingPlugin):
 
     name: str = "audio"
     depends_on = None
-    options: StirlingPluginAudioOptions | str | dict
+    options: StirlingPluginAudioOptions | str | dict | None = None
 
     def __post_init__(self):
         self._counter: int = 0

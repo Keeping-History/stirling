@@ -20,7 +20,6 @@ class StirlingCommandStatus(StrEnum):
     SUCCEEDED = auto()
 
 
-@dataclass
 class StirlingCommand(StirlingClass):
     """StirlingCommand is the base class for command objects. These command
     objects will be converted into specific commands to run for
