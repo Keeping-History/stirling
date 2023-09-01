@@ -2,7 +2,6 @@ from enum import auto
 from pathlib import Path
 from typing import Dict, List
 
-from pydantic.dataclasses import dataclass
 from strenum import StrEnum
 
 from stirling.core import StirlingClass
@@ -18,6 +17,12 @@ class StirlingCommandStatus(StrEnum):
     CANCELLED = auto()
     FAILED = auto()
     SUCCEEDED = auto()
+
+
+class StirlingCommandTarget(StrEnum):
+    """StirlingCommandStatus is the status of a current command."""
+
+    LOCAL = auto()
 
 
 class StirlingCommand(StirlingClass):
@@ -63,6 +68,7 @@ class StirlingCommand(StirlingClass):
     log: str | None = None
     status: StirlingCommandStatus = StirlingCommandStatus.RECEIVED
     priority: int = 0
+    target: StirlingCommandTarget = StirlingCommandTarget.LOCAL
 
     def receive(self) -> StirlingCommandStatus:
         """
@@ -105,3 +111,63 @@ class StirlingCommand(StirlingClass):
         """
         self.status = StirlingCommandStatus.SUCCEEDED
         return self.status
+
+
+class StirlingCommandQueue(StirlingClass):
+    commands: List[StirlingCommand] = []
+    target: StirlingCommandTarget = StirlingCommandTarget.LOCAL
+
+    def status(self):
+        if len(self.commands) == 0:
+            # If the command queue is empty, then we set it as received.
+            return StirlingCommandStatus.RECEIVED
+        elif any(c.status == StirlingCommandStatus.FAILED for c in self.commands):
+            # If any command fails, then the whole queue should be considered as failed also.
+            return StirlingCommandStatus.FAILED
+        elif any(c.status == StirlingCommandStatus.CANCELLED for c in self.commands):
+            # If any command is cancelled, then the whole queue should be considered as cancelled also.
+            return StirlingCommandStatus.CANCELLED
+        elif all(c.status == StirlingCommandStatus.SUCCEEDED for c in self.commands):
+            # The queue is successful only when all commands succeed.
+            return StirlingCommandStatus.SUCCEEDED
+        elif any(c.status == StirlingCommandStatus.RUNNING for c in self.commands):
+            # If any command is running, and none of the jobs have been cancelled or failed, then the queue is running.
+            return StirlingCommandStatus.RUNNING
+        else:
+            # The default status of a queue is queued.
+            return StirlingCommandStatus.QUEUED
+
+    def get(self, command: int | List[str] | str):
+        if isinstance(command, int):
+            return self.commands[command]
+        if isinstance(command, str):
+            return [c for c in self.commands if c.name == command]
+        if isinstance(command, list):
+            items = []
+            for c in command:
+                items.extend([c for c in self.commands if c.name == command])
+            return items
+
+    def add(self, command: StirlingCommand | List[StirlingCommand]):
+        if isinstance(command, list):
+            for c in command:
+                c.queued()
+            self.commands.extend(command)
+            return
+        command.queued()
+        self.commands.append(command)
+
+    def parse(self, command: int | List[str] | str):
+        command = self.get(command)
+
+    def sort(self):
+        self.commands.sort(key=lambda x: x.priority, reverse=True)
+
+    def run(self, index: int | List[int] | None = None):
+        self.sort()
+        if isinstance(index, int):
+            return self.commands[index].run(self.target)
+        if isinstance(index, list):
+            return [self.commands[c].run(self.target) for c in index]
+
+        return [c.run(self.target) for c in self.commands]
