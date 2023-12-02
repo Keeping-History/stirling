@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import copyfile
 from subprocess import getstatusoutput
 from textwrap import shorten
-from typing import List, Union, Any
+from typing import List, Union
 from urllib.parse import urlsplit
 from uuid import UUID, uuid4
 
@@ -210,8 +210,7 @@ class StirlingJob(StirlingClass):
             raise MissingFrameworkError
 
         # Get and initialize the framework.
-        framework_class = get_framework(self.options.framework)
-        self.framework = framework_class(source=self.source)
+        self.framework = get_framework(self.options.framework)(source=self.source)
 
         # Probe the source file
         self.media_info = self.framework.probe(source=str(self.source))

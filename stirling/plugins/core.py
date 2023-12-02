@@ -1,21 +1,21 @@
 import json
+import os
 import pathlib
 from abc import ABC, abstractmethod
 from dataclasses import field
-from typing import List, Any
 from pathlib import Path
-import os
+from typing import List, Any
 
+from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 from stirling.config import StirlingConfig
 from stirling.core import StirlingClass
 from stirling.logger import get_job_logger, StirlingJobLogger
-from pydantic import BaseModel
 
 
 def load_plugins(
-    options: List["StirlingPluginOptions" | dict | str],
+    options: "List[StirlingPluginOptions | dict | str]",
     directory: str | Path | None = None,
 ):
     """Load all plugins."""

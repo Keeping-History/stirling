@@ -254,3 +254,8 @@ class StirlingMediaFramework(StirlingClass, ABC):
     def codec_container_supported(self, codec: str, container: str) -> bool:
         """Check if the codec and container are supported."""
         ...
+
+    @abstractmethod
+    def get_dependency(self) -> Path:
+        """Get the path to the binary dependency."""
+        return self.dependencies.get(self.name)

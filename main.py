@@ -1,12 +1,7 @@
 import shutil
 from pathlib import Path
 
-from stirling.codecs.base import StirlingMediaCodec
-from stirling.containers.base import StirlingMediaContainer
-from stirling.frameworks.ffmpeg.codecs.mp3 import StirlingFFMpegMediaCodecAudioMP3
-from stirling.frameworks.ffmpeg.codecs.pcm import StirlingFFMpegMediaCodecAudioPCM
 from stirling.job import StirlingJob
-from stirling.plugins.audio.core import StirlingPluginAudio, StirlingPluginAudioOptions
 
 if __name__ == "__main__":
     # Remove the output directory every time, for testing.
@@ -19,21 +14,30 @@ if __name__ == "__main__":
     my_job = StirlingJob(
         source=input_file,
     )
-    print(my_job.plugins)
+
+    print(my_job.framework.trim(1, 2, my_job.media_info.get_preferred_stream("audio")))
 
     # codecs = [
-    #     StirlingFFMpegMediaCodecAudioMP3(stream=1, framework=my_job.framework),
-    #     StirlingFFMpegMediaCodecAudioPCM(stream=2, framework=my_job.framework),
+    #     StirlingFFMpegMediaCodecAudioMP3(framework=my_job.framework),
+    #     StirlingFFMpegMediaCodecAudioPCM(framework=my_job.framework),
+    # ]
+    #
+    # containers = [
+    #     StirlingMediaContainerAudioMP3(),
+    #     StirlingMediaContainerAudioWAV(),
     # ]
     #
     # audio_plugin = StirlingPluginAudio(
     #     options={
     #         "source": input_file,
     #         "source_stream": 0,
+    #         "codec": codecs[0],
+    #         "container": containers[0],
     #     }
     # )
     #
-    # print(audio_plugin.options)
+    #
+    # print(audio_plugin.cmds(my_job))
     #
     # # Add plugins to the job
     # my_job.add_plugins(

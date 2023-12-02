@@ -1,15 +1,11 @@
-import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-
-from pydantic import BaseModel
 
 from stirling.codecs.audio.base import StirlingMediaCodecAudioBase
 from stirling.codecs.base import get_codec
 from stirling.command.base import StirlingCommand
-from stirling.config import StirlingConfig
 from stirling.containers.base import StirlingMediaContainer, get_container
+from stirling.frameworks.base import StirlingStream
 from stirling.job import StirlingJob
 from stirling.plugins.core import StirlingPlugin, StirlingPluginOptions
 
@@ -41,6 +37,7 @@ class StirlingPluginAudio(StirlingPlugin):
     def __post_init__(self):
         super().__post_init__()
         self._counter: int = 0
+        self._commands = []
 
         self.options: StirlingPluginAudioOptions = (
             StirlingPluginAudioOptions.parse_options(self.options)
@@ -56,13 +53,7 @@ class StirlingPluginAudio(StirlingPlugin):
         """Extract audio from a media file."""
         self._counter += 1
 
-        return [
-            StirlingCommand(
-                name=f"audio_{self._counter}",
-                dependency=job.framework.options.dependencies.get(job.framework.name),
-                expected_outputs=[self._cmd_output(job)],
-            )
-        ]
+        return self._commands
 
     def _cmd_output(self, job: StirlingJob):
         return Path(
@@ -70,15 +61,34 @@ class StirlingPluginAudio(StirlingPlugin):
             / f"audio_{str(self._counter)}-{self.options.codec.output_name}.{self.options.container.file_extension}"
         )
 
-    ## Extract Audio from file
-    # def cmd(self):
+    def _add_command(self, command: StirlingCommand):
+        self._counter += 1
+        self._commands.append(
+                command
+        )
+
+    def trim(self, job: StirlingJob, stream: StirlingStream):
+        """Trim audio from a media file."""
+
+        # print(my_job.framework.trim(1, 2, my_job.media_info.get_preferred_stream("audio")))
+
+        self._add_command(
+                StirlingCommand(
+                    name=f"audio_{self._counter}",
+                    dependency=job.framework.options.dependencies.get(job.framework.name),
+                    expected_outputs=[self._cmd_output(job)],
+                )
+        )
+
+    # # Extract Audio from file
+    # def cmd(self, job: StirlingJob):
     #     if (
-    #         self.audio_source_stream == -1
-    #         and self.plugin_name in job.media_info.preferred
-    #         and job.media_info.preferred[self.plugin_name] is not None
+    #         self.options.source_stream == -1
+    #         and self.name in job.media_info.preferred
+    #         and job.media_info.preferred[self.name] is not None
     #     ):
-    #         self.audio_source_stream = job.media_info.preferred[
-    #             self.plugin_name
+    #         self.options.source_stream = job.media_info.preferred[
+    #             self.name
     #         ]
     #
     #     # Set the options to extract audio from the source file.
@@ -87,19 +97,19 @@ class StirlingPluginAudio(StirlingPlugin):
     #         "y": True,
     #         "loglevel": "quiet",
     #         "i": job.media_info.source,
-    #         "f": self.audio_output_format[0],
-    #         "map": "0:a:{}".format(self.audio_source_stream),
+    #         "f": self.options.container.file_extension,
+    #         "map": "0:a:{}".format(self.options.source_stream),
     #     }
     #
-    #     output_directory = job.output_directory / self.plugin_name
+    #     output_directory = job.options.output_annotations_directory / self.name
     #     output_directory.mkdir(parents=True, exist_ok=True)
     #     output_file = output_directory / (
-    #         "source.{}".format(self.audio_output_format[1])
+    #         "source.{}".format(self.options.container.file_extension)
     #     )
     #
-    #     job.commands.append(
-    #         definitions.StrilingCmd(
-    #             plugin_name=self.plugin_name,
+    #     return StirlingCommand(
+    #             name=self.name,
+    #             dependency=job.framework.dependencies.get(job.framework.name),
     #             command="ffmpeg {} {}".format(
     #                 args.ffmpeg_unparser.unparse(**options), output_file
     #             ),
