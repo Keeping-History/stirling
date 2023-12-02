@@ -25,7 +25,7 @@ class StirlingPluginVideoOptions(StirlingPluginOptions):
 
 
 def get_plugin():
-    return StirlingPluginVideo
+    return StirlingPluginVideo()
 
 
 @dataclass(kw_only=True)
@@ -37,9 +37,9 @@ class StirlingPluginVideo(StirlingPlugin):
     options: StirlingPluginVideoOptions | str | dict | None = None
 
     def __post_init__(self):
+        super().__post_init__()
         self._counter: int = 0
 
-        self.logger.debug(f"Initializing plugin {self.name}")
         self.options: StirlingPluginVideoOptions = (
             StirlingPluginVideoOptions.parse_options(self.options)
         )

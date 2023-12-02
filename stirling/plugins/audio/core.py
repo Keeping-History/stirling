@@ -15,7 +15,7 @@ from stirling.plugins.core import StirlingPlugin, StirlingPluginOptions
 
 
 def get_plugin():
-    return StirlingPluginAudio
+    return StirlingPluginAudio()
 
 
 class StirlingPluginAudioOptions(StirlingPluginOptions):
@@ -39,9 +39,9 @@ class StirlingPluginAudio(StirlingPlugin):
     options: StirlingPluginAudioOptions | str | dict | None = None
 
     def __post_init__(self):
+        super().__post_init__()
         self._counter: int = 0
 
-        self.logger.debug(f"Initializing plugin {self.name}")
         self.options: StirlingPluginAudioOptions = (
             StirlingPluginAudioOptions.parse_options(self.options)
         )

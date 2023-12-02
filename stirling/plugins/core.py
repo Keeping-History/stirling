@@ -14,7 +14,10 @@ from stirling.logger import get_job_logger, StirlingJobLogger
 from pydantic import BaseModel
 
 
-def load_plugins(directory: str | Path | None = None):
+def load_plugins(
+    options: List["StirlingPluginOptions" | dict | str],
+    directory: str | Path | None = None,
+):
     """Load all plugins."""
 
     if directory is None:
@@ -41,23 +44,18 @@ def load_plugins(directory: str | Path | None = None):
 
     # Attempt to dynamically import the plugins and initialize them with their
     # default options.
-    loaded_plugins = []
-
-    for plugin in plugin_directories:
-        a = __import__(
-            f"stirling.plugins.{plugin}.core", fromlist=["get_plugin"]
-        ).get_plugin()
-        print(dir(a), a.__abstractmethods__)
-
     try:
-        return [
+        loaded_plugins = [
             __import__(
                 f"stirling.plugins.{plugin}.core", fromlist=["get_plugin"]
             ).get_plugin()
             for plugin in plugin_directories
         ]
+
     except Exception as e:
         raise ImportError("Could not load plugins.") from e
+
+    return loaded_plugins
 
 
 @dataclass
@@ -105,7 +103,6 @@ class StirlingPluginOptions(BaseModel, StirlingClass):
 
     @classmethod
     def parse_options(cls, options: Any):
-        print(cls.__fields__)
         try:
             match options:
                 case cls():
@@ -143,6 +140,9 @@ class StirlingPlugin(StirlingClass, ABC):
     assets: List[StirlingPluginAssets] | None = None
     priority: int = 0
     logger: StirlingJobLogger = field(default_factory=get_job_logger)
+
+    def __post_init__(self):
+        self.logger.debug(f"Initializing plugin {self.name}")
 
     @abstractmethod
     def cmds(self, job):

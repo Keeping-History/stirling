@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import copyfile
 from subprocess import getstatusoutput
 from textwrap import shorten
-from typing import List, Union
+from typing import List, Union, Any
 from urllib.parse import urlsplit
 from uuid import UUID, uuid4
 
@@ -30,7 +30,12 @@ from stirling.logger import (
     StirlingLoggerLevel,
     get_job_logger,
 )
-from stirling.plugins.core import StirlingPlugin, StirlingPluginAssets, load_plugins
+from stirling.plugins.core import (
+    StirlingPlugin,
+    StirlingPluginAssets,
+    load_plugins,
+    StirlingPluginOptions,
+)
 
 
 @dataclass_json
@@ -73,6 +78,7 @@ class StirlingJobOptions(StirlingClass):
     source_copy: bool | None = None
     log_level: StirlingLoggerLevel | int | None = None
     framework: str | None = None
+    plugins: List[StirlingPluginOptions] = field(default_factory=list)
 
 
 @dataclass_json
@@ -220,7 +226,7 @@ class StirlingJob(StirlingClass):
 
         self.write()
 
-        self.plugins = load_plugins()
+        self.plugins = load_plugins(self.options.plugins)
 
     def close(self) -> None:
         """Close out the job and update its metadata"""
