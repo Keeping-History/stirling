@@ -152,6 +152,13 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
         # For now, just return True.
         return True
 
+    def get_dependency(self, name: str | None = None) -> StirlingDependency:
+        match name:
+            case "binary_probe":
+                return self._binary_probe
+            case _:
+                return self._binary_transcoder
+
     @dispatch(int, int, StirlingStreamVideo)
     def resize(
         self, width: int, height: int, stream: StirlingStreamVideo

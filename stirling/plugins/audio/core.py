@@ -75,7 +75,7 @@ class StirlingPluginAudio(StirlingPlugin):
         self._add_command(
                 StirlingCommand(
                     name=f"audio_{self._counter}",
-                    dependency=job.framework.options.dependencies.get(job.framework.name),
+                    dependency=job.framework.get_dependency(),
                     expected_outputs=[self._cmd_output(job)],
                 )
         )

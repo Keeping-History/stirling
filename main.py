@@ -16,7 +16,7 @@ if __name__ == "__main__":
     )
 
     print(my_job.framework.trim(1, 2, my_job.media_info.get_preferred_stream("audio")))
-
+    print(my_job.framework.get_dependency())
     # codecs = [
     #     StirlingFFMpegMediaCodecAudioMP3(framework=my_job.framework),
     #     StirlingFFMpegMediaCodecAudioPCM(framework=my_job.framework),

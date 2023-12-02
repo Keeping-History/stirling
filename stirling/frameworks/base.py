@@ -256,6 +256,6 @@ class StirlingMediaFramework(StirlingClass, ABC):
         ...
 
     @abstractmethod
-    def get_dependency(self) -> Path:
+    def get_dependency(self, name: str | None = None) -> Path:
         """Get the path to the binary dependency."""
-        return self.dependencies.get(self.name)
+        ...
