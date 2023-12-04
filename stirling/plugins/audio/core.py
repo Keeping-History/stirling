@@ -6,7 +6,6 @@ from stirling.codecs.audio.base import StirlingMediaCodecAudioBase
 from stirling.codecs.base import get_codec
 from stirling.command.base import StirlingCommand
 from stirling.containers.base import StirlingMediaContainer, get_container
-from stirling.frameworks.base import StirlingStream
 from stirling.job import StirlingJob
 from stirling.plugins.core import StirlingPlugin, StirlingPluginOptions
 
@@ -77,7 +76,8 @@ class StirlingPluginAudio(StirlingPlugin):
                     ...
                 case _:
                     ...
-
+            print(self.options.codec)
+            result += self.options.codec.get()
             cmds.append(
                 StirlingCommand(
                     name=f"audio_{self._counter}",

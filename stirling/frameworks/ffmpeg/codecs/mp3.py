@@ -6,6 +6,9 @@ from stirling.frameworks.ffmpeg.constants import FFMpegCommandFlags as FCmd
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 
 
+def get_codec_library():
+    return StirlingFFMpegMediaCodecAudioMP3()
+
 @dataclass
 class StirlingFFMpegMediaCodecAudioMP3(StirlingMediaCodecAudioMP3):
     framework: StirlingMediaFrameworkFFMpeg | None = None

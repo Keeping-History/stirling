@@ -19,28 +19,27 @@ if __name__ == "__main__":
     my_job = StirlingJob(
         source=input_file,
     )
-    print(my_job.framework.codec())
-    exit()
-
-    codecs = [
-        StirlingFFMpegMediaCodecAudioMP3(framework=my_job.framework),
-        StirlingFFMpegMediaCodecAudioPCM(framework=my_job.framework),
-    ]
-
-    containers = [
-        StirlingMediaContainerAudioMP3(),
-        StirlingMediaContainerAudioWAV(),
-    ]
-
-    audio_plugin = StirlingPluginAudio()
+    # my_job.framework.get_codec("mp3")
     #
-    # print(audio_plugin.cmds(my_job))
+    # codecs = [
+    #     StirlingFFMpegMediaCodecAudioMP3(framework=my_job.framework),
+    #     StirlingFFMpegMediaCodecAudioPCM(framework=my_job.framework),
+    # ]
     #
-    # # Add plugins to the job.json
-    my_job.add_plugins(audio_plugin)
-    audio_plugin2 = my_job.plugins[0]
-    audio_plugin2.command("trim", {"time_start": 0, "time_end": 10})
-    audio_plugin2.cmds(my_job)
+    # containers = [
+    #     StirlingMediaContainerAudioMP3(),
+    #     StirlingMediaContainerAudioWAV(),
+    # ]
+    #
+    # audio_plugin = StirlingPluginAudio()
+    # #
+    # # print(audio_plugin.cmds(my_job))
+    # #
+    # # # Add plugins to the job.json
+    # my_job.add_plugins(audio_plugin)
+    # audio_plugin2 = my_job.plugins[0]
+    # audio_plugin2.command("trim", {"time_start": 0, "time_end": 10})
+    # audio_plugin2.cmds(my_job)
 
     #     video.StirlingPluginVideo(),
     #     audio.StirlingPluginAudio(),

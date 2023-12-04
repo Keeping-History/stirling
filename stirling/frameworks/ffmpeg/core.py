@@ -159,13 +159,8 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
             case _:
                 return self._binary_transcoder
 
-    def codec(self):
-        from stirling.frameworks.ffmpeg.codecs.pcm import (
-            StirlingFFMpegMediaCodecAudioPCM,
-        )
-
-        a = StirlingFFMpegMediaCodecAudioPCM().get()
-        return a
+    def get_codec(self, codec_name: str):
+        return [cdict for cdict in self.capabilities.codecs if cdict.name == codec_name]
 
     @dispatch(int, int, StirlingStreamVideo)
     def resize(

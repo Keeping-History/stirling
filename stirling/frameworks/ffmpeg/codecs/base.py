@@ -1,5 +1,7 @@
 import itertools
+import os
 import re
+from pathlib import Path
 from typing import List, Tuple
 
 from stirling.core import StirlingClass
@@ -46,9 +48,58 @@ class StirlingFFMpegFAudioFormatParser(StirlingClass):
         ]
 
 
+def load_codecs(
+    directory: str | Path | None = None,
+):
+    """Load all codec libararies."""
+
+    if directory is None:
+        directory = os.path.dirname(Path(__file__).absolute())
+
+    if isinstance(directory, str):
+        directory = Path(directory)
+
+    print(directory)
+
+    # Get the list of directories in the plugins directory.
+    # We only want directories and ones that are properly named
+    # (i.e. don't start with an underscore). We also want to make
+    # sure there is a `core.py` file in the directory.
+    library_directory = [
+        item
+        for item in list(
+            filter(
+                lambda item: not item.startswith("_")
+                and not item.startswith("base"),
+                os.listdir(directory),
+            )
+        )
+    ]
+
+    # Attempt to dynamically import the plugins and initialize them with their
+    # default options.
+    try:
+        loaded_libraries = [
+            __import__(
+                f"stirling.frameworks.ffmpeg.codecs." + plugin.replace('.py', ''), fromlist=["*"]
+            )
+            for plugin in library_directory
+        ]
+
+    except Exception as e:
+        raise ImportError("Could not load plugins.") from e
+
+    return loaded_libraries
+
 class StirlingFFMpegCodecParser(StirlingClass):
     def __init__(self, binary_transcoder: StirlingDependency):
         self._binary_transcoder = binary_transcoder
+
+        loaded_codecs = load_codecs()
+
+        for loaded_codec in loaded_codecs:
+            a = loaded_codec.get_codec_library()
+            print(a)
 
     @staticmethod
     def _get_codec_type(row: str) -> str:

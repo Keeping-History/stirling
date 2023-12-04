@@ -6,6 +6,9 @@ from stirling.frameworks.ffmpeg.constants import FFMpegCommandFlags as FCmd
 from stirling.frameworks.ffmpeg.core import StirlingMediaFrameworkFFMpeg
 
 
+def get_codec_library():
+    return StirlingFFMpegMediaCodecAudioPCM()
+
 @dataclass
 class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
     framework: StirlingMediaFrameworkFFMpeg | None = None
@@ -61,7 +64,7 @@ class StirlingFFMpegMediaCodecAudioPCM(StirlingMediaCodecAudioPCM):
 
         self.encoders = available_codecs
 
-    def get(self):
+    def gets(self):
         args = {
             FCmd.AUDIO_CODEC: f"{self.encoder}",
             FCmd.AUDIO_SAMPLE_RATE: self.sample_rate,
