@@ -97,7 +97,7 @@ class StirlingMediaFrameworkFFMpegOptions(StirlingMediaFrameworkOptions):
 @dataclass(kw_only=True)
 class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
     """StirlingMediaFrameworkFFMpeg is a class for using the `ffmpeg` Media
-    Framework to interact with media files
+    Framework to interact with media files.json
     and their metadata.
 
     When using any version of `ffmpeg`, please note: it is required to pass
@@ -158,6 +158,14 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
                 return self._binary_probe
             case _:
                 return self._binary_transcoder
+
+    def codec(self):
+        from stirling.frameworks.ffmpeg.codecs.pcm import (
+            StirlingFFMpegMediaCodecAudioPCM,
+        )
+
+        a = StirlingFFMpegMediaCodecAudioPCM().get()
+        return a
 
     @dispatch(int, int, StirlingStreamVideo)
     def resize(
@@ -248,8 +256,8 @@ class StirlingMediaFrameworkFFMpeg(StirlingMediaFramework):
     @dispatch((str, int, float), (str, int, float), StirlingStreamText)
     def trim(
         self,
-        stream: StirlingStreamText,
         time_start: str | int | float,
         time_end: str | int | float,
+        stream: StirlingStreamText,
     ) -> Dict[str, str]:
         raise NotImplementedError("Trimming is not supported for this stream type.")

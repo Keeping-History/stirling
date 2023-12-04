@@ -57,11 +57,11 @@ class StirlingDependency(StirlingClass):
             building an executable from source or decompressing the downloaded
             file.
         force_download (bool | None): Force the download of the binary.
-            This will overwrite any files in the ./bin/ directory that have the
+            This will overwrite any files.json in the ./bin/ directory that have the
             ame name.
-        move_all (bool | None): Move all files in the archive to the ./bin/
+        move_all (bool | None): Move all files.json in the archive to the ./bin/
             directory. This is useful when an archive contains libraries or
-            other additional files needed to run, besides the executable itself.
+            other additional files.json needed to run, besides the executable itself.
 
 
     Typical usage example:

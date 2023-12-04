@@ -5,7 +5,7 @@ class StirlingError(Exception):
 
 
 class MissingFrameworkError(StirlingError):
-    """Raised when the framework requested for the job is not available."""
+    """Raised when the framework requested for the job.json is not available."""
 
     pass
 

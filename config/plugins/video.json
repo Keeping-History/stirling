@@ -1,6 +1,6 @@
 {
   "defaults": {
-    "codec": "h264",
+    "codec": "h267",
     "container":"mp4",
     "output_directory": "./video",
     "filename": "video"

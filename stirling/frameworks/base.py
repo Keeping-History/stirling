@@ -229,13 +229,13 @@ class StirlingMediaFrameworkOptions(StirlingClass):
 @dataclass
 class StirlingMediaFramework(StirlingClass, ABC):
     """StirlingMediaFramework is a class for handling the underlying system
-    media framework used to interact with media files.
+    media framework used to interact with media files.json.
 
 
     Args:
         name (str): The encoder framework to use. For example, `FFMpeg` is a
             media framework that can be used to interact with media
-            files; `Mencoder` and `MLT` are other examples of media frameworks.
+            files.json; `Mencoder` and `MLT` are other examples of media frameworks.
     """
 
     name: str

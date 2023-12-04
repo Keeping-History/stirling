@@ -28,7 +28,7 @@ class StirlingCommandTarget(StrEnum):
 class StirlingCommand(StirlingClass):
     """StirlingCommand is the base class for command objects. These command
     objects will be converted into specific commands to run for
-    a specific plugin/step in a job. A StirlingCommand includes the full command
+    a specific plugin/step in a job.json. A StirlingCommand includes the full command
     to run in "cli" style, and the raw output from the command.
 
     The goal is to eliminate Python-only media packages, and run jobs in any
@@ -41,7 +41,7 @@ class StirlingCommand(StirlingClass):
     perform as efficiently as possible. Using an additional package to wrap
     a Media Framework (such as FFMPeg) adds additional overhead, and using
     bindings to a low-level codec library (such as `libav`) limits options for
-    what kind of environments can run a job.
+    what kind of environments can run a job.json.
 
     Attributes:
         name (str): The name of plugin that created the command.

@@ -16,7 +16,7 @@ def load_class_module_names(directory: Path | str):
     """Load all class names from a directory.
 
     This is a helper utility function for loading all class names from a
-    directory. It is used in the __init__.py files to enable the use of
+    directory. It is used in the __init__.py files.json to enable the use of
     `from stirling.codecs.audio import *` and similar, as a simple
     time saver."""
 

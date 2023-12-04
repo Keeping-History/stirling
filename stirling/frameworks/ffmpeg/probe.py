@@ -23,7 +23,7 @@ from stirling.frameworks.ffmpeg.command import (
 
 @dataclass
 class StirlingMediaFrameworkFFMpegProbe(StirlingClass):
-    """StirlingMediaFrameworkFFMpegProbe is a class that is used to probe media files using FFMpeg."""
+    """StirlingMediaFrameworkFFMpegProbe is a class that is used to probe media files.json using FFMpeg."""
 
     source: Path
     transcoder_binary_dependency: StirlingDependency

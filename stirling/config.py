@@ -48,15 +48,23 @@ class StirlingConfig(StirlingClass):
     # Private methods
     def _path_to_nested_dict(self):
         accumulated_dict = {}
-
         for file_path in self._get_paths_for_config_files():
             object_path_array = self._get_object_path_as_array(file_path)
-            accumulated_dict = {
-                **self._merge_config_dicts(object_path_array, file_path),
-                **accumulated_dict,
-            }
-
+            self._accumulate_dict(
+                accumulated_dict, self._merge_config_dicts(object_path_array, file_path)
+            )
         return self._remove_comment_keys(accumulated_dict)
+
+    def _accumulate_dict(self, a: dict, b: dict, path=[]):
+        for key in b:
+            if key in a:
+                if isinstance(a[key], dict) and isinstance(b[key], dict):
+                    self._accumulate_dict(a[key], b[key], path + [str(key)])
+                elif a[key] != b[key]:
+                    raise Exception("Conflict at " + ".".join(path + [str(key)]))
+            else:
+                a[key] = b[key]
+        return a
 
     def _remove_comment_keys(self, config_dict):
         return {

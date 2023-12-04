@@ -62,14 +62,14 @@ def load_plugins(
 class StirlingPluginAssets(StirlingClass):
     """The assets output from a plugin that can be used by other plugins.
 
-    This is not the same as the commands expected output. Assets are files specifically
+    This is not the same as the commands expected output. Assets are files.json specifically
     declared for use outside the plugin; the expected outputs are only for
     the command runner to verify that the plugin ran successfully.
 
     Attributes:
         name (str): The name of unique name given to the asset. This will be
             used by other plugins to reference this asset.
-        path (str): The full path to the asset.
+        path (str): The fulla path to the asset.
     """
 
     name: str
@@ -124,7 +124,7 @@ class StirlingPluginOptions(BaseModel, StirlingClass):
 
 @dataclass(kw_only=True)
 class StirlingPlugin(StirlingClass, ABC):
-    """StirlingPlugin is the base class fxor all plugins.
+    """StirlingPlugin is the base class for all plugins.
 
     Any plugin class definition should use this as its parent class.
 
@@ -140,6 +140,7 @@ class StirlingPlugin(StirlingClass, ABC):
     assets: List[StirlingPluginAssets] | None = None
     priority: int = 0
     logger: StirlingJobLogger = field(default_factory=get_job_logger)
+    commands: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.logger.debug(f"Initializing plugin {self.name}")
@@ -158,6 +159,6 @@ class StirlingPlugin(StirlingClass, ABC):
 
     # TODO: Do we need this still?
     # @abstractmethod
-    # def outputs(self, job):
+    # def outputs(self, job.json):
     #     """Returns a list of the expected outputs of the plugin."""
     #     ...
