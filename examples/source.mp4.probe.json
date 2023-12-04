@@ -1,0 +1,39 @@
+{
+  "source": "examples/source.mp4",
+  "streams": [
+    {
+      "stream_id": 0,
+      "type": "video",
+      "duration": 1162.094,
+      "width": 1024,
+      "height": 576,
+      "frame_rate": 29.97002997002997,
+      "aspect": [
+        "16",
+        "9"
+      ],
+      "codec": "h264",
+      "bit_rate": 535000,
+      "profile": "Main",
+      "color_model": "yuv420p",
+      "scan_type": "progressive",
+      "version": null
+    },
+    {
+      "stream_id": 1,
+      "type": "audio",
+      "duration": 1162.158005,
+      "channels": 2,
+      "bit_rate": "93586",
+      "sample_rate": 44100,
+      "codec": "aac",
+      "language": "und",
+      "channel_layout": "stereo",
+      "profile": "LC"
+    }
+  ],
+  "preferred": {
+    "video": 0,
+    "audio": 1
+  }
+}

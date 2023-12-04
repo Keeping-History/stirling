@@ -1,0 +1,95 @@
+{
+  "options": {
+    "version": ">=6.0.0",
+    "binary_transcoder": "ffmpeg",
+    "binary_probe": "ffprobe",
+    "dependencies": [
+      {
+        "name": "ffmpeg",
+        "binary": "ffmpeg",
+        "version": "6.0.0",
+        "platform": [
+          "Darwin",
+          "arm64"
+        ],
+        "url": "https://www.osxexperts.net/ffmpeg6arm.zip",
+        "post_process": "unzip",
+        "force_download": false
+      },
+      {
+        "name": "ffmpeg",
+        "binary": "ffmpeg",
+        "version": "6.0.0",
+        "platform": [
+          "Darwin",
+          "amd64"
+        ],
+        "url": "https://www.osxexperts.net/ffmpeg6intel.zip",
+        "post_process": "unzip",
+        "force_download": false
+      },
+      {
+        "name": "ffprobe",
+        "binary": "ffprobe",
+        "version": "6.0.0",
+        "platform": [
+          "Darwin",
+          "arm64"
+        ],
+        "url": "https://www.osxexperts.net/ffprobe6arm.zip",
+        "post_process": "unzip",
+        "force_download": false
+      },
+      {
+        "name": "ffprobe",
+        "binary": "ffprobe",
+        "version": "6.0.0",
+        "platform": [
+          "Darwin",
+          "amd64"
+        ],
+        "url": "https://www.osxexperts.net/ffprobe6intel.zip",
+        "post_process": "unzip",
+        "force_download": false
+      }
+    ],
+    "default_cmd_options": {}
+  },
+  "audio": {
+    "encoders": {
+      "defaults": {
+        "mp3": "libmp3lame"
+      },
+      "mp3": {
+        "defaults": {
+          "encoder_library": "libmp3lame"
+        }
+      },
+      "pcm": {
+        "defaults": {
+          "sample_bit_depth": 16,
+          "encoder_library": "pcm_s16le"
+        },
+        "sample_bit_depths": [
+          0,
+          8,
+          16,
+          24,
+          32
+        ]
+      }
+    },
+    "sample_rates": [
+      8000,
+      11025,
+      16000,
+      44100,
+      48000,
+      88200,
+      96000,
+      176400,
+      192000,
+      352800
+    ]
+  }
+}

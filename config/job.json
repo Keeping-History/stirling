@@ -1,0 +1,12 @@
+{
+  "_description": "This file contains settings for Jobs.",
+  "job_file": "job.json",
+  "log_file": "job.log",
+  "input_directory": "./",
+  "output_directory": "./output",
+  "source_delete": "false",
+  "output_annotations_directory": "annotations",
+  "source_copy": "true",
+  "log_level": 5,
+  "framework": "ffmpeg"
+}

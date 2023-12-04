@@ -1,0 +1,8 @@
+{
+  "defaults": {
+    "codec": "pcm",
+    "container":"wav",
+    "output_directory": "./audio",
+    "filename": "audio"
+  }
+}
